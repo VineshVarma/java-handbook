@@ -25,11 +25,11 @@ export const foundationsLessons: Lesson[] = [
         type: 'problem',
         content: `Every enterprise backend starts with plain text in a \`.java\` file. Whether you write a high-throughput payment handler or a simple utility, the CPU cannot execute Java source code directly.
 
-Unlike compiled languages like C or Go that generate machine code targeted directly at x86 or ARM CPU instruction sets, Java was designed around the architectural philosophy: **"Write Once, Run Anywhere" (WORA)**.
+Unlike ahead-of-time (AOT) compiled languages like C or Go that emit CPU machine code targeted directly at specific x86 or ARM instruction sets, Java was designed around the architectural philosophy: **"Write Once, Run Anywhere" (WORA)**.
 
-To achieve this hardware independence, your source code must first be translated into an intermediate representation known as **Java Bytecode**. Let's follow what happens the moment you compile.`,
+To achieve hardware independence, Java source code is compiled into an intermediate representation known as **Java Bytecode**. Let's follow what happens the moment you compile.`,
         keyIdea: 'Java achieves platform independence by compiling source code to intermediate bytecode rather than direct CPU machine code.',
-        productionSymptom: 'Why did our payment microservice take 3.2 seconds to serve the first 100 requests right after deployment, but later processed 60,000 req/sec in 0.4ms? This is caused by the JIT compilation lifecycle: cold bytecode interpretation transitioning into Tier 4 C2 optimized native assembly.',
+        productionSymptom: 'Why did our payment microservice take 3.2 seconds to serve its first 100 requests right after deployment, but later sustained 60,000 req/sec at 0.4ms average latency across 24 concurrent worker threads? This warm-up curve reflects the JVM startup lifecycle: initial class loading, connection pool warm-up, DB query cache readiness, and the HotSpot JIT compiler transitioning hot paths from cold bytecode interpretation into Tier 4 C2 profile-guided native machine code.',
         codeExample: {
           title: 'PaymentProcessor.java',
           code: `package com.bank.payment;
@@ -46,7 +46,7 @@ public class PaymentProcessor {
     }
 }`,
         },
-        interviewTip: 'Why does Java use an intermediate bytecode instead of compiling directly to machine instructions like C++? It enables platform portability and allows runtime profiling and adaptive JIT optimizations that can outperform static compilers.',
+        interviewTip: 'Why does Java use an intermediate bytecode instead of compiling directly to native machine instructions like C++? Bytecode enables write-once platform portability across OS/CPU architectures, while allowing runtime profile-guided JIT compilation that can rival or outperform static AOT compilers on long-running, branch-heavy server workloads.',
         diagramState: 'write-code',
       },
       {
@@ -159,7 +159,9 @@ Once verified, the class undergoes **Preparation** (allocating static fields wit
 
 - **Level 0 (Interpreter)**: Starts executing bytecode immediately line by line with zero compilation delay, gathering invocation and backedge profiling counters.
 - **Levels 1–3 (C1 Client Compiler)**: Compiles native code quickly. Level 1 produces simple native code; Level 2 adds basic profiling; Level 3 instruments full profiling counters (branch frequencies, type feedback).
-- **Level 4 (C2 Server Compiler / Graal)**: When a method crosses the hot threshold (~10,000 calls), C2 applies aggressive speculative optimizations: method inlining, loop unrolling, escape analysis, and SIMD vectorization.
+- **Level 4 (C2 Server Compiler / Graal)**: When a method crosses the hot invocation threshold (~10,000 calls), C2 applies aggressive speculative optimizations: method inlining, loop unrolling, escape analysis, and SIMD vectorization.
+
+*(Note: Tiered C1/C2 compilation is a **HotSpot JVM** implementation architecture found in OpenJDK, Oracle JDK, and Eclipse Temurin. The JVM Specification defines the bytecode instruction set and execution model, leaving JIT and compilation strategies to VM implementers like GraalVM, OpenJ9, or Zing).*
 
 Two critical runtime mechanics to master:
 1. **On-Stack Replacement (OSR)**: If a long loop runs inside the interpreter, HotSpot compiles the loop mid-execution and switches the running stack frame to native code without waiting for the method to exit!

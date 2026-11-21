@@ -25,12 +25,13 @@ export function Header({
           onClick={onMenuToggle}
           className="lg:hidden p-1.5 rounded-lg text-charcoal-700 dark:text-cream-200 hover:bg-cream-200 dark:hover:bg-charcoal-800 transition-colors"
           aria-label="Toggle menu"
+          data-testid="mobile-menu-toggle"
         >
           {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
         <a
-          href="#/"
+          href="/"
           className="flex items-center gap-2 text-charcoal-900 dark:text-cream-100 group"
         >
           <div className="w-8 h-8 rounded-lg bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
@@ -51,6 +52,7 @@ export function Header({
       <nav className="hidden md:flex items-center gap-1 bg-cream-200/60 dark:bg-charcoal-800 p-1 rounded-xl border border-cream-300/80 dark:border-charcoal-700 text-xs font-medium">
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-sm font-semibold transition-all"
+          data-testid="tab-learn"
         >
           <BookOpen className="w-3.5 h-3.5" />
           <span>Learn</span>
@@ -63,6 +65,7 @@ export function Header({
             )
           }
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700 dark:text-cream-300 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors"
+          data-testid="tab-practice"
         >
           <Target className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
           <span>Practice</span>
@@ -75,6 +78,7 @@ export function Header({
             )
           }
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700 dark:text-cream-300 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors"
+          data-testid="tab-cheatsheets"
         >
           <FileText className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
           <span>Cheatsheets</span>
@@ -86,6 +90,7 @@ export function Header({
         <button
           onClick={onSearchOpen}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cream-300 dark:border-charcoal-700 bg-cream-50 dark:bg-charcoal-800 text-charcoal-600 dark:text-cream-300 text-xs hover:border-cream-400 dark:hover:border-charcoal-600 transition-colors shadow-sm"
+          data-testid="search-button"
         >
           <Search className="w-3.5 h-3.5 text-charcoal-400 dark:text-cream-400" />
           <span className="hidden sm:inline">Search lessons...</span>

@@ -10,7 +10,7 @@ interface CodeBlockProps {
   beforeCode?: string;
 }
 
-// Java syntax highlighter tokenizer
+// Java syntax highlighter tokenizer emitting semantic code tokens
 function highlightJava(code: string): React.ReactNode[] {
   const lines = code.split('\n');
 
@@ -31,19 +31,19 @@ function highlightJava(code: string): React.ReactNode[] {
       const token = match[0];
       if (token.startsWith('//') || token.startsWith('/*')) {
         parts.push(
-          <span key={match.index} className="token-comment">
+          <span key={match.index} className="text-emerald-700 dark:text-emerald-400/80 italic font-medium">
             {token}
           </span>
         );
       } else if (token.startsWith('"') || token.startsWith("'")) {
         parts.push(
-          <span key={match.index} className="token-string">
+          <span key={match.index} className="text-amber-700 dark:text-amber-300">
             {token}
           </span>
         );
       } else if (token.startsWith('@')) {
         parts.push(
-          <span key={match.index} className="token-annotation">
+          <span key={match.index} className="text-purple-700 dark:text-purple-400 font-semibold">
             {token}
           </span>
         );
@@ -53,7 +53,7 @@ function highlightJava(code: string): React.ReactNode[] {
         )
       ) {
         parts.push(
-          <span key={match.index} className="token-keyword">
+          <span key={match.index} className="text-sky-700 dark:text-sky-400 font-bold">
             {token}
           </span>
         );
@@ -63,19 +63,19 @@ function highlightJava(code: string): React.ReactNode[] {
         )
       ) {
         parts.push(
-          <span key={match.index} className="token-type">
+          <span key={match.index} className="text-teal-700 dark:text-teal-300 font-semibold">
             {token}
           </span>
         );
       } else if (/^\d+$/.test(token)) {
         parts.push(
-          <span key={match.index} className="token-number">
+          <span key={match.index} className="text-rose-700 dark:text-rose-400">
             {token}
           </span>
         );
       } else if (/^[=+\-*/%&|^!<>?:.]$/.test(token)) {
         parts.push(
-          <span key={match.index} className="token-operator">
+          <span key={match.index} className="text-charcoal-700 dark:text-cream-400">
             {token}
           </span>
         );
@@ -91,12 +91,15 @@ function highlightJava(code: string): React.ReactNode[] {
     }
 
     return (
-      <div key={lineIndex} className="table-row">
-        <span className="table-cell pr-4 text-right select-none text-charcoal-700/40 dark:text-cream-400/30 text-xs font-mono">
+      <span key={lineIndex} className="table-row">
+        <span
+          aria-hidden="true"
+          className="table-cell pr-4 text-right select-none text-charcoal-400 dark:text-cream-500/40 text-xs font-mono font-medium pointer-events-none w-8"
+        >
           {lineIndex + 1}
         </span>
         <span className="table-cell">{parts}</span>
-      </div>
+      </span>
     );
   });
 }
@@ -114,7 +117,7 @@ export function CodeBlock({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(displayCode);
+      await navigator.clipboard.writeText(displayCode.trim());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
@@ -123,16 +126,17 @@ export function CodeBlock({
   };
 
   return (
-    <div className="my-4 rounded-xl overflow-hidden border border-cream-300 dark:border-charcoal-700 bg-[#FAF7F2] dark:bg-[#181715] shadow-sm">
+    <div className="my-4 rounded-xl overflow-hidden border border-cream-300 dark:border-charcoal-700 bg-[#FAF7F2] dark:bg-[#181715] shadow-xs">
+      {/* Code Header Bar with Tab Toggle and Copy Button */}
       <div className="flex items-center justify-between px-3.5 py-2 bg-cream-200/60 dark:bg-charcoal-800/80 border-b border-cream-300 dark:border-charcoal-700 text-xs">
         <div className="flex items-center gap-2">
           {beforeCode ? (
             <div className="flex bg-cream-300/60 dark:bg-charcoal-700 p-0.5 rounded-lg text-xs font-medium">
               <button
                 onClick={() => setActiveTab('before')}
-                className={`px-2 py-0.5 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors ${
                   activeTab === 'before'
-                    ? 'bg-white dark:bg-charcoal-900 shadow-sm text-charcoal-900 dark:text-cream-100'
+                    ? 'bg-white dark:bg-charcoal-900 shadow-xs text-charcoal-900 dark:text-cream-100 font-bold'
                     : 'text-charcoal-600 dark:text-cream-400 hover:text-charcoal-900'
                 }`}
               >
@@ -140,9 +144,9 @@ export function CodeBlock({
               </button>
               <button
                 onClick={() => setActiveTab('after')}
-                className={`px-2 py-0.5 rounded-md transition-colors ${
+                className={`px-2.5 py-1 rounded-md transition-colors ${
                   activeTab === 'after'
-                    ? 'bg-white dark:bg-charcoal-900 shadow-sm text-charcoal-900 dark:text-cream-100'
+                    ? 'bg-white dark:bg-charcoal-900 shadow-xs text-charcoal-900 dark:text-cream-100 font-bold'
                     : 'text-charcoal-600 dark:text-cream-400 hover:text-charcoal-900'
                 }`}
               >
@@ -150,7 +154,7 @@ export function CodeBlock({
               </button>
             </div>
           ) : (
-            <span className="font-mono font-semibold text-charcoal-700 dark:text-cream-200 uppercase tracking-wider text-[11px]">
+            <span className="font-mono font-bold text-charcoal-700 dark:text-cream-200 uppercase tracking-wider text-[11px]">
               {title || language}
             </span>
           )}
@@ -158,13 +162,15 @@ export function CodeBlock({
 
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 px-2 py-1 rounded text-charcoal-600 dark:text-cream-300 hover:bg-cream-300 dark:hover:bg-charcoal-700 transition-colors"
-          title="Copy to clipboard"
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-charcoal-700 dark:text-cream-300 hover:bg-cream-300 dark:hover:bg-charcoal-700 transition-colors"
+          title="Copy code to clipboard"
+          aria-label="Copy code to clipboard"
+          data-testid="copy-code-button"
         >
           {copied ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-emerald-600 dark:text-emerald-400">Copied</span>
+              <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied</span>
             </>
           ) : (
             <>
@@ -175,9 +181,10 @@ export function CodeBlock({
         </button>
       </div>
 
-      <div className="p-3.5 overflow-x-auto text-xs font-mono leading-relaxed text-charcoal-900 dark:text-cream-100">
-        <div className="table w-full">{highlightJava(displayCode.trim())}</div>
-      </div>
+      {/* Semantic <pre><code> Block */}
+      <pre className="p-3.5 overflow-x-auto text-xs font-mono leading-relaxed text-charcoal-900 dark:text-cream-100 scrollbar-none">
+        <code className="table w-full font-mono">{highlightJava(displayCode.trim())}</code>
+      </pre>
     </div>
   );
 }

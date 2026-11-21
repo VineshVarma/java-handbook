@@ -149,7 +149,7 @@ export function SearchDialog({
                   setSelectedIndex(0);
                 }}
                 placeholder="Search Java concepts, topics, steps (e.g. CompletableFuture, G1 GC, Virtual Threads)..."
-                className="flex-1 bg-transparent border-none outline-none text-sm text-charcoal-900 dark:text-cream-100 placeholder:text-charcoal-400 dark:placeholder:text-cream-500"
+                className="flex-1 bg-transparent border-none outline-none text-base sm:text-sm text-charcoal-900 dark:text-cream-100 placeholder:text-charcoal-400 dark:placeholder:text-cream-500"
               />
               <button
                 onClick={onClose}

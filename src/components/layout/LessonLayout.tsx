@@ -13,7 +13,11 @@ import { SearchDialog } from '@/components/ui/SearchDialog';
 import { Toast } from '@/components/ui/Toast';
 import { Layers, BookOpen } from 'lucide-react';
 
-export function LessonLayout() {
+export function LessonLayout({
+  initialLessonSlug,
+}: {
+  initialLessonSlug?: string;
+} = {}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -30,7 +34,7 @@ export function LessonLayout() {
     prevStep,
     hasNext,
     hasPrev,
-  } = useLesson(allLessons);
+  } = useLesson(allLessons, initialLessonSlug);
 
   const {
     progress,
@@ -77,7 +81,7 @@ export function LessonLayout() {
     progress.completedSteps[currentLesson.slug] || [];
 
   return (
-    <div className="h-screen max-h-screen w-screen overflow-hidden flex flex-col bg-cream-100 dark:bg-charcoal-950 text-charcoal-900 dark:text-cream-100 selection:bg-emerald-500/20">
+    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col bg-cream-100 dark:bg-charcoal-950 text-charcoal-900 dark:text-cream-100 selection:bg-emerald-500/20 pb-[env(safe-area-inset-bottom)]">
       {/* Top Navigation Bar */}
       <Header
         onSearchOpen={() => setSearchOpen(true)}

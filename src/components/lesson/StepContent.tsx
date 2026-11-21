@@ -269,6 +269,26 @@ export function StepContent({
             </div>
           </div>
         )}
+
+        {/* Next Up Lesson Footer Callout (shown on final step of lesson) */}
+        {stepIndex === totalSteps - 1 && nextStepTitle && (
+          <div className="mt-4 p-4 rounded-xl border border-emerald-300 dark:border-emerald-850 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                Lesson Complete · Next Up
+              </span>
+              <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                {stepIndex + 1}/{totalSteps} Steps Done
+              </span>
+            </div>
+            <p className="text-xs font-bold font-mono text-charcoal-900 dark:text-cream-50">
+              {nextStepTitle}
+            </p>
+            <p className="text-[11px] font-sans text-charcoal-600 dark:text-cream-300">
+              Continue your journey to master internal JVM architecture and distributed systems.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Pinned Bottom Navigation Action Bar */}
@@ -282,6 +302,7 @@ export function StepContent({
                 ? 'bg-cream-100 dark:bg-charcoal-800 text-charcoal-800 dark:text-cream-100 border-cream-300 dark:border-charcoal-600 hover:bg-cream-200 dark:hover:bg-charcoal-700 active:scale-95'
                 : 'opacity-40 cursor-not-allowed bg-transparent text-charcoal-400 dark:text-cream-500 border-cream-200 dark:border-charcoal-800'
             }`}
+            data-testid="prev-step-button"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Back</span>
@@ -295,6 +316,7 @@ export function StepContent({
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95'
                 : 'opacity-50 cursor-not-allowed bg-emerald-600/50 text-white'
             }`}
+            data-testid="next-step-button"
           >
             <span className="truncate">
               Next: {nextStepTitle || 'Next Step'}

@@ -190,6 +190,9 @@ export function Sidebar({
               style={{ width: `${progressPercent}%` }}
             />
           </div>
+          <span className="text-[10px] font-sans text-charcoal-500 dark:text-cream-400 mt-1.5 block">
+            Progress saved locally in browser
+          </span>
         </div>
       </aside>
     </>

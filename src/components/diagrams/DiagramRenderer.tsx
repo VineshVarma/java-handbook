@@ -1577,10 +1577,10 @@ function JavaExecutionStage({
   return (
     <StageContainer
       telemetry={[
-        { label: 'EXECUTION MODE', value: isJit ? 'Tiered JIT (Level 4 C2)' : isClassLoader ? 'ClassLoader' : 'Interpreter' },
-        { label: 'BYTECODE VERIFIER', value: '0xCAFEBABE' },
-        { label: 'HOT INVOCATIONS', value: isJit ? '120,450 / s' : '820 / s' },
-        { label: 'NATIVE CODE CACHE', value: isJit ? '64 MB' : '4 MB' },
+        { label: 'EXECUTION MODE', value: isJit ? 'Tiered JIT (HotSpot Level 4 C2)' : isClassLoader ? 'ClassLoader Linking' : 'Level 0 Interpreter' },
+        { label: 'CLASS VERIFICATION', value: isClassLoader ? 'Type & Stack Discipline OK' : 'Magic 0xCAFEBABE Verified' },
+        { label: 'INVOCATION COUNTER', value: isJit ? '10,000+ (C2 Threshold Hit)' : '342 Calls (Profiling)' },
+        { label: 'CODE CACHE', value: isJit ? '48 MB / 240 MB Reserved' : '2.4 MB / 240 MB Reserved' },
       ]}
       viewMode={viewMode}
       simulationScenario={simulationScenario as any}
@@ -1826,9 +1826,9 @@ function StageContainer({
   let effectiveTelemetry = telemetry;
   if (simulationScenario === 'hot-calls') {
     effectiveTelemetry = [
-      { label: 'JIT COMPILER', value: 'Level 4 C2 Active' },
-      { label: 'CALL FREQUENCY', value: '148,200 calls/s' },
-      { label: 'CODE CACHE', value: '64MB Committed' },
+      { label: 'JIT COMPILER', value: 'HotSpot Level 4 C2' },
+      { label: 'INVOCATION RATE', value: '10,000+ Calls (Threshold)' },
+      { label: 'CODE CACHE', value: '64 MB / 240 MB Reserved' },
       { label: 'STATUS', value: 'OSR Native Compiled' },
     ];
   } else if (simulationScenario === 'recursion') {

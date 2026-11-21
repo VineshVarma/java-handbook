@@ -34,6 +34,7 @@ export function DiagramCanvas({
           onClick={() => setViewMode((v) => (v === '3d' ? '2d' : '3d'))}
           className="flex items-center gap-1 px-2 py-1 rounded-lg text-cream-300 hover:text-white hover:bg-white/10 transition-colors font-bold text-[10px]"
           title="Toggle 2D Flat / 3D Isometric View"
+          data-testid="toggle-view-mode"
         >
           {viewMode === '3d' ? (
             <>
@@ -58,6 +59,7 @@ export function DiagramCanvas({
                 : 'text-cream-300 hover:text-white hover:bg-white/10'
             }`}
             title="Break It: Runtime Simulations"
+            data-testid="break-it-button"
           >
             <Zap
               className={`w-3.5 h-3.5 ${
@@ -83,6 +85,7 @@ export function DiagramCanvas({
                     ? 'bg-emerald-600 text-white font-bold'
                     : 'text-cream-300 hover:bg-white/10'
                 }`}
+                data-testid="sim-scenario-normal"
               >
                 Normal Execution
               </button>
@@ -96,6 +99,7 @@ export function DiagramCanvas({
                     ? 'bg-amber-600 text-white font-bold'
                     : 'text-cream-300 hover:bg-white/10'
                 }`}
+                data-testid="sim-scenario-hot-calls"
               >
                 Simulate 10,000 Calls (JIT C2)
               </button>
@@ -109,6 +113,7 @@ export function DiagramCanvas({
                     ? 'bg-rose-600 text-white font-bold'
                     : 'text-cream-300 hover:bg-white/10'
                 }`}
+                data-testid="sim-scenario-recursion"
               >
                 Trigger Recursion (StackOverflow)
               </button>
@@ -122,6 +127,7 @@ export function DiagramCanvas({
                     ? 'bg-purple-600 text-white font-bold'
                     : 'text-cream-300 hover:bg-white/10'
                 }`}
+                data-testid="sim-scenario-thread-pin"
               >
                 Pin Virtual Thread (synchronized)
               </button>
@@ -135,6 +141,7 @@ export function DiagramCanvas({
           className="p-1.5 rounded-lg text-cream-300 hover:text-white hover:bg-white/10 transition-colors"
           title="Replay packet animation (R)"
           aria-label="Replay"
+          data-testid="replay-button"
         >
           <RotateCcw className="w-3.5 h-3.5" />
         </button>
@@ -145,13 +152,14 @@ export function DiagramCanvas({
           className="p-1.5 rounded-lg text-cream-300 hover:text-white hover:bg-white/10 transition-colors"
           title={isPlaying ? 'Pause animation (Space)' : 'Play animation (Space)'}
           aria-label={isPlaying ? 'Pause' : 'Play'}
+          data-testid="play-pause-button"
         >
           {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {/* SVG Animation Stage */}
-      <div className="flex-1 min-h-0 w-full h-full overflow-hidden">
+      <div className="flex-1 min-h-0 w-full h-full overflow-hidden touch-pan-y">
         <DiagramRenderer
           lessonSlug={lessonSlug}
           diagramState={diagramState}
