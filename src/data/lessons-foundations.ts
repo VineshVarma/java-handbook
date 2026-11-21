@@ -504,4 +504,191 @@ Common causes:
       },
     ],
   },
+  {
+    id: 'java-data-types',
+    slug: 'java-data-types',
+    title: 'Data Types, String Pool & Immutability',
+    subtitle: 'Master the 8 primitives, wrapper classes, autoboxing pitfalls, and String pool memory allocation.',
+    moduleId: '01',
+    moduleTitle: '01. Java Foundations',
+    duration: '10 min',
+    difficulty: 'Beginner',
+    youllLearn: [
+      'The 8 primitive types, byte sizes, and default values',
+      'Primitive types vs Reference types in memory allocation',
+      'The String Pool (String Interning) and why Strings are immutable',
+      'Autoboxing and Unboxing pitfalls causing NullPointerExceptions',
+      'Local Variable Type Inference (var) in modern Java (Java 10+)',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'The 8 Primitive Data Types',
+        subtitle: 'Stored directly by value on the execution stack',
+        type: 'concept',
+        content: `Java is not a pure object-oriented language because it preserves **8 primitive data types** for raw computational speed. Primitives store their binary values directly in the thread stack frame, avoiding heap allocation and object header overhead:
+
+1. **Integral**: \`byte\` (8-bit), \`short\` (16-bit), \`int\` (32-bit), \`long\` (64-bit)
+2. **Floating-point**: \`float\` (32-bit IEEE 754), \`double\` (64-bit IEEE 754)
+3. **Character**: \`char\` (16-bit Unicode UTF-16 code point)
+4. **Boolean**: \`boolean\` (\`true\` / \`false\`)
+
+In enterprise financial applications (like banking and insurance), NEVER use \`float\` or \`double\` for currency arithmetic due to binary floating-point rounding errors! Always use **\`BigDecimal\`** or store monetary amounts as integer cents.`,
+        keyIdea: 'Primitives store raw binary values directly on the stack for high speed; use BigDecimal for financial calculations.',
+        codeExample: {
+          title: 'FinancialPrecision.java',
+          code: `// DANGEROUS: Floating-point precision error!
+double amount1 = 0.1;
+double amount2 = 0.2;
+System.out.println(amount1 + amount2); // 0.30000000000000004!
+
+// SAFE: BigDecimal for exact financial calculations
+BigDecimal b1 = new BigDecimal("0.1");
+BigDecimal b2 = new BigDecimal("0.2");
+System.out.println(b1.add(b2)); // 0.3`,
+        },
+        interviewTip: 'Why should you never use double for money? Binary floating-point representation cannot exactly represent base-10 fractions like 0.1, accumulating rounding errors. Always use BigDecimal or integer cents.',
+        diagramState: 'default',
+      },
+      {
+        id: 'step-2',
+        title: 'The String Pool & Immutability',
+        subtitle: 'Why String is final and how interning saves memory',
+        type: 'insight',
+        content: `In Java, **\`String\`** objects are completely immutable. Once created, their internal byte array cannot be altered.
+
+Because strings constitute over 30% of typical application heap memory, the JVM maintains the **String Pool** (a specialized hash table in the heap):
+- Literal declaration \`String s1 = "hello";\` checks the pool. If \`"hello"\` exists, it reuses the reference.
+- Explicit creation \`String s2 = new String("hello");\` forcibly creates a new object in general heap memory outside the pool.
+- \`==\` compares memory addresses; \`.equals()\` compares actual character contents.
+
+**Why Immutability Matters**:
+1. **Security**: Sensitive parameters (database URLs, passwords) cannot be modified maliciously after passing validation.
+2. **Thread Safety**: Immutable strings can be shared across multiple concurrent threads with zero synchronization.
+3. **Caching HashCode**: \`String\` caches its computed \`hashCode\`, making it the premier key choice for HashMaps.`,
+        keyIdea: 'Strings are immutable and cached in the String Pool to guarantee thread safety, security, and fast hash lookups.',
+        codeExample: {
+          title: 'StringPoolComparison.java',
+          code: `String s1 = "StandardLife";
+String s2 = "StandardLife";
+String s3 = new String("StandardLife");
+
+System.out.println(s1 == s2);      // true (Both point to identical pool reference)
+System.out.println(s1 == s3);      // false (s3 is a separate heap instance)
+System.out.println(s1.equals(s3)); // true (Character sequence is identical)
+
+// Explicit interning moves s3 into pool:
+System.out.println(s1 == s3.intern()); // true`,
+        },
+        diagramState: 'default',
+      },
+      {
+        id: 'step-3',
+        title: 'Autoboxing, Unboxing & NullPointerExceptions',
+        subtitle: 'Automatic conversion between primitives and Wrapper objects',
+        type: 'trade-off',
+        content: `Java automatically converts between primitives and their corresponding Wrapper objects (\`int\` <-> \`Integer\`, \`boolean\` <-> \`Boolean\`):
+- **Autoboxing**: Primitive to Wrapper (\`Integer.valueOf(val)\`)
+- **Unboxing**: Wrapper to Primitive (\`wrapper.intValue()\`)
+
+**The Hidden Production Trap**:
+When unboxing an \`Integer\` that is \`null\` into an \`int\`, the compiler silently inserts \`integer.intValue()\`, triggering an unexpected **\`NullPointerException\`**!
+
+Always be cautious when mapping DTO fields or interacting with database entities where numeric columns can be \`null\`.`,
+        keyIdea: 'Unboxing a null wrapper object triggers a silent NullPointerException at runtime.',
+        codeExample: {
+          title: 'AutoboxingNPE.java',
+          code: `public class AutoboxingTrap {
+    public static void main(String[] args) {
+        Integer cachedPolicyId = getNullablePolicyId(); // returns null
+
+        // THROWS java.lang.NullPointerException!
+        // The bytecode compiles this to cachedPolicyId.intValue()
+        int primitiveId = cachedPolicyId; 
+    }
+
+    private static Integer getNullablePolicyId() {
+        return null;
+    }
+}`,
+        },
+        diagramState: 'recap',
+      },
+    ],
+  },
+  {
+    id: 'exception-handling',
+    slug: 'exception-handling',
+    title: 'Exception Handling & Fault Tolerance',
+    subtitle: 'Checked vs Unchecked exceptions, try-with-resources, and designing resilient enterprise error flows.',
+    moduleId: '01',
+    moduleTitle: '01. Java Foundations',
+    duration: '10 min',
+    difficulty: 'Beginner',
+    youllLearn: [
+      'The Throwable class hierarchy: Error vs Exception',
+      'Checked Exceptions vs Unchecked RuntimeExceptions',
+      'Automatic resource management with try-with-resources (AutoCloseable)',
+      'Designing domain-specific Custom Exception hierarchies',
+      'Best practices: why you should never swallow exceptions',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'The Throwable Hierarchy',
+        subtitle: 'Error vs Exception vs RuntimeException',
+        type: 'concept',
+        content: `All exceptional conditions in Java extend **\`java.lang.Throwable\`**, which branches into two fundamental roots:
+
+1. **\`Error\`**: Fatal JVM-level issues that applications should never attempt to catch (e.g. \`OutOfMemoryError\`, \`StackOverflowError\`, \`VirtualMachineError\`).
+2. **\`Exception\`**: Conditions that a reasonable application might want to catch:
+   - **Checked Exceptions** (direct subclasses of \`Exception\`): Checked at compile-time (e.g. \`IOException\`, \`SQLException\`). The method signature must declare them via \`throws\` or handle them via \`try-catch\`.
+   - **Unchecked Exceptions** (subclasses of \`RuntimeException\`): Not checked at compile time (e.g. \`NullPointerException\`, \`IllegalArgumentException\`, \`IllegalStateException\`). Represent programming or business logic flaws.`,
+        keyIdea: 'Checked exceptions represent recoverable external conditions; RuntimeExceptions represent programming bugs or business rule violations.',
+        diagramState: 'default',
+      },
+      {
+        id: 'step-2',
+        title: 'try-with-resources (AutoCloseable)',
+        subtitle: 'Guaranteed resource cleanup without messy finally blocks',
+        type: 'solution',
+        content: `Before Java 7, closing database connections, files, or network streams required nested, error-prone \`finally\` blocks. If an exception was thrown in both the \`try\` block and the \`finally\` block, the \`finally\` exception swallowed the original business exception!
+
+**\`try-with-resources\`** automatically closes any resource implementing **\`java.lang.AutoCloseable\`** or \`java.io.Closeable\` when the block exits:
+- Resources are closed in **reverse order of their creation**.
+- Any exception thrown during \`close()\` is captured as a **Suppressed Exception** attached to the primary root cause!`,
+        keyIdea: 'try-with-resources guarantees leak-free cleanup of streams and connections while preserving root-cause exceptions.',
+        codeExample: {
+          title: 'TryWithResourcesModern.java',
+          code: `// Database connection and Statement automatically closed in reverse order:
+try (Connection conn = dataSource.getConnection();
+     PreparedStatement ps = conn.prepareStatement("SELECT * FROM policies WHERE id = ?")) {
+    
+    ps.setString(1, policyId);
+    try (ResultSet rs = ps.executeQuery()) {
+        if (rs.next()) {
+            return mapToPolicy(rs);
+        }
+    }
+} catch (SQLException ex) {
+    log.error("Failed to fetch policy {}", policyId, ex);
+    throw new DataAccessException("Persistence query failed", ex);
+}`,
+        },
+        diagramState: 'default',
+      },
+      {
+        id: 'step-3',
+        title: 'Enterprise Custom Exception Design',
+        subtitle: 'Creating clear, semantic business domain exceptions',
+        type: 'recap',
+        content: `In clean microservices:
+- Do NOT throw raw generic \`Exception\` or \`RuntimeException\`.
+- Create a clean hierarchy of **Domain Runtime Exceptions** with error codes and contextual parameters (e.g. \`PolicyNotFoundException\`, \`PaymentAuthorizationFailedException\`).
+- Pair custom exceptions with Spring’s **\`@RestControllerAdvice\`** and \`@ExceptionHandler\` to serialize exceptions into RFC 7807 standard error payloads automatically!`,
+        keyIdea: 'Domain-specific runtime exceptions provide clear telemetry and integrate seamlessly with global Spring exception handlers.',
+        diagramState: 'recap',
+      },
+    ],
+  },
 ];

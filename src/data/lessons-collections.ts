@@ -241,4 +241,165 @@ Map<PolicyStatus, Double> premiumSumByStatus = policies.stream()
       },
     ],
   },
+  {
+    id: 'lambdas-functional',
+    slug: 'lambdas-functional',
+    title: 'Lambda Expressions & Functional Interfaces',
+    subtitle: 'From anonymous inner classes to invokedynamic lambdas, method references, and null-safe Optional.',
+    moduleId: '02',
+    moduleTitle: '02. Collections & Streams',
+    duration: '10 min',
+    difficulty: 'Intermediate',
+    youllLearn: [
+      'Anonymous inner classes vs Lambdas and invokedynamic execution',
+      'The 4 core functional interfaces: Predicate, Function, Consumer, Supplier',
+      'Method references: static, instance, and constructor references',
+      'Function composition using andThen() and compose()',
+      'Monadic null-safety using Optional<T> best practices',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'From Anonymous Classes to Lambdas',
+        subtitle: 'How Java 8 transformed functional syntax and JVM bytecode',
+        type: 'concept',
+        content: `Before Java 8, passing behavior as an argument required verbose **Anonymous Inner Classes**. Each anonymous class forced the compiler to generate a separate \`Enclosing$1.class\` file on disk and allocate a new object on every invocation.
+
+A **Lambda Expression** provides a concise syntax for single-abstract-method interfaces (**Functional Interfaces** annotated with \`@FunctionalInterface\`).
+
+Under the hood, lambdas do NOT generate anonymous class files! Instead, the JVM uses the **\`invokedynamic\`** (indy) bytecode instruction, generating a call site via \`LambdaMetafactory\` at runtime with near-zero memory footprint.`,
+        keyIdea: 'Lambdas leverage invokedynamic to avoid generating separate .class files and minimize object allocation overhead.',
+        codeExample: {
+          title: 'AnonymousClassVsLambda.java',
+          beforeCode: `// Before Java 8: Verbose Anonymous Inner Class
+Collections.sort(policies, new Comparator<Policy>() {
+    @Override
+    public int compare(Policy p1, Policy p2) {
+        return p1.getId().compareTo(p2.getId());
+    }
+});`,
+          code: `// Modern Java: Concise Lambda Expression with Method Reference
+policies.sort(Comparator.comparing(Policy::getId));`,
+        },
+        diagramState: 'default',
+      },
+      {
+        id: 'step-2',
+        title: 'The Core Functional Interfaces',
+        subtitle: 'Predicate, Function, Consumer, and Supplier in java.util.function',
+        type: 'solution',
+        content: `The \`java.util.function\` package provides standardized contracts for functional programming:
+
+1. **\`Predicate<T>\`**: \`T -> boolean\` (Testing a condition, e.g. \`filter(p -> p.isActive())\`).
+2. **\`Function<T, R>\`**: \`T -> R\` (Transforming an input to an output, e.g. \`map(p -> p.getId())\`).
+3. **\`Consumer<T>\`**: \`T -> void\` (Accepting a value and performing side effects, e.g. \`forEach(System.out::println)\`).
+4. **\`Supplier<T>\`**: \`() -> T\` (Factory producing a value without input, e.g. \`Optional.orElseGet(() -> fetchDefault())\`).
+
+Functional interfaces can be composed: \`predicate.and(otherPredicate)\` or \`function.andThen(otherFunction)\`.`,
+        keyIdea: 'The four core functional interfaces standardize testing, transformation, consumption, and deferred evaluation.',
+        diagramState: 'default',
+      },
+      {
+        id: 'step-3',
+        title: 'Optional<T>: Eliminating NullPointerExceptions',
+        subtitle: 'A monadic type-safe container for values that may or may not exist',
+        type: 'recap',
+        content: `Sir Tony Hoare called \`null\` his "billion-dollar mistake". In Java 8, **\`Optional<T>\`** was introduced as a return type to explicitly signal that a method may not return a value.
+
+**Optional Best Practices in Production**:
+- **DO** use \`Optional\` as a return type from Repository and Service methods.
+- **DO** use functional chaining: \`optional.map(...).filter(...).orElseThrow(...)\`.
+- **DON'T** call \`optional.get()\` without checking \`isPresent()\` (equivalent to raw null check).
+- **DON'T** use \`Optional\` as class fields, method arguments, or collection elements (it is not Serializable and wastes memory).`,
+        keyIdea: 'Optional makes the possibility of absence explicit in the API contract and provides monadic chaining methods.',
+        codeExample: {
+          title: 'OptionalBestPractice.java',
+          code: `public String getCustomerCity(String policyId) {
+    return policyRepository.findById(policyId)
+        .map(Policy::getCustomer)
+        .map(Customer::getAddress)
+        .map(Address::getCity)
+        .filter(city -> !city.isBlank())
+        .orElse("UNKNOWN");
+}`,
+        },
+        diagramState: 'recap',
+      },
+    ],
+  },
+  {
+    id: 'generics',
+    slug: 'generics',
+    title: 'Generics Deep Dive & PECS Principle',
+    subtitle: 'Type safety at compile-time, wildcard bounds (extends/super), and JVM type erasure mechanics.',
+    moduleId: '02',
+    moduleTitle: '02. Collections & Streams',
+    duration: '10 min',
+    difficulty: 'Intermediate',
+    youllLearn: [
+      'Why Generics exist: eliminating runtime ClassCastExceptions',
+      'The Producer Extends, Consumer Super (PECS) principle',
+      'Upper-bounded (? extends T) vs Lower-bounded (? super T) wildcards',
+      'Type Erasure: how the compiler preserves backward compatibility',
+      'Heap pollution and reifiable vs non-reifiable types',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'Why Generics: Compile-Time Type Safety',
+        subtitle: 'Catching type errors before your code reaches production',
+        type: 'concept',
+        content: `Before Java 5, collections stored raw \`Object\` references. A developer could add an \`Integer\` to a list intended for \`String\` values. The code compiled without error, only to crash in production with a fatal **\`ClassCastException\`**!
+
+**Generics** enable compile-time type checking. By parameterizing types with angle brackets (\`List<String>\`), the compiler prevents invalid insertions and automatically inserts required casts at compile time.`,
+        keyIdea: 'Generics shift type checking from runtime crashes to compile-time guarantees.',
+        diagramState: 'default',
+      },
+      {
+        id: 'step-2',
+        title: 'The PECS Principle: Producer Extends, Consumer Super',
+        subtitle: 'The golden rule for generic wildcard variance in Java',
+        type: 'insight',
+        content: `One of the most tested senior Java interview topics is the **PECS Principle** coined by Joshua Bloch in *Effective Java*:
+
+- **Producer Extends (\`? extends T\`)**:
+  - If a collection **produces** items for you to read, use \`? extends T\`.
+  - You can read elements as type \`T\`, but you CANNOT write elements into it (except \`null\`) because the compiler cannot guarantee the exact subtype.
+- **Consumer Super (\`? super T\`)**:
+  - If a collection **consumes** items that you write into it, use \`? super T\`.
+  - You can safely insert instances of \`T\` (or subtypes of \`T\`), but reading yields only raw \`Object\`.`,
+        keyIdea: 'Use ? extends T when reading data out of a collection; use ? super T when writing data into a collection.',
+        codeExample: {
+          title: 'PecsInPractice.java',
+          code: `public class CollectionUtils {
+    // Producer Extends: Reading numbers from 'src'
+    // Consumer Super: Writing numbers into 'dest'
+    public static <T> void copy(List<? super T> dest, List<? extends T> src) {
+        for (T item : src) {
+            dest.add(item); // Safe: dest accepts T or supertypes of T!
+        }
+    }
+}`,
+        },
+        interviewTip: 'What is the PECS rule in Java Generics? Producer Extends, Consumer Super. Use <? extends T> when reading from a collection and <? super T> when adding to a collection.',
+        diagramState: 'default',
+      },
+      {
+        id: 'step-3',
+        title: 'Type Erasure: The JVM Secret',
+        subtitle: 'Why generic type information disappears in bytecode',
+        type: 'recap',
+        content: `When Java 5 added Generics, it had to remain 100% backward-compatible with billions of lines of legacy Java 1.4 bytecode.
+
+To achieve this without changing the JVM bytecode specification, Java uses **Type Erasure**:
+1. During compilation, the compiler replaces generic type parameters with their bound (e.g. \`T\` becomes \`Object\`, or \`T extends Number\` becomes \`Number\`).
+2. The compiler automatically inserts type casts in calling code.
+3. In the final \`.class\` bytecode, generic type arguments do NOT exist at runtime!
+
+*Consequence*: You cannot do \`new T()\`, \`new T[10]\`, or \`instanceof List<String>\` at runtime because type arguments are erased!`,
+        keyIdea: 'Type erasure strips generic type parameters during compilation, replacing them with bounds and casts for backward compatibility.',
+        diagramState: 'recap',
+      },
+    ],
+  },
 ];

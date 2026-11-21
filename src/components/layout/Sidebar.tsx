@@ -76,8 +76,8 @@ export function Sidebar({
         }`}
       >
         {/* Course Header */}
-        <div className="p-4 border-b border-cream-300 dark:border-charcoal-700 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-charcoal-700 dark:text-cream-300">
+        <div className="px-5 py-4 border-b border-cream-300 dark:border-charcoal-700 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 text-xs font-mono font-semibold uppercase tracking-wider text-charcoal-700 dark:text-cream-300">
             <BookOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <span>Curriculum</span>
           </div>

@@ -53,10 +53,18 @@ export function LessonLayout() {
     onSearch: () => setSearchOpen(true),
   });
 
+  const currentLessonIndex = allLessons.findIndex((l) => l.slug === currentLesson.slug);
+  const nextLesson =
+    currentLessonIndex >= 0 && currentLessonIndex < allLessons.length - 1
+      ? allLessons[currentLessonIndex + 1]
+      : undefined;
+
   const nextStepTitle =
     currentStepIndex < currentLesson.steps.length - 1
       ? currentLesson.steps[currentStepIndex + 1]?.title
-      : undefined;
+      : nextLesson
+      ? `${nextLesson.title} →`
+      : 'Finish Course';
 
   const handleNextWithProgress = () => {
     markStepComplete(currentLesson.slug, currentStepIndex);

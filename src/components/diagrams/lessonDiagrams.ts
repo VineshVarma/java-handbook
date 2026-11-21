@@ -167,10 +167,10 @@ export const lessonDiagrams: Record<string, DiagramConfig> = {
   'memory-and-gc': {
     nodes: [
       { id: 'stack', label: 'Thread Stack', sublabel: 'Local references', type: 'memory', x: 120, y: 220, color: '#4E8752' },
-      { id: 'eden', label: 'Eden Space', sublabel: 'New allocations', type: 'memory', x: 300, y: 150, color: '#42A5F5' },
-      { id: 'survivor', label: 'Survivor S0/S1', sublabel: 'Surviving objects', type: 'memory', x: 300, y: 290, color: '#26A69A' },
-      { id: 'oldgen', label: 'Tenured / Old Gen', sublabel: 'Long-lived objects', type: 'memory', x: 500, y: 220, color: '#AB47BC' },
-      { id: 'gc', label: 'G1 Garbage Collector', sublabel: 'Concurrent Mark & Sweep', type: 'server', x: 680, y: 220, color: '#D14D41' },
+      { id: 'eden', label: 'Eden Space', sublabel: 'New allocations', type: 'memory', x: 310, y: 130, color: '#42A5F5' },
+      { id: 'survivor', label: 'Survivor S0/S1', sublabel: 'Surviving objects', type: 'memory', x: 310, y: 310, color: '#26A69A' },
+      { id: 'oldgen', label: 'Tenured / Old Gen', sublabel: 'Long-lived objects', type: 'memory', x: 510, y: 220, color: '#AB47BC' },
+      { id: 'gc', label: 'G1 Garbage Collector', sublabel: 'Concurrent Mark & Sweep', type: 'server', x: 690, y: 220, color: '#D14D41' },
     ],
     edges: [
       { id: 'e1', from: 'stack', to: 'eden', label: 'ref points to new', animated: true, color: '#4E8752' },
