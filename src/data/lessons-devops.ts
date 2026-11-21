@@ -264,4 +264,141 @@ index=insurance_prod correlation_id="8f9b2a-pol-9921"
       },
     ],
   },
+  {
+    id: 'offheap-ffm-api',
+    slug: 'offheap-ffm-api',
+    title: 'Off-Heap Memory & Modern FFM API',
+    subtitle: 'Direct ByteBuffer vs Java 22+ Project Panama: Arena lifetimes, MemorySegment, and Linux RSS vs JVM Heap OOM.',
+    moduleId: '07',
+    moduleTitle: '07. DevOps & Performance',
+    duration: '15 min',
+    difficulty: 'Advanced',
+    youllLearn: [
+      'Why Kubernetes OOMKills JVM pods even when Heap usage is under 40%',
+      'Legacy DirectByteBuffer pitfalls: sun.misc.Unsafe, PhantomReference, and GC-dependent cleaner leaks',
+      'Java 22+ Foreign Function & Memory (FFM) API: Arena, MemorySegment, and deterministic scoped frees',
+      'Native Memory Tracking (NMT): isolating off-heap allocations, Metaspace, and C-runtime malloc',
+      'Zero-copy networking and native C-library interop without brittle JNI headers',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'The Silent Killer: Linux RSS vs JVM Heap',
+        subtitle: 'Why your container gets killed when Java heap graphs look completely healthy',
+        type: 'problem',
+        productionSymptom: 'A container with -Xmx2g was killed by Kubernetes with OOMKilled (Exit Code 137) at the 4GB cgroup limit. JVM dashboards showed Heap usage was under 1.4GB! Why did Linux terminate the process when the JVM heap appeared completely healthy?',
+        content: `In production cloud environments, developers configure \`-Xmx2g\` on a container provisioned with 3GB of RAM and assume they have a safe 1GB buffer. Suddenly, Kubernetes terminates the pod with **OOMKilled (Exit Code 137)**.
+        
+The JVM process Resident Set Size (RSS) consists of much more than Java Heap:
+- **Java Heap**: Managed by GC (\`-Xmx\`).
+- **Metaspace & Class Data**: Loaded bytecode and reflection metadata.
+- **Thread Stacks**: 1MB per OS platform thread (\`-Xss1m\`).
+- **JIT Code Cache**: Compiled native x86/ARM machine code.
+- **Off-Heap Direct Buffers & Native C Libraries**: Memory allocated outside the garbage-collected heap via \`malloc\` or \`mmap\`. When off-heap buffers leak, JVM GC cannot collect them until a full GC is forced!`,
+        keyIdea: 'Kubernetes enforces memory limits on Linux process Resident Set Size (RSS), not JVM Heap. Off-heap native memory leaks cause instant cgroup termination.',
+        cliInspection: {
+          command: 'jcmd 1 VM.native_memory summary',
+          output: `1:
+Native Memory Tracking:
+
+Total: reserved=4821MB, committed=3954MB
+-                 Java Heap (reserved=2048MB, committed=1450MB)
+-                    Class (reserved=1120MB, committed=180MB)
+-                   Thread (reserved=350MB, committed=350MB) (340 threads)
+-                     Code (reserved=250MB, committed=98MB)
+-                       GC (reserved=180MB, committed=180MB)
+-            Internal/Arena (reserved=873MB, committed=1696MB) <-- LEAK!`,
+          explanation: 'Native Memory Tracking (NMT) breaks down memory by category. Notice committed Internal/Arena native allocations exceeding 1.6GB outside the 1.45GB Java Heap.',
+        },
+        microCheck: {
+          question: 'If a JVM container has -Xmx4g and runs on an 8GB RAM host, what happens if application code allocates 5GB of off-heap memory via malloc/FFM?',
+          options: [
+            'Java throws java.lang.OutOfMemoryError: Java heap space immediately.',
+            'The JVM will run normally if physical host RAM is available, but Linux will OOMKill it if container cgroup limit is exceeded.',
+            'Garbage collection will automatically shrink the JVM heap to compensate for the native memory.',
+            'The off-heap memory is automatically swapped to disk by the JIT compiler.',
+          ],
+          answerIndex: 1,
+          explanation: 'Off-heap memory allocations bypass JVM heap tracking. As long as the operating system or container cgroup limit is not breached, allocations succeed; once breached, the Linux kernel terminates the process via SIGKILL.',
+        },
+        diagramState: 'offheap-vs-heap',
+      },
+      {
+        id: 'step-2',
+        title: 'Legacy ByteBuffer vs Java 22 FFM API',
+        subtitle: 'From risky sun.misc.Unsafe to type-safe, scoped deterministic Arenas',
+        type: 'concept',
+        content: `Historically, high-performance systems (Netty, Kafka, RocksDB, Cassandra) bypassed on-heap GC pauses by allocating direct off-heap memory using \`ByteBuffer.allocateDirect()\` or internal \`sun.misc.Unsafe.allocateMemory()\`.
+        
+However, legacy off-heap memory suffered from critical flaws:
+1. **Nondeterministic Deallocation**: A \`DirectByteBuffer\` holds a native pointer cleaned up only when its Java reference becomes unreachable and a background GC \`Cleaner\` thread runs.
+2. **Buffer Capacity Limitations**: Traditional \`ByteBuffer\` is indexed by a 32-bit signed integer, limiting individual buffers to 2GB.
+3. **Segmentation Faults**: Accessing deallocated native memory via \`Unsafe\` crashes the entire JVM process immediately.
+
+Java 22 finalized the **Foreign Function & Memory (FFM) API** (JEP 454) in package \`java.lang.foreign\`, introducing:
+- **\`MemorySegment\`**: A contiguous region of native memory with spatial bounds checking and 64-bit addressing.
+- **\`Arena\`**: Controls the deterministic lifetime of one or more memory segments. Closing the Arena frees all associated native memory immediately!`,
+        keyIdea: 'Java 22 FFM API replaces unpredictable GC Cleaners and dangerous Unsafe calls with deterministic, scoped Arenas and bounds-checked MemorySegments.',
+        codeExample: {
+          title: 'ModernOffHeapFFM.java',
+          code: `import java.lang.foreign.*;
+import java.lang.invoke.VarHandle;
+
+public class NativeBufferPipeline {
+    public static void main(String[] args) {
+        // 1. Confined Arena guarantees deterministic native cleanup on close
+        try (Arena arena = Arena.ofConfined()) {
+            long elementCount = 10_000_000L;
+            
+            // 2. Allocate 80MB of native off-heap memory outside the GC Heap
+            MemorySegment segment = arena.allocate(
+                ValueLayout.JAVA_LONG, elementCount
+            );
+            
+            // 3. Fast bounds-checked sequential write
+            for (long i = 0; i < elementCount; i++) {
+                segment.setAtIndex(ValueLayout.JAVA_LONG, i, i * 42L);
+            }
+            
+            System.out.println("Read native index 500: " + 
+                segment.getAtIndex(ValueLayout.JAVA_LONG, 500));
+        } // 4. Deterministic native memory free occurs HERE immediately!
+        // No waiting for GC, no Cleaner thread latency, zero memory leaks.
+    }
+}`,
+        },
+        diagramState: 'ffm-arena-lifecycle',
+      },
+      {
+        id: 'step-3',
+        title: 'Native Memory Tracking (NMT) in Production',
+        subtitle: 'Diagnosing off-heap leaks before container OOMKill occurs',
+        type: 'solution',
+        content: `To inspect native off-heap usage, enable HotSpot Native Memory Tracking at startup:
+\`-XX:NativeMemoryTracking=summary\` or \`-XX:NativeMemoryTracking=detail\`
+
+During continuous integration or production triage, capture a baseline and compare diffs over time:
+1. Baseline: \`jcmd <pid> VM.native_memory baseline\`
+2. Workload Run: Execute heavy batch or streaming operations.
+3. Diff: \`jcmd <pid> VM.native_memory detail.diff\`
+
+NMT outputs an exact delta (e.g. \`+420MB\`) attributed to specific allocation sites, isolating whether the leak stems from direct byte buffers, unclosed FFM arenas, third-party JNI C-libraries, or class metadata expansion.`,
+        keyIdea: 'Use jcmd VM.native_memory baseline and detail.diff to pinpoint off-heap native memory growth down to the exact call site.',
+        cliInspection: {
+          command: 'jcmd 1 VM.native_memory detail.diff',
+          output: `1:
+Native Memory Tracking:
+
+Total: reserved=5120MB (+299MB), committed=4320MB (+366MB)
+-                 Java Heap (reserved=2048MB, committed=1450MB) (no change)
+-                    Class (reserved=1120MB, committed=182MB (+2MB))
+-                   Thread (reserved=350MB, committed=350MB)
+-            Arena / OffHeap (reserved=920MB (+297MB), committed=1990MB (+294MB))
+             [0x00007f9a14000000 - 0x00007f9a26000000] malloc at NativeBufferPipeline.main`,
+          explanation: 'Notice how Java Heap has no change, while Arena/OffHeap jumped by +294MB committed directly from NativeBufferPipeline.main.',
+        },
+        diagramState: 'nmt-inspection',
+      },
+    ],
+  },
 ];

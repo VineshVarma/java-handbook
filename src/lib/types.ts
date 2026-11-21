@@ -7,6 +7,19 @@ export interface CodeExample {
   beforeCode?: string;
 }
 
+export interface CliInspection {
+  command: string;
+  output?: string;
+  explanation: string;
+}
+
+export interface MicroCheck {
+  question: string;
+  options: string[];
+  answerIndex: number;
+  explanation: string;
+}
+
 export interface LessonStep {
   id: string;
   title: string;
@@ -16,6 +29,9 @@ export interface LessonStep {
   keyIdea?: string;
   codeExample?: CodeExample;
   interviewTip?: string;
+  productionSymptom?: string;
+  cliInspection?: CliInspection;
+  microCheck?: MicroCheck;
   diagramState: string;
 }
 

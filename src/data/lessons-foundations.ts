@@ -29,6 +29,7 @@ Unlike compiled languages like C or Go that generate machine code targeted direc
 
 To achieve this hardware independence, your source code must first be translated into an intermediate representation known as **Java Bytecode**. Let's follow what happens the moment you compile.`,
         keyIdea: 'Java achieves platform independence by compiling source code to intermediate bytecode rather than direct CPU machine code.',
+        productionSymptom: 'Why did our payment microservice take 3.2 seconds to serve the first 100 requests right after deployment, but later processed 60,000 req/sec in 0.4ms? This is caused by the JIT compilation lifecycle: cold bytecode interpretation transitioning into Tier 4 C2 optimized native assembly.',
         codeExample: {
           title: 'PaymentProcessor.java',
           code: `package com.bank.payment;
@@ -80,6 +81,11 @@ public class com.bank.payment.PaymentProcessor {
 }`,
         },
         interviewTip: 'What is the Constant Pool in a .class file? It acts as a symbol table containing literal values (strings, ints), symbolic references to classes, interfaces, field names, and method descriptors.',
+        cliInspection: {
+          command: 'javap -c -v com.bank.payment.PaymentProcessor',
+          output: `0: ldc2_w        #7   // double 150.0d\n3: dstore_1\n4: dload_1\n5: invokestatic  #9   // Method processTransaction:(D)Z\n8: istore_3`,
+          explanation: 'Disassembles class constant pool and operand stack instructions. Note how dload_1 loads from the local variable array onto the operand stack, and invokestatic dispatches statically.',
+        },
         diagramState: 'compile-bytecode',
       },
       {
@@ -113,6 +119,16 @@ Class loading in Java strictly obeys the **Parent Delegation Model**. When a cla
 }`,
         },
         interviewTip: 'Why does String.class.getClassLoader() return null? Because the Bootstrap ClassLoader is written in native C/C++ inside the JVM, not Java code, so null denotes the native bootstrap root.',
+        microCheck: {
+          question: 'What happens if a developer creates a custom class named java.lang.String and puts it in the application classpath?',
+          options: [
+            'The custom String overrides the standard JDK String',
+            'The Parent Delegation Model asks Bootstrap ClassLoader first, which loads the genuine JDK String and ignores the duplicate',
+            'The JVM crashes immediately with a LinkageError at compile-time',
+          ],
+          answerIndex: 1,
+          explanation: 'Because ClassLoaders delegate to their parent first, the root Bootstrap ClassLoader always resolves java.lang.String from the JDK runtime modules, protecting core runtime security.',
+        },
         diagramState: 'classloader-load',
       },
       {
@@ -139,13 +155,21 @@ Once verified, the class undergoes **Preparation** (allocating static fields wit
         title: 'Execution Engine: Interpreter & JIT',
         subtitle: 'From slow line-by-line interpretation to lightning-fast native assembly',
         type: 'insight',
-        content: `The JVM Execution Engine uses a hybrid approach: **Tiered Compilation**.
+        content: `Modern HotSpot JVMs (Java 17–25+) execute code through a sophisticated pipeline called **Tiered Compilation (Levels 0–4)**:
 
-1. **Interpreter**: Starts executing bytecode immediately line by line with zero compilation delay. This gives fast startup times.
-2. **JIT (Just-In-Time) Compiler**: As methods are invoked repeatedly, the JVM tracks execution counters. Once a method crosses a compile threshold (e.g., 10,000 invocations), it is designated **"Hot Code"**.
+- **Level 0 (Interpreter)**: Starts executing bytecode immediately line by line with zero compilation delay, gathering invocation and backedge profiling counters.
+- **Levels 1–3 (C1 Client Compiler)**: Compiles native code quickly. Level 1 produces simple native code; Level 2 adds basic profiling; Level 3 instruments full profiling counters (branch frequencies, type feedback).
+- **Level 4 (C2 Server Compiler / Graal)**: When a method crosses the hot threshold (~10,000 calls), C2 applies aggressive speculative optimizations: method inlining, loop unrolling, escape analysis, and SIMD vectorization.
 
-Hot code is compiled by **C1 (Client Compiler)** for quick optimizations, and later by **C2 (Server Compiler)** with aggressive profiling: loop unrolling, dead code elimination, and method inlining directly into machine CPU instructions.`,
-        keyIdea: 'Tiered JIT compilation dynamically compiles hot execution paths into optimized CPU instructions, allowing Java long-running server backends to match or exceed C++ performance.',
+Two critical runtime mechanics to master:
+1. **On-Stack Replacement (OSR)**: If a long loop runs inside the interpreter, HotSpot compiles the loop mid-execution and switches the running stack frame to native code without waiting for the method to exit!
+2. **Deoptimization (Uncommon Traps)**: If a speculative assumption breaks (e.g., a polymorphic call site suddenly receives a second subclass), C2 bails out at a safe point and falls back to the interpreter.`,
+        keyIdea: 'Tiered JIT compilation dynamically transitions code from Level 0 Interpreter through C1 to Level 4 C2 optimizations with OSR and graceful deoptimization.',
+        cliInspection: {
+          command: 'jcmd <pid> Compiler.codelist',
+          output: `124  4       com.bank.payment.PaymentProcessor::processTransaction (18 bytes)\n125  3       java.lang.String::equals (84 bytes)`,
+          explanation: 'Inspects active compiled native methods inside the JVM Code Cache, showing compilation tier (Level 3 vs Level 4 C2).',
+        },
         codeExample: {
           title: 'JVM Optimization Flags',
           code: `# Inspect Tiered Compilation and inlined methods:
@@ -688,6 +712,278 @@ try (Connection conn = dataSource.getConnection();
 - Pair custom exceptions with Spring’s **\`@RestControllerAdvice\`** and \`@ExceptionHandler\` to serialize exceptions into RFC 7807 standard error payloads automatically!`,
         keyIdea: 'Domain-specific runtime exceptions provide clear telemetry and integrate seamlessly with global Spring exception handlers.',
         diagramState: 'recap',
+      },
+    ],
+  },
+  {
+    id: 'object-headers-lilliput',
+    slug: 'object-headers-lilliput',
+    title: 'Object Headers, Compressed OOPs & TLAB',
+    subtitle: 'Inside the Heap: Mark Word, Klass Pointer, Compact Object Headers (Project Lilliput), and lock-free TLAB allocation.',
+    moduleId: '01',
+    moduleTitle: '01. Java Foundations',
+    duration: '14 min',
+    difficulty: 'Advanced',
+    youllLearn: [
+      'The exact 16-byte memory footprint of an empty new Object()',
+      'The 64-bit Mark Word: hash code, GC age bits, biased lock state, and lock pointers',
+      'How Compressed OOPs enable 32-bit pointers on 64-bit JVMs up to 32GB',
+      'Compact Object Headers (Project Lilliput) in Java 24/25+ saving 10-20% memory',
+      'TLAB (Thread-Local Allocation Buffer) lock-free bump-the-pointer allocation',
+      'Using JOL (Java Object Layout) to inspect memory byte alignment',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'The 16-Byte Mystery of new Object()',
+        subtitle: 'Why an object with zero fields still consumes 16 bytes on the Heap',
+        type: 'problem',
+        productionSymptom: 'A high-throughput cache holding 50 million small objects ran out of memory on a 16GB server even though data fields were only 4 bytes each! Why does Java add 12-16 bytes of invisible overhead to every single object?',
+        content: `In Java, you cannot allocate "just the fields". Every single object on the Heap is wrapped in an **Object Header**:
+
+1. **Mark Word (64 bits / 8 bytes)**: Stores runtime metadata:
+   - Identity Hash Code (computed lazily on first \`System.identityHashCode()\` call)
+   - GC Generational Age bits (4 bits: values 0 to 15 before promotion to Old Gen)
+   - Lock State bits (01: unlocked, 00: lightweight lock, 10: heavyweight monitor lock)
+2. **Klass Word (32 or 64 bits)**: A pointer back to the object's metadata in Metaspace (\`java.lang.Class\`).
+3. **8-Byte Alignment Padding**: The HotSpot JVM aligns all memory addresses to multiples of 8 bytes for efficient 64-bit CPU bus fetches. An empty object with 8B Mark Word + 4B Klass Word takes 12 bytes, padded to **16 bytes**.`,
+        keyIdea: 'Every Java object carries a mandatory header consisting of a 64-bit Mark Word and a Klass Pointer, padded to 8-byte boundaries.',
+        cliInspection: {
+          command: 'java -jar jol-cli.jar internals java.lang.Object',
+          output: `OFFSET  SIZE   TYPE DESCRIPTION                    VALUE\n      0     8        (object header: mark)          0x0000000000000001 (unlocked)\n      8     4        (object header: class)         0x00000ba0\n     12     4        (loss due to the next object alignment)\nInstance size: 16 bytes`,
+          explanation: 'JOL shows the 8-byte Mark Word, 4-byte compressed Klass Word, and 4 bytes of alignment padding, totaling 16 bytes.',
+        },
+        diagramState: 'object-layout',
+      },
+      {
+        id: 'step-2',
+        title: 'Compressed OOPs & The 32GB Heap Ceiling',
+        subtitle: 'How 32-bit pointers address up to 32GB of heap',
+        type: 'concept',
+        content: `On standard 64-bit CPUs, memory pointers take 8 bytes (64 bits). In a 10GB heap with millions of references, pointer overhead wastes gigabytes of memory.
+
+HotSpot solves this using **Compressed OOPs** (\`-XX:+UseCompressedOops\`):
+- Because all objects are aligned to 8-byte boundaries, the lowest 3 bits of every object address are always \`000\`.
+- The JVM shifts 32-bit pointers right by 3 bits when storing them, and shifts left by 3 bits when reading.
+- As a result, a 32-bit pointer can address $2^{32} \\times 8 \\text{ bytes} = \\mathbf{32\\text{ GB}}$ of heap!
+
+If you set \`-Xmx33g\`, the JVM is forced to disable Compressed OOPs and switch to 64-bit pointers, instantly consuming ~30% more memory! Setting your heap to 31GB often stores more objects than setting it to 33GB.`,
+        keyIdea: 'Compressed OOPs take advantage of 8-byte memory alignment to represent 64-bit addresses with 32-bit pointers up to 32GB.',
+        codeExample: {
+          title: 'CompressedOopsThreshold.sh',
+          code: `# Inspect compressed OOP status in HotSpot:\njava -XX:+PrintFlagsFinal -version | grep -i UseCompressedOops\n\n# Rule of thumb for senior engineers:\n# Never set -Xmx between 32GB and 40GB; 31GB is usually more effective!`,
+        },
+        interviewTip: 'Why is a 31GB heap often better than a 33GB heap? Crossing 32GB disables Compressed OOPs, causing every object reference to jump from 4 bytes to 8 bytes, which shrinks usable data capacity.',
+        diagramState: 'compressed-oops',
+      },
+      {
+        id: 'step-3',
+        title: 'Project Lilliput: Compact Object Headers',
+        subtitle: 'The modern Java 24/25+ revolution saving 10-20% heap memory',
+        type: 'solution',
+        content: `For 25+ years, 64-bit Java objects had a 128-bit header (64-bit Mark Word + 64-bit/32-bit Klass Pointer).
+
+**Project Lilliput (JEP 450)** revolutionizes object headers in modern Java:
+- It collapses the Klass Pointer directly into the **Mark Word**, reducing the entire Object Header to a single **64-bit word (8 bytes)**!
+- In future milestones, it will compress further to a **32-bit header (4 bytes)**.
+
+This single architectural change immediately reduces total heap footprint by **10% to 20%** across enterprise applications with zero code changes required!`,
+        keyIdea: 'Project Lilliput shrinks Java object headers from 16/12 bytes down to 8 bytes (and eventually 4 bytes), delivering massive free memory savings.',
+        codeExample: {
+          title: 'EnableCompactHeaders.sh',
+          code: `# Enable compact 64-bit headers in Java 24+:\njava -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -jar microservice.jar`,
+        },
+        microCheck: {
+          question: 'What is the primary benefit of Project Lilliput in modern Java runtimes?',
+          options: [
+            'It enables C++ style manual memory deallocation',
+            'It shrinks object headers from 12-16 bytes down to 8 bytes, saving 10-20% heap space across millions of objects',
+            'It disables garbage collection entirely for short-lived records',
+          ],
+          answerIndex: 1,
+          explanation: 'Lilliput shrinks the header by packing class pointer metadata directly into unused bits of the mark word, saving billions of bytes in dense object collections.',
+        },
+        diagramState: 'lilliput-headers',
+      },
+      {
+        id: 'step-4',
+        title: 'TLAB: Lock-Free Bump-The-Pointer Allocation',
+        subtitle: 'Why new in Java is as fast as C malloc without heap contention',
+        type: 'insight',
+        content: `If hundreds of concurrent threads all allocated memory from the same shared Heap, acquiring a global heap lock on every \`new\` would destroy multicore throughput.
+
+HotSpot solves this with **TLAB (Thread-Local Allocation Buffer)**:
+- Every thread is granted a private chunk of memory inside the **Eden Space** (~100KB to 1MB).
+- When a thread allocates an object, it advances a simple local pointer: \`top += size\`. This **Bump-the-Pointer** allocation requires zero locks, zero CAS operations, and executes in a couple of CPU instructions!
+- Only when a thread exhausts its private TLAB does it synchronize with the global heap to request a fresh TLAB.`,
+        keyIdea: 'TLAB gives each thread a private allocation buffer in Eden space, allowing lock-free bump-the-pointer allocations.',
+        cliInspection: {
+          command: 'jcmd <pid> VM.flags -all | grep -i TLAB',
+          output: `bool UseTLAB = true\nsize_t TLABSize = 0 (dynamically resized)\nintx TLABWasteTargetPercent = 1`,
+          explanation: 'TLAB is enabled by default in all production JVMs. The JVM dynamically tunes buffer sizes based on each thread\'s allocation rate.',
+        },
+        diagramState: 'tlab-allocation',
+      },
+    ],
+  },
+  {
+    id: 'escape-analysis',
+    slug: 'escape-analysis',
+    title: 'Escape Analysis & Scalar Replacement',
+    subtitle: 'Dispelling the myth that all objects live on the Heap: C2 scalar replacement and lock elision.',
+    moduleId: '01',
+    moduleTitle: '01. Java Foundations',
+    duration: '12 min',
+    difficulty: 'Advanced',
+    youllLearn: [
+      'The three escape states: GlobalEscape, ArgEscape, and NoEscape',
+      'How HotSpot C2 proves an object never escapes a method boundary',
+      'Scalar Replacement: decomposing objects into CPU registers and Stack slots',
+      'Lock Elision: removing synchronized monitor locks from thread-confined objects',
+      'Diagnosing escape analysis using JVM compiler flags',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'The Escape Analysis Myth',
+        subtitle: 'Do all Java objects really live on the Heap?',
+        type: 'problem',
+        productionSymptom: 'A junior engineer avoided creating small immutable Record objects in a high-frequency trading loop, fearing that 10,000,000 allocations per second would drown the Garbage Collector in Eden space. Yet in production, GC pauses were 0ms! How did the JVM eliminate allocations completely?',
+        content: `Junior developers often believe: *"In C++ you allocate on the stack, but in Java, every \`new\` creates an object on the Heap."*
+
+In modern Java, **this is false!**
+
+Through **Escape Analysis**, the HotSpot C2 compiler inspects the control-flow graph of your code to determine the scope of an object's reference. If an object never escapes outside the current method or thread, the JVM does NOT allocate it on the heap at all!`,
+        keyIdea: 'Escape analysis proves whether an object reference escapes its creating method, allowing the JIT to eliminate heap allocations entirely.',
+        codeExample: {
+          title: 'NonEscapingObject.java',
+          code: `public record Point(int x, int y) {}\n\npublic int calculateDistance() {\n    // This Point object is created, used, and discarded entirely within this method!\n    Point p = new Point(10, 20);\n    return p.x() + p.y();\n}`,
+        },
+        diagramState: 'escape-graph',
+      },
+      {
+        id: 'step-2',
+        title: 'The Three Escape States',
+        subtitle: 'GlobalEscape, ArgEscape, and NoEscape',
+        type: 'concept',
+        content: `During C2 intermediate representation analysis, every object allocation is classified into one of three escape states:
+
+1. **\`GlobalEscape\`**: The object escapes the method and thread (e.g. stored in a static field, returned from a method, or published to a queue). Must live on the Heap.
+2. **\`ArgEscape\`**: The object is passed as an argument to another method, but that method does not store or publish it. It cannot be scalar replaced, but its locks can be optimized.
+3. **\`NoEscape\`**: The object reference never leaves the executing method boundary! It is 100% thread-confined and temporary.`,
+        keyIdea: 'Only NoEscape objects qualify for scalar replacement, transforming heap objects into raw primitive registers.',
+        cliInspection: {
+          command: 'java -XX:+UnlockDiagnosticVMOptions -XX:+PrintEscapeAnalysis PointDemo',
+          output: `Point: NoEscape (eliminated)\nVector: ArgEscape\nCustomer: GlobalEscape (allocated on Heap)`,
+          explanation: 'Prints the exact escape state determination made by the C2 compiler for every allocation site.',
+        },
+        diagramState: 'escape-states',
+      },
+      {
+        id: 'step-3',
+        title: 'Scalar Replacement & Lock Elision',
+        subtitle: 'Decomposing objects into CPU registers with zero GC footprint',
+        type: 'solution',
+        content: `When an object is categorized as **\`NoEscape\`**, HotSpot applies two astonishing optimizations:
+
+1. **Scalar Replacement**:
+   The compiler dismantles the object into its individual scalar fields (primitives like \`int\`, \`double\`, or references).
+   Instead of allocating an object on the heap, fields are placed directly into **CPU Registers** or the **Local Stack Frame**!
+   No object header is created. No heap allocation occurs. Zero garbage is collected!
+
+2. **Lock Elision (Synchronization Elimination)**:
+   If code acquires a lock on a \`NoEscape\` object (e.g. using a legacy \`StringBuffer\` or \`Vector\` inside a local method), the JIT compiler completely deletes the \`monitorenter\` and \`monitorexit\` instructions!`,
+        keyIdea: 'Scalar replacement breaks objects into CPU registers, eliminating object headers and garbage collection pauses entirely.',
+        codeExample: {
+          title: 'ScalarReplacementEquivalent.java',
+          code: `// What you wrote:\npublic int compute() {\n    Point p = new Point(10, 20);\n    return p.x + p.y;\n}\n\n// What HotSpot C2 JIT actually compiles to machine code:\npublic int compute() {\n    int p_x = 10; // Placed directly in CPU register R1\n    int p_y = 20; // Placed directly in CPU register R2\n    return p_x + p_y; // Direct ADD instruction! No object!\n}`,
+        },
+        microCheck: {
+          question: 'What happens to a NoEscape object during Scalar Replacement?',
+          options: [
+            'It is serialized into off-heap direct memory',
+            'Its fields are decomposed directly into CPU registers or stack slots, and no heap object is ever created',
+            'It is moved immediately to the Tenured Old Generation',
+          ],
+          answerIndex: 1,
+          explanation: 'Scalar replacement dismantles the object into individual scalar primitives that live directly in hardware registers or stack frames, avoiding the heap entirely.',
+        },
+        diagramState: 'scalar-replacement',
+      },
+    ],
+  },
+  {
+    id: 'zgc-vs-g1',
+    slug: 'zgc-vs-g1',
+    title: 'Modern Garbage Collection: G1 vs Generational ZGC',
+    subtitle: 'Region evacuation STW pauses in G1GC vs colored pointers and load barriers in Generational ZGC (<1ms pauses).',
+    moduleId: '01',
+    moduleTitle: '01. Java Foundations',
+    duration: '15 min',
+    difficulty: 'Advanced',
+    youllLearn: [
+      'Why traditional Stop-The-World (STW) pauses occur during region evacuation',
+      'The architecture of G1GC: Eden, Survivor, Old Gen, and Humongous regions',
+      'ZGC core innovation: Colored Pointers embedding GC metadata into 64-bit addresses',
+      'How Load Barriers allow application threads to relocate objects concurrently',
+      'Generational ZGC (Java 21+) achieving sub-millisecond pauses across terabyte heaps',
+      'Real-world GC logging with -Xlog:gc* and jstat monitoring',
+    ],
+    steps: [
+      {
+        id: 'step-1',
+        title: 'The Stop-The-World Latency Barrier',
+        subtitle: 'Why trading systems and real-time APIs cannot tolerate 100ms GC pauses',
+        type: 'problem',
+        productionSymptom: 'During peak market open, an algorithmic order router experienced 80ms p99 latency spikes that triggered connection timeouts on client sockets. Investigation showed that G1GC was pausing all application threads to evacuate Survivor and Old regions.',
+        content: `Traditional garbage collectors (Parallel GC, CMS, and G1GC) rely on **Stop-The-World (STW)** phases:
+
+When the collector needs to move live objects from one memory region to another (evacuation/compacting), it pauses all application threads.
+Why? Because if an application thread reads or writes to an object while the GC is copying it to a new memory address, memory corruption or stale reads would occur!
+
+In G1GC, pause times are bounded (e.g. \`-XX:MaxGCPauseMillis=200\`), but under high allocation rates, pause times can still spike to 50–200ms. Enter **ZGC**.`,
+        keyIdea: 'Stop-The-World pauses occur because legacy collectors cannot safely let application threads access objects while they are being moved in memory.',
+        cliInspection: {
+          command: 'jstat -gcutil <pid> 1000',
+          output: `S0     S1     E      O      M     CCS    YGC     YGCT    FGC    FGCT     CGC    CGCT    GCT\n0.00  98.20  45.10  68.40  96.50  92.10   142    1.240     0    0.000     28    0.412   1.652`,
+          explanation: 'Monitors Eden (E), Old Gen (O), Young GC count/time (YGC/YGCT), and Full GC count (FGC). Shows where memory pressure builds.',
+        },
+        diagramState: 'stw-barrier',
+      },
+      {
+        id: 'step-2',
+        title: 'ZGC Innovation: Colored Pointers & Load Barriers',
+        subtitle: 'Moving objects concurrently while application threads continue running',
+        type: 'solution',
+        content: `**ZGC (Z Garbage Collector)** achieves max pause times of **under 1 millisecond** even on multi-terabyte heaps.
+
+It does this through two foundational mechanisms:
+
+1. **Colored Pointers**:
+   ZGC embeds 4 bits of metadata directly inside the unused upper bits of 64-bit object reference pointers:
+   - \`Finalizable\`: Object only reachable through finalizer
+   - \`Remapped\`: Object has already been relocated to its new address
+   - \`Marked0\` / \`Marked1\`: Marks live objects across concurrent mark phases
+
+2. **Load Barriers (Self-Healing Reads)**:
+   When your application thread reads an object reference (\`p.getName()\`), the JIT inserts an ultra-fast hardware check (the Load Barrier).
+   If the pointer's color indicates that the object is being relocated, the thread itself updates the reference to the new memory location on-the-fly and continues running!`,
+        keyIdea: 'ZGC uses Colored Pointers and self-healing Load Barriers to evacuate memory concurrently without stopping application threads.',
+        codeExample: {
+          title: 'EnableGenerationalZGC.sh',
+          code: `# Enable Generational ZGC in Java 21+:\njava -XX:+UseZGC -XX:+ZGenerational -Xmx16g -Xlog:gc*:file=gc.log:time,uptime -jar app.jar`,
+        },
+        microCheck: {
+          question: 'How does ZGC prevent Stop-The-World pauses when relocating objects in memory?',
+          options: [
+            'It never relocates objects, leaving memory permanently fragmented',
+            'It uses colored pointer bits and load barriers that self-heal references on-the-fly when application threads read them',
+            'It moves all objects to native off-heap storage using Project Panama',
+          ],
+          answerIndex: 1,
+          explanation: 'ZGC tests the reference color on read via JIT load barriers. If an object is moving, the load barrier self-heals the pointer to the forward address immediately.',
+        },
+        diagramState: 'colored-pointers',
       },
     ],
   },

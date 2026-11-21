@@ -11,12 +11,14 @@ import { LessonView } from '@/components/lesson/LessonView';
 import { StepContent } from '@/components/lesson/StepContent';
 import { SearchDialog } from '@/components/ui/SearchDialog';
 import { Toast } from '@/components/ui/Toast';
+import { Layers, BookOpen } from 'lucide-react';
 
 export function LessonLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<'diagram' | 'content'>('diagram');
 
   const {
     currentLesson,
@@ -76,7 +78,7 @@ export function LessonLayout() {
 
   return (
     <div className="h-screen max-h-screen w-screen overflow-hidden flex flex-col bg-cream-100 dark:bg-charcoal-950 text-charcoal-900 dark:text-cream-100 selection:bg-emerald-500/20">
-      {/* Top Navigation */}
+      {/* Top Navigation Bar */}
       <Header
         onSearchOpen={() => setSearchOpen(true)}
         onMenuToggle={() => setSidebarOpen((p) => !p)}
@@ -84,13 +86,16 @@ export function LessonLayout() {
         onShowToast={(msg) => setToastMessage(msg)}
       />
 
-      {/* Main 3-Column Studio Layout strictly fitting 100vh */}
+      {/* Main Studio Layout */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
-        {/* Column 1: Left Curriculum Sidebar */}
+        {/* Column 1: Left Curriculum Sidebar (Fixed / Slide-over on mobile) */}
         <Sidebar
           modules={modules}
           currentLessonSlug={currentLesson.slug}
-          onLessonSelect={(slug) => goToLesson(slug, 0)}
+          onLessonSelect={(slug) => {
+            goToLesson(slug, 0);
+            setSidebarOpen(false);
+          }}
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           isLessonComplete={(slug) => {
@@ -102,40 +107,105 @@ export function LessonLayout() {
         />
 
         {/* Content Area offset by sidebar on desktop */}
-        <main className="flex-1 lg:pl-72 flex flex-col xl:flex-row h-full min-h-0 overflow-hidden">
-          {/* Column 2: Center Interactive Simulation Stage */}
-          <section className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
-            <LessonView
-              lesson={currentLesson}
-              currentStepIndex={currentStepIndex}
-              onStepClick={(idx) => {
-                markStepComplete(currentLesson.slug, currentStepIndex);
-                goToStep(idx);
-              }}
-              isPlaying={isPlaying}
-              onTogglePlay={() => setIsPlaying((p) => !p)}
-              onReplay={() => {
-                setIsPlaying(false);
-                setTimeout(() => setIsPlaying(true), 100);
-              }}
-              completedStepIndices={completedStepsInCurrentLesson}
-            />
-          </section>
+        <main className="flex-1 lg:pl-72 flex flex-col h-full min-h-0 overflow-hidden relative">
+          {/* Mobile & Tablet Segmented View Switcher (Visible only below xl) */}
+          <div className="xl:hidden flex items-center justify-between px-3 py-2 bg-cream-200/90 dark:bg-charcoal-900 border-b border-cream-300 dark:border-charcoal-800 flex-shrink-0 z-20">
+            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-cream-300/60 dark:bg-charcoal-800 text-xs font-mono">
+              <button
+                onClick={() => setMobileTab('diagram')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                  mobileTab === 'diagram'
+                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                    : 'text-charcoal-700 dark:text-cream-300 hover:text-emerald-600'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Simulation</span>
+              </button>
+              <button
+                onClick={() => setMobileTab('content')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                  mobileTab === 'content'
+                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                    : 'text-charcoal-700 dark:text-cream-300 hover:text-emerald-600'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>Notes & Code</span>
+              </button>
+            </div>
 
-          {/* Column 3: Right Educational Reading Card */}
-          <aside className="w-full xl:w-[400px] 2xl:w-[440px] xl:flex-shrink-0 h-full min-h-0 flex flex-col overflow-hidden border-t xl:border-t-0 border-l border-cream-300 dark:border-charcoal-700 bg-cream-50/70 dark:bg-charcoal-900/60">
-            <StepContent
-              step={currentStep}
-              stepIndex={currentStepIndex}
-              totalSteps={currentLesson.steps.length}
-              onNext={handleNextWithProgress}
-              onPrev={prevStep}
-              hasNext={hasNext}
-              hasPrev={hasPrev}
-              nextStepTitle={nextStepTitle}
-              youllLearn={currentLesson.youllLearn}
-            />
-          </aside>
+            <div className="text-[11px] font-mono text-charcoal-600 dark:text-cream-400 font-semibold">
+              Step {currentStepIndex + 1}/{currentLesson.steps.length}
+            </div>
+          </div>
+
+          {/* Main 2-Pane Workspace: Side-by-Side on Desktop, Tabbed on Mobile */}
+          <div className="flex-1 min-h-0 flex flex-col xl:flex-row overflow-hidden">
+            {/* Column 2: Center Interactive Simulation Stage */}
+            <section
+              className={`${
+                mobileTab === 'diagram' ? 'flex' : 'hidden'
+              } xl:flex flex-1 h-full min-h-0 flex-col overflow-hidden relative`}
+            >
+              <LessonView
+                lesson={currentLesson}
+                currentStepIndex={currentStepIndex}
+                onStepClick={(idx) => {
+                  markStepComplete(currentLesson.slug, currentStepIndex);
+                  goToStep(idx);
+                }}
+                isPlaying={isPlaying}
+                onTogglePlay={() => setIsPlaying((p) => !p)}
+                onReplay={() => {
+                  setIsPlaying(false);
+                  setTimeout(() => setIsPlaying(true), 100);
+                }}
+                completedStepIndices={completedStepsInCurrentLesson}
+              />
+            </section>
+
+            {/* Column 3: Educational Reading Card */}
+            <aside
+              className={`${
+                mobileTab === 'content' ? 'flex' : 'hidden'
+              } xl:flex w-full xl:w-[420px] 2xl:w-[460px] xl:flex-shrink-0 h-full min-h-0 flex-col overflow-hidden border-t xl:border-t-0 border-l border-cream-300 dark:border-charcoal-700 bg-cream-50/70 dark:bg-charcoal-900/60`}
+            >
+              <StepContent
+                step={currentStep}
+                stepIndex={currentStepIndex}
+                totalSteps={currentLesson.steps.length}
+                onNext={handleNextWithProgress}
+                onPrev={prevStep}
+                hasNext={hasNext}
+                hasPrev={hasPrev}
+                nextStepTitle={nextStepTitle}
+                youllLearn={currentLesson.youllLearn}
+              />
+            </aside>
+          </div>
+
+          {/* Floating Mobile Peek Quick Toggle (Bottom-Right on mobile) */}
+          <div className="xl:hidden fixed bottom-16 right-4 z-30">
+            <button
+              onClick={() =>
+                setMobileTab((prev) => (prev === 'diagram' ? 'content' : 'diagram'))
+              }
+              className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-bold shadow-lg shadow-emerald-900/20 active:scale-95 transition-all border border-emerald-500/40"
+            >
+              {mobileTab === 'diagram' ? (
+                <>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Read Notes</span>
+                </>
+              ) : (
+                <>
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>View Diagram</span>
+                </>
+              )}
+            </button>
+          </div>
         </main>
       </div>
 

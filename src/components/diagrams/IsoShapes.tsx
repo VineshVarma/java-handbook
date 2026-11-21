@@ -27,6 +27,7 @@ export interface IsoBlockProps {
   badgeColor?: string;
   isActive?: boolean;
   isHighlighted?: boolean;
+  is2D?: boolean;
   icon?: 'server' | 'database' | 'client' | 'cpu' | 'shield' | 'gateway';
 }
 
@@ -46,9 +47,102 @@ export function IsoBlock({
   badgeColor = '#4E8752',
   isActive = true,
   isHighlighted = false,
+  is2D = false,
 }: IsoBlockProps) {
   const hw = w / 2;
   const hd = d / 2;
+
+  // Auto-fit badge width so words never overlap or spill outside pill
+  const badgeLen = badge?.length || 0;
+  const pillW = Math.max(56, badgeLen * 6.5 + 24);
+  const pillHalf = pillW / 2;
+  const dotX = -pillHalf + 9;
+
+  // 2D Flat Mode (High contrast, crisp mobile rendering)
+  if (is2D) {
+    return (
+      <g className="transition-all duration-300">
+        {/* Pulse highlight */}
+        {isHighlighted && (
+          <rect
+            x={cx - hw - 5}
+            y={cy - hd - 5}
+            width={w + 10}
+            height={d + 10}
+            rx="14"
+            fill="none"
+            stroke={badgeColor}
+            strokeWidth="2.5"
+            className="animate-pulse"
+          />
+        )}
+
+        {/* 2D Flat Card */}
+        <rect
+          x={cx - hw}
+          y={cy - hd}
+          width={w}
+          height={d}
+          rx="10"
+          fill={isActive ? topColor : '#22201D'}
+          stroke={isHighlighted ? badgeColor : strokeColor}
+          strokeWidth={isHighlighted ? '2' : '1.2'}
+        />
+
+        {/* Status Badge */}
+        {badge && (
+          <g transform={`translate(${cx}, ${cy - hd - 12})`}>
+            <rect
+              x={-pillHalf}
+              y="-9"
+              width={pillW}
+              height="18"
+              rx="9"
+              fill="rgba(18, 17, 16, 0.95)"
+              stroke={badgeColor}
+              strokeWidth="1.2"
+            />
+            <circle cx={dotX} cy="-0.5" r="2.5" fill={badgeColor} />
+            <text
+              x="4"
+              y="3.5"
+              textAnchor="middle"
+              fill="#FFFFFF"
+              className="text-[9px] font-mono font-bold select-none"
+            >
+              {badge}
+            </text>
+          </g>
+        )}
+
+        {/* Label */}
+        {label && (
+          <text
+            x={cx}
+            y={cy - (sublabel ? 3 : -3)}
+            textAnchor="middle"
+            fill="#FFFFFF"
+            className="text-[10px] font-mono font-bold select-none pointer-events-none"
+          >
+            {label}
+          </text>
+        )}
+
+        {/* Sublabel */}
+        {sublabel && (
+          <text
+            x={cx}
+            y={cy + 11}
+            textAnchor="middle"
+            fill="rgba(255, 255, 255, 0.75)"
+            className="text-[8.5px] font-sans font-medium select-none pointer-events-none"
+          >
+            {sublabel}
+          </text>
+        )}
+      </g>
+    );
+  }
 
   // Diamond Top Face (cx, cy - h)
   const topPoints = `
@@ -81,12 +175,6 @@ export function IsoBlock({
     ${cx},${cy + d + 12}
     ${cx - hw - 10},${cy + hd + 8}
   `;
-
-  // Auto-fit badge width so words never overlap or spill outside pill
-  const badgeLen = badge?.length || 0;
-  const pillW = Math.max(56, badgeLen * 6.5 + 24);
-  const pillHalf = pillW / 2;
-  const dotX = -pillHalf + 9;
 
   return (
     <g className="transition-all duration-300">
