@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-main: #F4F1EA;
+  --bg-card: #FCFAF7;
+  --bg-sidebar: #EBE6DC;
+  --border-color: #DCD5C9;
+  --text-primary: #1F2421;
+  --text-secondary: #5C635B;
+  --accent-green: #4E8752;
+  --accent-amber: #D9822B;
+  --accent-red: #D14D41;
+  --accent-blue: #4A90E2;
+}
+
+.dark {
+  --bg-main: #161513;
+  --bg-card: #22201D;
+  --bg-sidebar: #1A1916;
+  --border-color: #33302B;
+  --text-primary: #ECE8E1;
+  --text-secondary: #8C887E;
+  --accent-green: #6BB372;
+  --accent-amber: #F0A840;
+  --accent-red: #E06C60;
+  --accent-blue: #64B5F6;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Code Syntax Highlighting colors */
+.token-keyword {
+  color: #d73a49;
+  font-weight: 600;
+}
+.dark .token-keyword {
+  color: #ff7b72;
+}
+
+.token-type {
+  color: #005cc5;
+  font-weight: 600;
+}
+.dark .token-type {
+  color: #79c0ff;
+}
+
+.token-string {
+  color: #032f62;
+}
+.dark .token-string {
+  color: #a5d6ff;
+}
+
+.token-comment {
+  color: #6a737d;
+  font-style: italic;
+}
+.dark .token-comment {
+  color: #8b949e;
+}
+
+.token-annotation {
+  color: #b07d0f;
+  font-weight: 500;
+}
+.dark .token-annotation {
+  color: #e3b341;
+}
+
+.token-number {
+  color: #005cc5;
+}
+.dark .token-number {
+  color: #79c0ff;
+}
+
+.token-operator {
+  color: #d73a49;
+}
+.dark .token-operator {
+  color: #ff7b72;
+}
