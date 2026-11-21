@@ -32,7 +32,7 @@ At the root sits the **\`Iterable<T>\`** interface, which allows any collection 
 
 Notice that **\`Map<K, V>\`** does NOT implement the Collection interface because it operates on key-value pairs rather than standalone elements.`,
         keyIdea: 'List, Set, and Queue share the Collection interface; Map is an independent key-value mapping hierarchy.',
-        diagramState: 'default',
+        diagramState: 'hierarchy',
       },
       {
         id: 'step-2',
@@ -55,7 +55,7 @@ int expectedPolicies = 10_000;
 List<PolicyDTO> optimizedList = new ArrayList<>(expectedPolicies);`,
         },
         interviewTip: 'How does ArrayList grow when it reaches capacity? It creates a new array 1.5x larger (newCapacity = oldCapacity + (oldCapacity >> 1)) and copies elements via System.arraycopy().',
-        diagramState: 'default',
+        diagramState: 'arraylist-vs-linkedlist',
       },
       {
         id: 'step-3',
@@ -98,7 +98,7 @@ When you call \`map.put(key, value)\`:
 }`,
         },
         interviewTip: 'What happens if two objects return the same hashCode() but are not equal according to equals()? A hash collision occurs. Both objects are stored in the same bucket linked list (or Red-Black tree). The equals() method is then used during get() to identify the exact key.',
-        diagramState: 'default',
+        diagramState: 'hashmap-buckets-treeify',
       },
       {
         id: 'step-4',
@@ -112,7 +112,7 @@ When you call \`map.put(key, value)\`:
 - **CAS (Compare-And-Swap)**: On insertion, if a bucket node is empty, it uses hardware-level atomic CAS without locking.
 - **Bucket-Level Synchronized**: When collision occurs on a non-empty bucket, it locks only that individual bucket node (\`synchronized(node)\`), allowing other threads to simultaneously read and write to all other buckets!`,
         keyIdea: 'ConcurrentHashMap provides non-blocking volatile reads and fine-grained bucket-level synchronization for high-throughput concurrency.',
-        diagramState: 'recap',
+        diagramState: 'concurrenthashmap-cas',
       },
     ],
   },
