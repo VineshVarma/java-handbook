@@ -176,6 +176,7 @@ export function SearchDialog({
                         onClose();
                       }}
                       onMouseEnter={() => setSelectedIndex(index)}
+                      data-testid="search-result-item"
                       className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${
                         isSelected
                           ? 'bg-cream-200/90 dark:bg-charcoal-700 text-charcoal-900 dark:text-cream-100'
