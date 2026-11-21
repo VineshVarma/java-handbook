@@ -196,6 +196,7 @@ export function LessonLayout({
                 setMobileTab((prev) => (prev === 'diagram' ? 'content' : 'diagram'))
               }
               className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-bold shadow-lg shadow-emerald-900/20 active:scale-95 transition-all border border-emerald-500/40"
+              data-testid="mobile-toggle-tab"
             >
               {mobileTab === 'diagram' ? (
                 <>

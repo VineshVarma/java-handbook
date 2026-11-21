@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Java Internals - Core Platform & E2E Validation', () => {
 
-  test('1. Core Lesson Flow & Interactive Controls', async ({ page, context }) => {
+  test('1. Core Lesson Flow & Interactive Controls', async ({ page, context, isMobile }) => {
     // Monitor uncaught errors
     const errors: string[] = [];
     page.on('pageerror', (err) => errors.push(err.message));
@@ -17,35 +17,11 @@ test.describe('Java Internals - Core Platform & E2E Validation', () => {
     const h1 = page.locator('h1').first();
     await expect(h1).toBeVisible();
 
-    // Verify initial step (Step 1)
-    await expect(page.getByRole('heading', { name: /Hit Enter: Write Source Code/i })).toBeVisible();
-
-    // Test Next Step
-    const nextBtn = page.getByTestId('next-step-button');
-    await expect(nextBtn).toBeVisible();
-    await nextBtn.click();
-    await page.waitForTimeout(400);
-
-    // Verify step advanced (Step 2)
-    await expect(page.getByRole('heading', { name: /javac: Compile to Bytecode/i })).toBeVisible();
-
-    // Test Keyboard navigation (Right arrow -> Step 3)
-    await page.keyboard.press('ArrowRight');
-    await page.waitForTimeout(400);
-    await expect(page.getByRole('heading', { name: /Inside the \.class File: CAFEBABE/i })).toBeVisible();
-
-    // Test Back button
-    const prevBtn = page.getByTestId('prev-step-button');
-    await expect(prevBtn).toBeVisible();
-    await prevBtn.click();
-    await page.waitForTimeout(400);
-    await expect(page.getByRole('heading', { name: /javac: Compile to Bytecode/i })).toBeVisible();
-
-    // Test 2D / 3D view toggle
+    // 1. Test Diagram controls (2D/3D & Break It)
     const toggleViewBtn = page.getByTestId('toggle-view-mode');
     await expect(toggleViewBtn).toBeVisible();
     await toggleViewBtn.click();
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(200);
     await toggleViewBtn.click();
 
     // Test "Break It" runtime scenario menu
@@ -55,7 +31,40 @@ test.describe('Java Internals - Core Platform & E2E Validation', () => {
     const hotCallsOption = page.getByTestId('sim-scenario-hot-calls');
     await expect(hotCallsOption).toBeVisible();
     await hotCallsOption.click();
+    await page.waitForTimeout(300);
+
+    // If mobile, switch to content view to inspect step cards and stepper buttons
+    if (isMobile) {
+      const mobileTabToggle = page.getByTestId('mobile-toggle-tab');
+      if (await mobileTabToggle.isVisible()) {
+        await mobileTabToggle.click();
+        await page.waitForTimeout(300);
+      }
+    }
+
+    // Verify initial step (Step 1)
+    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+
+    // Test Next Step
+    const nextBtn = page.getByTestId('next-step-button');
+    await expect(nextBtn).toBeVisible();
+    await nextBtn.click();
     await page.waitForTimeout(400);
+
+    // Verify step advanced (Step 2)
+    await expect(page.getByRole('heading', { name: /javac Compiles/i })).toBeVisible();
+
+    // Test Keyboard navigation (Right arrow -> Step 3)
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(400);
+    await expect(page.getByRole('heading', { name: /ClassLoader Hierarchy/i })).toBeVisible();
+
+    // Test Back button
+    const prevBtn = page.getByTestId('prev-step-button');
+    await expect(prevBtn).toBeVisible();
+    await prevBtn.click();
+    await page.waitForTimeout(400);
+    await expect(page.getByRole('heading', { name: /javac Compiles/i })).toBeVisible();
 
     // Test Code Copy button (clean Java syntax, no line numbers)
     try {
@@ -135,8 +144,17 @@ test.describe('Java Internals - Core Platform & E2E Validation', () => {
     expect(robotsText).toContain('sitemap.xml');
   });
 
-  test('4. Progress Tracking & LocalStorage Persistence', async ({ page }) => {
+  test('4. Progress Tracking & LocalStorage Persistence', async ({ page, isMobile }) => {
     await page.goto('/lessons/how-java-runs');
+
+    // If mobile, switch to content view to reach the next step button
+    if (isMobile) {
+      const mobileTabToggle = page.getByTestId('mobile-toggle-tab');
+      if (await mobileTabToggle.isVisible()) {
+        await mobileTabToggle.click();
+        await page.waitForTimeout(300);
+      }
+    }
 
     // Complete steps by clicking next
     const nextBtn = page.getByTestId('next-step-button');
