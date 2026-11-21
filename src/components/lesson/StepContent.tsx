@@ -34,7 +34,7 @@ function renderFormattedContent(text: string) {
   const paragraphs = text.split('\n\n');
 
   return (
-    <div className="space-y-3.5 text-xs sm:text-[13px] leading-relaxed text-charcoal-800 dark:text-cream-200">
+    <div className="space-y-3 text-xs sm:text-[13px] leading-relaxed text-charcoal-800 dark:text-cream-200">
       {paragraphs.map((p, pIdx) => {
         const trimmed = p.trim();
         if (!trimmed) return null;
@@ -99,8 +99,9 @@ export function StepContent({
   youllLearn,
 }: StepContentProps) {
   return (
-    <div className="h-full flex flex-col justify-between overflow-y-auto p-4 sm:p-6 bg-cream-50/70 dark:bg-charcoal-900/60 border-l border-cream-300 dark:border-charcoal-700">
-      <div className="space-y-4">
+    <div className="h-full flex flex-col overflow-hidden bg-cream-50/70 dark:bg-charcoal-900/60">
+      {/* Scrollable Reading Content Body */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-4">
         {/* Step indicator header */}
         <div className="flex items-center justify-between">
           <span className="font-mono text-xs font-semibold uppercase tracking-wider text-charcoal-500 dark:text-cream-400">
@@ -113,7 +114,7 @@ export function StepContent({
 
         {/* Step Title & Subtitle */}
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-charcoal-900 dark:text-cream-100">
+          <h2 className="text-lg sm:text-xl font-bold font-mono tracking-tight text-charcoal-900 dark:text-cream-100">
             {step.title}
           </h2>
           {step.subtitle && (
@@ -146,7 +147,7 @@ export function StepContent({
 
         {/* "You'll Learn" checklist (shown on step 1) */}
         {stepIndex === 0 && youllLearn && youllLearn.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-cream-300 dark:border-charcoal-700">
+          <div className="mt-4 pt-4 border-t border-cream-300 dark:border-charcoal-700">
             <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-charcoal-700 dark:text-cream-300 mb-2.5">
               You'll Learn
             </h3>
@@ -165,8 +166,8 @@ export function StepContent({
         )}
       </div>
 
-      {/* Navigation & hotkeys footer */}
-      <div className="mt-8 pt-4 border-t border-cream-300 dark:border-charcoal-700 space-y-2.5">
+      {/* Pinned Bottom Navigation Action Bar */}
+      <div className="flex-shrink-0 p-3 sm:p-4 border-t border-cream-300 dark:border-charcoal-700 bg-cream-100/90 dark:bg-charcoal-900/90 backdrop-blur-xs space-y-2">
         <div className="flex items-center gap-2">
           <button
             onClick={onPrev}

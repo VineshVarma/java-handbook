@@ -75,7 +75,7 @@ export function LessonLayout() {
     progress.completedSteps[currentLesson.slug] || [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream-100 dark:bg-charcoal-950 text-charcoal-900 dark:text-cream-100 selection:bg-emerald-500/20">
+    <div className="h-screen max-h-screen w-screen overflow-hidden flex flex-col bg-cream-100 dark:bg-charcoal-950 text-charcoal-900 dark:text-cream-100 selection:bg-emerald-500/20">
       {/* Top Navigation */}
       <Header
         onSearchOpen={() => setSearchOpen(true)}
@@ -84,8 +84,8 @@ export function LessonLayout() {
         onShowToast={(msg) => setToastMessage(msg)}
       />
 
-      {/* Main 3-Column Studio Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main 3-Column Studio Layout strictly fitting 100vh */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Column 1: Left Curriculum Sidebar */}
         <Sidebar
           modules={modules}
@@ -102,9 +102,9 @@ export function LessonLayout() {
         />
 
         {/* Content Area offset by sidebar on desktop */}
-        <main className="flex-1 lg:pl-72 flex flex-col xl:flex-row overflow-hidden">
+        <main className="flex-1 lg:pl-72 flex flex-col xl:flex-row h-full min-h-0 overflow-hidden">
           {/* Column 2: Center Interactive Simulation Stage */}
-          <section className="flex-1 h-full min-h-[500px] xl:min-h-0 flex flex-col overflow-hidden">
+          <section className="flex-1 h-full min-h-0 flex flex-col overflow-hidden">
             <LessonView
               lesson={currentLesson}
               currentStepIndex={currentStepIndex}
@@ -123,7 +123,7 @@ export function LessonLayout() {
           </section>
 
           {/* Column 3: Right Educational Reading Card */}
-          <aside className="w-full xl:w-[440px] xl:flex-shrink-0 h-[600px] xl:h-full overflow-hidden border-t xl:border-t-0">
+          <aside className="w-full xl:w-[400px] 2xl:w-[440px] xl:flex-shrink-0 h-full min-h-0 flex flex-col overflow-hidden border-t xl:border-t-0 border-l border-cream-300 dark:border-charcoal-700 bg-cream-50/70 dark:bg-charcoal-900/60">
             <StepContent
               step={currentStep}
               stepIndex={currentStepIndex}
