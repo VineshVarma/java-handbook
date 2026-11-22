@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { allLessons } from '@/data/lessons';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://java-internals.vercel.app';
+  const baseUrl = 'https://java-handbook.vercel.app';
 
   const lessonEntries: MetadataRoute.Sitemap = allLessons.map((lesson) => ({
     url: `${baseUrl}/lessons/${lesson.slug}`,

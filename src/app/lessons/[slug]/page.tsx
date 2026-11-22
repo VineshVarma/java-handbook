@@ -17,24 +17,24 @@ export async function generateMetadata({
   const lesson = getLessonBySlug(params.slug);
   if (!lesson) {
     return {
-      title: 'Lesson Not Found | Java Internals',
-      description: 'The requested Java Internals lesson was not found.',
+      title: 'Lesson Not Found | Java Handbook',
+      description: 'The requested Java Handbook lesson was not found.',
     };
   }
 
   return {
-    title: `${lesson.title} | Java Internals`,
+    title: `${lesson.title} | Java Handbook`,
     description: lesson.subtitle,
     openGraph: {
-      title: `${lesson.title} | Java Internals`,
+      title: `${lesson.title} | Java Handbook`,
       description: lesson.subtitle,
-      url: `https://java-internals.vercel.app/lessons/${lesson.slug}`,
-      siteName: 'Java Internals',
+      url: `https://java-handbook.vercel.app/lessons/${lesson.slug}`,
+      siteName: 'Java Handbook',
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${lesson.title} | Java Internals`,
+      title: `${lesson.title} | Java Handbook`,
       description: lesson.subtitle,
     },
   };

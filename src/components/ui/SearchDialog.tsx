@@ -220,7 +220,7 @@ export function SearchDialog({
                 <span>ESC to close</span>
               </div>
               <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
-                Java Internals
+                Java Handbook
               </span>
             </div>
           </motion.div>

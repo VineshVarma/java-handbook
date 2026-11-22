@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const isProduction = process.env.PLAYWRIGHT_TEST_BASE_URL || process.env.USE_PROD;
-const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || (isProduction ? 'https://java-internals.vercel.app' : 'http://localhost:3000');
+const baseURL = process.env.PLAYWRIGHT_TEST_BASE_URL || (isProduction ? 'https://java-handbook.vercel.app' : 'http://localhost:3000');
 
 export default defineConfig({
   testDir: './tests',

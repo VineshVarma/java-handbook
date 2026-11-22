@@ -3,15 +3,15 @@ import { LessonLayout } from '@/components/layout/LessonLayout';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Java Internals · Interactive Java Concepts & Architecture',
+  title: 'Java Handbook · Interactive Architecture & JVM Guide',
   description:
-    'An interactive Java course: each concept is an animated diagram you step through — JVM, OOP, Concurrency, Spring Boot, Microservices, and Cloud Observability.',
+    'An interactive Java handbook: each concept is an animated diagram you step through — JVM, OOP, Concurrency, Spring Boot, Microservices, and Cloud Observability.',
   openGraph: {
-    title: 'Java Internals · Interactive Java Concepts & Architecture',
+    title: 'Java Handbook · Interactive Architecture & JVM Guide',
     description:
-      'An interactive Java course: each concept is an animated diagram you step through — JVM, OOP, Concurrency, Spring Boot, Microservices, and Cloud Observability.',
-    url: 'https://java-internals.vercel.app',
-    siteName: 'Java Internals',
+      'An interactive Java handbook: each concept is an animated diagram you step through — JVM, OOP, Concurrency, Spring Boot, Microservices, and Cloud Observability.',
+    url: 'https://java-handbook.vercel.app',
+    siteName: 'Java Handbook',
   },
 };
 
@@ -22,7 +22,7 @@ export default function HomePage() {
       <noscript>
         <div className="p-8 max-w-4xl mx-auto space-y-6 font-sans">
           <h1 className="text-3xl font-bold font-mono">
-            Java Internals — Interactive Java Concepts & Architecture
+            Java Handbook — Interactive Architecture & JVM Guide
           </h1>
           <p className="text-base text-gray-700">
             27 interactive deep-dive lessons covering JVM internal mechanics, memory models, garbage collection algorithms, modern concurrency, Spring Boot request lifecycles, and cloud observability.

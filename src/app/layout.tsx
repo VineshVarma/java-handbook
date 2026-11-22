@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 export const metadata: Metadata = {
-  title: 'Java Internals · Interactive Java Concepts',
+  title: 'Java Handbook · Interactive Architecture & JVM Guide',
   description:
-    'An interactive Java course: each concept is an animated diagram you step through — JVM, OOP, Concurrency, Spring Boot, Microservices, and Cloud Observability.',
+    'An interactive Java handbook: each concept is an animated diagram you step through — JVM, OOP, Concurrency, Spring Boot, Microservices, and Cloud Observability.',
 };
 
 export default function RootLayout({

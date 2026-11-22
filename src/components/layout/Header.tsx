@@ -39,9 +39,9 @@ export function Header({
           </div>
           <div className="flex flex-col">
             <span className="font-mono font-bold text-sm tracking-tight flex items-center gap-1.5">
-              Java Internals
+              Java Handbook
               <span className="text-[10px] uppercase px-1.5 py-0.2 font-sans font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                Course
+                Handbook
               </span>
             </span>
           </div>

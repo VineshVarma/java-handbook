@@ -85,7 +85,7 @@ export function useLesson(allLessons: Lesson[], initialLessonSlug?: string) {
       }
       const found = allLessons.find((l) => l.slug === slug);
       if (found) {
-        document.title = `${found.title} | Java Internals`;
+        document.title = `${found.title} | Java Handbook`;
       }
     }
   }, [allLessons]);
