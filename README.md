@@ -1,6 +1,8 @@
-# Java Internals
+# Java Handbook
 
-An interactive Java learning platform — each concept is an animated diagram you step through.
+An interactive visual handbook for mastering Java and JVM internals — step-by-step interactive diagrams, clear real-world analogies, and copy-pasteable snippets.
+
+Live at: [https://java-handbook.vercel.app](https://java-handbook.vercel.app)
 
 Built with Next.js, TypeScript, Tailwind CSS, and Framer Motion.
 
