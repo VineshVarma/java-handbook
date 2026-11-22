@@ -29,50 +29,206 @@ const typeBadgeVariants: Record<StepType, 'default' | 'success' | 'warning' | 'd
   recap: 'default',
 };
 
-// Simple Markdown parser for rich text formatting in paragraphs
+interface BlockItem {
+  text: string;
+  children?: BlockList[];
+}
+
+interface BlockList {
+  type: 'list';
+  ordered: boolean;
+  items: BlockItem[];
+}
+
+interface BlockParagraph {
+  type: 'p';
+  content: string;
+}
+
+type ContentBlock = BlockParagraph | BlockList;
+
+// Parses markdown into structured blocks: paragraphs, bullet lists (ul), and numbered lists (ol)
+function parseMarkdownBlocks(text: string): ContentBlock[] {
+  const lines = text.split('\n');
+  const blocks: ContentBlock[] = [];
+  let i = 0;
+  const n = lines.length;
+
+  while (i < n) {
+    const line = lines[i];
+    const stripped = line.trim();
+
+    if (!stripped) {
+      i++;
+      continue;
+    }
+
+    // Check if line begins a list item: `- `, `* `, or `1. `, `2. ` etc.
+    const listMatch = line.match(/^(\s*)([-*]|\d+\.)\s+(.*)$/);
+
+    if (listMatch) {
+      const indent = listMatch[1];
+      const marker = listMatch[2];
+      const isOrdered = marker.endsWith('.');
+      const listBlock: BlockList = {
+        type: 'list',
+        ordered: isOrdered,
+        items: [],
+      };
+
+      while (i < n) {
+        const currLine = lines[i];
+        const currStripped = currLine.trim();
+
+        if (!currStripped) {
+          // Look ahead: does the list continue across a blank line?
+          let peek = i + 1;
+          while (peek < n && !lines[peek].trim()) {
+            peek++;
+          }
+          if (peek < n) {
+            const nextMatch = lines[peek].match(/^(\s*)([-*]|\d+\.)\s+(.*)$/);
+            if (nextMatch) {
+              const nextIsOrdered = nextMatch[2].endsWith('.');
+              if (nextIsOrdered === isOrdered) {
+                i++;
+                continue;
+              }
+            }
+          }
+          break;
+        }
+
+        const currMatch = currLine.match(/^(\s*)([-*]|\d+\.)\s+(.*)$/);
+        if (currMatch) {
+          const cIndent = currMatch[1];
+          const cMarker = currMatch[2];
+          const cText = currMatch[3];
+          const cOrdered = cMarker.endsWith('.');
+
+          // Sub-item with deeper indentation -> nest under last item
+          if (cIndent.length > indent.length && listBlock.items.length > 0) {
+            const lastItem = listBlock.items[listBlock.items.length - 1];
+            if (!lastItem.children) {
+              lastItem.children = [];
+            }
+            let targetChildList = lastItem.children[lastItem.children.length - 1];
+            if (!targetChildList || targetChildList.ordered !== cOrdered) {
+              targetChildList = {
+                type: 'list',
+                ordered: cOrdered,
+                items: [],
+              };
+              lastItem.children.push(targetChildList);
+            }
+            targetChildList.items.push({ text: cText });
+            i++;
+            continue;
+          } else if (cOrdered === isOrdered) {
+            listBlock.items.push({ text: cText });
+            i++;
+            continue;
+          } else {
+            // Switched list type at root level
+            break;
+          }
+        } else {
+          // Indented continuation line for active list item
+          if (listBlock.items.length > 0 && currLine.search(/\S/) > indent.length) {
+            const lastItem = listBlock.items[listBlock.items.length - 1];
+            if (lastItem.children && lastItem.children.length > 0) {
+              const lastChildList = lastItem.children[lastItem.children.length - 1];
+              if (lastChildList.items.length > 0) {
+                lastChildList.items[lastChildList.items.length - 1].text += ' ' + currStripped;
+              } else {
+                lastItem.text += ' ' + currStripped;
+              }
+            } else {
+              lastItem.text += ' ' + currStripped;
+            }
+            i++;
+            continue;
+          } else {
+            break;
+          }
+        }
+      }
+
+      blocks.push(listBlock);
+    } else {
+      // Paragraph: collect lines until a list marker or blank line
+      const pLines: string[] = [stripped];
+      i++;
+      while (i < n) {
+        const nextLine = lines[i];
+        const nextStripped = nextLine.trim();
+        if (!nextStripped) break;
+        if (/^\s*([*+-]|\d+\.)\s+/.test(nextLine)) {
+          break;
+        }
+        pLines.push(nextStripped);
+        i++;
+      }
+      blocks.push({
+        type: 'p',
+        content: pLines.join(' '),
+      });
+    }
+  }
+
+  return blocks;
+}
+
+function renderList(list: BlockList, keyPrefix: string | number, isNested = false): React.ReactNode {
+  const ListTag = list.ordered ? 'ol' : 'ul';
+  const listClass = list.ordered
+    ? isNested
+      ? 'list-decimal pl-5 space-y-1 mt-1 text-charcoal-700 dark:text-cream-300'
+      : 'list-decimal pl-5 space-y-2 my-2.5'
+    : isNested
+      ? 'list-disc pl-5 space-y-1 mt-1 text-charcoal-700 dark:text-cream-300'
+      : 'list-disc pl-5 space-y-2 my-2.5';
+
+  return (
+    <ListTag key={keyPrefix} className={listClass}>
+      {list.items.map((it, idx) => (
+        <li key={idx} className="leading-relaxed">
+          <span>{formatInline(it.text)}</span>
+          {it.children && it.children.map((child, cIdx) => renderList(child, `${keyPrefix}-${idx}-${cIdx}`, true))}
+        </li>
+      ))}
+    </ListTag>
+  );
+}
+
+// Markdown parser for rich text formatting in educational steps
 function renderFormattedContent(text: string) {
-  const paragraphs = text.split('\n\n');
+  const blocks = parseMarkdownBlocks(text);
 
   return (
     <div className="space-y-3 text-xs sm:text-[13px] leading-relaxed text-charcoal-800 dark:text-cream-200">
-      {paragraphs.map((p, pIdx) => {
-        const trimmed = p.trim();
-        if (!trimmed) return null;
-
-        // Bullet point list check
-        if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          const items = trimmed.split('\n');
-          return (
-            <ul key={pIdx} className="list-disc pl-5 space-y-1.5 my-2">
-              {items.map((it, itIdx) => {
-                const cleanItem = it.replace(/^[-*]\s+/, '');
-                return <li key={itIdx}>{formatInline(cleanItem)}</li>;
-              })}
-            </ul>
-          );
+      {blocks.map((block, idx) => {
+        if (block.type === 'list') {
+          return renderList(block, idx);
         }
-
-        return <p key={pIdx}>{formatInline(trimmed)}</p>;
+        return (
+          <p key={idx} className="leading-relaxed">
+            {formatInline(block.content)}
+          </p>
+        );
       })}
     </div>
   );
 }
 
 function formatInline(str: string): React.ReactNode {
-  // Bold **text** and `code`
-  const parts = str.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  // Bold **text**, inline `code`, and italics *text*
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*(?:[^* \n]|(?<=\S)\*)[^*\n]*?(?:[^* \n]|(?<=\S)\*)\*)/g;
+  const parts = str.split(regex);
 
   return parts.map((part, idx) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return (
-        <strong
-          key={idx}
-          className="font-bold text-charcoal-950 dark:text-cream-50"
-        >
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
+    if (!part) return null;
+
     if (part.startsWith('`') && part.endsWith('`')) {
       return (
         <code
@@ -83,6 +239,33 @@ function formatInline(str: string): React.ReactNode {
         </code>
       );
     }
+
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const inner = part.slice(2, -2);
+      return (
+        <strong
+          key={idx}
+          className="font-bold text-charcoal-950 dark:text-cream-50"
+        >
+          {formatInline(inner)}
+        </strong>
+      );
+    }
+
+    if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
+      const inner = part.slice(1, -1);
+      if (!inner.startsWith(' ') && !inner.endsWith(' ')) {
+        return (
+          <em
+            key={idx}
+            className="italic text-charcoal-900 dark:text-cream-100"
+          >
+            {formatInline(inner)}
+          </em>
+        );
+      }
+    }
+
     return part;
   });
 }
