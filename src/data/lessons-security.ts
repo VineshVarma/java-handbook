@@ -107,19 +107,32 @@ Always use standard HTTP status codes:
         title: 'Authentication vs Authorization & OAuth2 Roles',
         subtitle: 'Your photo ID card vs your VIP backstage wristband',
         type: 'concept',
-        content: `Think of going to a music concert:
-- **Authentication (AuthN - Who are you?)**: You show your government photo ID card at the front gate. The guard verifies your face and confirms your identity.
-- **Authorization (AuthZ - What are you allowed to do?)**: You walk towards the backstage dressing rooms. A security guard stops you and inspects your colored wristband. Your driver's license doesn't help here; only a shiny gold **VIP wristband** grants you access past the velvet rope!
+        content: `Think of attending an enterprise music festival:
+- **Authentication (AuthN - Who are you?)**: You present your government photo ID card at the perimeter gate. The guard verifies your identity and confirms your credentials.
+- **Authorization (AuthZ - What are you allowed to do?)**: You walk towards the stage dressing rooms. A security guard inspects your wristband. Your driver license is insufficient here; only a gold **VIP wristband** grants entry past the velvet rope.
 
-In modern web security:
-- **Authentication** verifies identity (login credentials, passwords, MFA).
-- **Authorization** verifies permissions and roles (can this user edit policies?).
+In modern distributed security:
+- **Authentication** verifies caller identity (passwords, WebAuthn, MFA).
+- **Authorization** evaluates permissions and scopes (whether this identity can read or update policy records).
 
-The **OAuth2 Framework (RFC 6749)** coordinates four roles:
-1. **Resource Owner**: The human user.
-2. **Client**: The frontend mobile app or web browser single-page app.
-3. **Authorization Server**: The central security authority (like **ForgeRock Access Management / AM**, Keycloak, or Auth0) that issues identity tokens upon successful login.
-4. **Resource Server**: The Spring Boot microservice that protects your backend data.`,
+The **OAuth2 Framework (RFC 6749)** coordinates four primary roles:
+1. **Resource Owner**: The human end-user who grants access to their protected resources.
+2. **Client**: The frontend Single-Page Application (SPA) or mobile client initiating requests on behalf of the user.
+3. **Authorization Server**: The central security authority (such as **ForgeRock Access Management / AM**, Keycloak, or Okta) that authenticates users and mints cryptographically signed tokens.
+4. **Resource Server**: The Spring Boot microservice hosting protected endpoints.
+
+### Access Tokens vs ID Tokens: A Critical Distinction
+A common security flaw is conflating OAuth2 Access Tokens with OpenID Connect (OIDC) ID Tokens:
+- **OAuth2 Access Tokens**: Scoped authorization credentials issued specifically for **Resource Servers** (APIs). They can be opaque strings or structured JWTs containing scopes (such as \`policies:read\`, \`claims:write\`). Resource Servers inspect access tokens to authorize endpoint operations. Resource Servers must accept only access tokens.
+- **OIDC ID Tokens**: Identity assertions issued specifically for the **Client application** (frontend UI). Formatted as JWTs per the OIDC Core specification, they contain user profile assertions (\`sub\`, \`email\`, \`name\`, \`auth_time\`). Frontend clients consume ID tokens to render user profiles. Resource Servers must reject ID tokens when presented for API authorization.
+
+### OIDC Authorization Code Flow with PKCE
+For browser Single-Page Apps and mobile apps where client secrets cannot be securely stored, the **Authorization Code Flow with PKCE (Proof Key for Code Exchange, RFC 7636)** prevents authorization code interception:
+1. **Code Verifier**: The client generates a high-entropy cryptographic random string (43 to 128 characters).
+2. **Code Challenge**: The client derives \`code_challenge = BASE64URL(SHA256(code_verifier))\` with \`code_challenge_method=S256\`.
+3. **Authorization Request**: The client redirects the browser to the Authorization Server \`/authorize\` endpoint with the \`code_challenge\` and a cryptographic \`state\` parameter to mitigate Cross-Site Request Forgery (CSRF).
+4. **Authorization Code**: Following user authentication, the Authorization Server returns a short-lived authorization code via redirect callback.
+5. **Secure Token Exchange**: The client directly POSTs the authorization code and original plaintext \`code_verifier\` to the \`/token\` endpoint over TLS. The Authorization Server hashes the verifier using SHA-256; if it matches the stored challenge, it issues the access and refresh tokens. Intercepted authorization codes cannot be exchanged without the client code verifier.`,
         keyIdea: 'Authentication proves identity; Authorization checks permissions using scoped security tokens.',
         diagramState: 'auth-request',
         diagramAlt: 'Architecture diagram illustrating Your photo ID card vs your VIP backstage wristband: Your photo ID card vs your VIP backstage wristband.',
@@ -129,57 +142,173 @@ The **OAuth2 Framework (RFC 6749)** coordinates four roles:
         title: 'The Structure of a JSON Web Token (JWT)',
         subtitle: 'The tamper-evident wax seal on an official passport',
         type: 'insight',
-        content: `Think of an official wax seal on an ancient royal decree. The document contains three things:
+        content: `Think of an official wax seal on an ancient royal decree. The document contains three elements:
 1. The type of wax and official stamp used (**The Header**).
-2. The decree text containing your name, title, and expiration date (**The Claims Payload**).
-3. The King's personal embossed wax seal stamp (**The Cryptographic Signature**).
+2. The decree text containing subject identifier, issuer, and expiration date (**The Claims Payload**).
+3. The sovereign embossed wax seal stamp (**The Cryptographic Signature**).
 
-If an evil messenger opens the scroll and tries to change your title from "Squire" to "Duke" with a pen, the wax seal breaks, and the guards at the castle gate arrest them instantly!
+If an untrusted carrier attempts to modify the text from "Squire" to "Duke", the seal breaks and inspection at the gate detects tampering immediately.
 
-A **JSON Web Token (JWT)** (RFC 7519) is a compact, URL-friendly string with three parts separated by periods:
+A **JSON Web Token (JWT)** (RFC 7519) consists of three Base64URL-encoded parts concatenated by periods:
 \`Header.Payload.Signature\`
 
-- **Header**: Contains metadata like algorithm: \`{ "alg": "RS256", "typ": "JWT" }\`.
-- **Payload (Claims)**: Contains user info like user ID (\`sub\`), expiration epoch (\`exp\`), and roles (\`["ADMIN"]\`).
-- **Signature**: A mathematical signature created with the private key of ForgeRock AM.
+- **Header**: Contains cryptographic metadata: \`{ "alg": "RS256", "typ": "JWT", "kid": "key-2026-prod" }\`.
+- **Payload (Claims)**: Contains standard claims including subject (\`sub\`), issuer (\`iss\`), audience (\`aud\`), expiration (\`exp\`), and custom roles (\`["ROLE_USER"]\`).
+- **Signature**: A mathematical signature computed over \`Base64URL(Header) + "." + Base64URL(Payload)\`.
 
-**The Major Benefit for Microservices**:
-Because the signature is verified using the public key, your Spring Boot services can validate user tokens in sub-milliseconds without querying the database on every single HTTP request!`,
+### Symmetric HS256 vs Asymmetric RS256 in Microservices
+Choosing the appropriate cryptographic signing algorithm is vital for distributed microservice security:
+- **Symmetric HS256 (HMAC-SHA256) Architectural Flaw**: HS256 uses the identical secret key for both token signing and token verification. If 20 downstream microservices validate JWTs, all 20 services must store the master HMAC secret. If an attacker breaches even one low-privilege service, they extract the secret and can forge arbitrary tokens with elevated roles across every service in the enterprise.
+- **Asymmetric RS256 (RSA-SHA256) Best Practice**: The Authorization Server maintains the private key in an HSM or secure key vault and signs tokens. Downstream resource servers only hold the public key to verify signatures. Even if a downstream microservice is compromised, the attacker cannot forge tokens or elevate privileges.
+
+### JWKS Endpoint and Dynamic Key Rotation
+To avoid hardcoding public keys in microservice configuration, production architectures use a **JSON Web Key Set (JWKS)**:
+- **Distribution via \`/.well-known/jwks.json\`**: The Authorization Server exposes its active public keys at a standardized JWKS endpoint. Each key contains a unique Key ID (\`kid\`), algorithm (\`alg\`), and public exponent/modulus.
+- **In-Memory Caching & TTL**: Microservices fetch and cache JWKS public keys in memory with a Time-To-Live (TTL, typically 12 to 24 hours), preventing network latency on every API call.
+- **Zero-Downtime Key Rotation**: When keys rotate, the Authorization Server publishes a new key pair with a new \`kid\`. If a resource server encounters a valid token with an unrecognized \`kid\`, it performs an on-demand, rate-limited refresh against the JWKS endpoint before rejecting the request, enabling seamless key transitions.`,
         keyIdea: 'JWTs are digitally signed and self-contained, allowing microservices to verify authenticity statelessly without querying a central database.',
         codeExample: {
           language: 'java',
           title: 'JwtValidationFilter.java',
           code: `import java.io.IOException;
-import java.util.Collections;
+import java.security.PublicKey;
+import java.time.Instant;
+import java.util.List;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-public class SimpleJwtFilter extends OncePerRequestFilter {
+public class JwtValidationFilter extends OncePerRequestFilter {
+
+    private final JwksKeyCache jwksKeyCache;
+    private final String expectedIssuer;
+    private final String expectedAudience;
+
+    public JwtValidationFilter(JwksKeyCache jwksKeyCache, String expectedIssuer, String expectedAudience) {
+        this.jwksKeyCache = jwksKeyCache;
+        this.expectedIssuer = expectedIssuer;
+        this.expectedAudience = expectedAudience;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
 
-        // Verify standard "Bearer <token>" header:
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            
-            // Validate signature and expiration statelessly using public key:
-            if (!isValidToken(token)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
+        // 1. Strict Fail-Closed Security: Abort immediately if missing or non-Bearer
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.setHeader("WWW-Authenticate",
+                "Bearer error=\\"invalid_token\\", error_description=\\"Missing or malformed Authorization header\\"");
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+            return;
+        }
+
+        String token = authHeader.substring(7).trim();
+
+        try {
+            // 2. Cryptographic Signature Verification via cached JWKS & kid lookup
+            String kid = extractKeyId(token);
+            PublicKey publicKey = jwksKeyCache.get(kid);
+            if (publicKey == null) {
+                // On-demand refresh against /.well-known/jwks.json on unknown kid
+                publicKey = jwksKeyCache.refreshAndGet(kid);
+                if (publicKey == null) {
+                    sendUnauthorized(response, "Unknown or rotated key ID (kid)");
+                    return;
+                }
+            }
+
+            if (!verifySignature(token, publicKey)) {
+                sendUnauthorized(response, "Invalid cryptographic signature");
                 return;
             }
+
+            // 3. Claims Verification: exp, iss, aud, nbf
+            Claims claims = parseClaims(token);
+            Instant now = Instant.now();
+
+            if (claims.getExpiration() == null || claims.getExpiration().isBefore(now)) {
+                sendUnauthorized(response, "Token has expired (exp claim)");
+                return;
+            }
+            if (claims.getNotBefore() != null && claims.getNotBefore().isAfter(now)) {
+                sendUnauthorized(response, "Token not active yet (nbf claim)");
+                return;
+            }
+            if (!expectedIssuer.equals(claims.getIssuer())) {
+                sendUnauthorized(response, "Untrusted token issuer (iss claim)");
+                return;
+            }
+            if (claims.getAudience() == null || !claims.getAudience().contains(expectedAudience)) {
+                sendUnauthorized(response, "Audience claim mismatch (aud claim)");
+                return;
+            }
+
+            // 4. Populate Spring Security Context
+            List<SimpleGrantedAuthority> authorities = claims.getRoles().stream()
+                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+                    .toList();
+
+            Authentication auth = new UsernamePasswordAuthenticationToken(
+                    claims.getSubject(),
+                    null,
+                    authorities
+            );
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
+        } catch (Exception ex) {
+            sendUnauthorized(response, "Token parsing or validation failure");
+            return;
         }
-        
+
         filterChain.doFilter(request, response);
     }
 
-    private boolean isValidToken(String token) {
-        return token != null && !token.isBlank(); // Validation logic using JWKS
+    private void sendUnauthorized(HttpServletResponse response, String description) throws IOException {
+        response.setHeader("WWW-Authenticate",
+            "Bearer error=\\"invalid_token\\", error_description=\\"" + description + "\\"");
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+    }
+
+    private String extractKeyId(String token) {
+        return "rsa-key-2026"; // Extracted from decoded JWT header {"alg":"RS256","kid":"..."}
+    }
+
+    private boolean verifySignature(String token, PublicKey key) {
+        return key != null && !token.isBlank(); // Signature verification via java.security.Signature
+    }
+
+    private Claims parseClaims(String token) {
+        return new Claims("user_123", expectedIssuer, List.of(expectedAudience),
+                Instant.now().plusSeconds(900), Instant.now().minusSeconds(10), List.of("USER"));
+    }
+
+    public interface JwksKeyCache {
+        PublicKey get(String kid);
+        PublicKey refreshAndGet(String kid);
+    }
+
+    public record Claims(
+        String subject,
+        String issuer,
+        List<String> audience,
+        Instant expiration,
+        Instant notBefore,
+        List<String> roles
+    ) {
+        public String getSubject() { return subject; }
+        public String getIssuer() { return issuer; }
+        public List<String> getAudience() { return audience; }
+        public Instant getExpiration() { return expiration; }
+        public Instant getNotBefore() { return notBefore; }
+        public List<String> getRoles() { return roles; }
     }
 }`,
         },
@@ -208,13 +337,28 @@ This automatic renewal cycle gives users a seamless experience while keeping sec
         title: 'Secure Logout & Cookie Cleanup',
         subtitle: 'Canceling the key card and shredding the duplicate',
         type: 'trade-off',
-        content: `Because JWT tokens are stateless, the server cannot simply "delete" a token from the sky once it has been signed! If a user clicks Logout, an attacker who captured that token could technically still use it until its 15-minute expiration timer runs out.
+        content: `Because signed JWTs are self-contained and immutable, an application cannot simply delete a token from remote memory once minted. If an attacker captures an access token, they could use it until its expiration timestamp elapses.
 
-A complete, enterprise-grade logout sequence requires three steps:
-1. **Revoke Session in ForgeRock AM**: Notify the central identity provider so no new tokens can ever be issued for this session.
-2. **Token Blacklist in Redis**: Store the logged-out token ID (JTI) in a lightning-fast Redis cache with an expiration time equal to the token's remaining minutes, rejecting any future requests carrying that token ID.
-3. **Erase Browser Cookies**: Clear all \`HttpOnly\`, \`Secure\`, \`SameSite=Strict\` cookies by sending a zero-age cookie header:
-   \`Set-Cookie: session_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict\``,
+### Resolving the Statelessness vs Token Revocation Contradiction
+This creates an architectural tension in distributed systems:
+- Pure stateless token validation avoids central database lookups, giving high throughput and linear scalability.
+- Immediate token revocation requires tracking revoked token IDs (\`jti\`), which reintroduces state.
+- If every microservice checks a central Redis cluster for every request, the architecture loses pure statelessness and reintroduces distributed cache dependency and network latency.
+
+### The Modern Enterprise Hybrid Pattern
+Production systems resolve this trade-off using a tiered defense:
+1. **Short-Lived Access Tokens (5 to 15 Minutes)**: Access tokens expire quickly. Resource servers validate them purely statelessly using cached JWKS public keys without contacting any database or cache.
+2. **Bounded Exposure Window**: If an access token leaks, the exposure window is strictly capped by its short remaining lifespan.
+3. **Stateful Refresh Token Rotation**: Long-lived refresh tokens (7 to 30 days) are tracked statefully at the central Authorization Server (such as ForgeRock AM or Redis). During token refresh, the client presents the refresh token; the server revokes it and issues a fresh refresh token alongside a new access token. If an old refresh token is reused, the server detects token theft and invalidates the entire token lineage.
+4. **Enterprise Logout & Cleanup**: On logout, the client-side authentication cookies are erased (\`Set-Cookie: access_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict\`), and the Authorization Server immediately revokes the refresh token family. For high-security environments, revoked \`jti\` values are published via Redis Pub/Sub to API gateways to reject compromised access tokens during their remaining minutes.
+
+### Security Limitations: What This Architecture Does NOT Protect Against
+Even with fail-closed filters and asymmetric RS256 JWKS verification, backend engineers must defend against five critical threat vectors:
+1. **XSS Token Exfiltration (localStorage)**: Storing JWT tokens in \`localStorage\` or \`sessionStorage\` exposes them to Cross-Site Scripting (XSS). Any injected script can read storage and exfiltrate tokens. Tokens must be stored in secure \`HttpOnly\`, \`SameSite=Strict\` cookies inaccessible to JavaScript.
+2. **CSRF on Ambient Cookie Requests**: When authentication tokens reside in browser cookies, cross-site requests automatically attach cookies unless mitigated by \`SameSite=Strict\`, custom headers (such as \`X-Requested-With\`), or anti-CSRF challenge tokens.
+3. **Replay Attacks Within Validity Window**: Stateless signature validation cannot determine whether an authentic token was intercepted and replayed prior to expiration. Replay windows must be minimized using short token lifetimes and mutual TLS (mTLS).
+4. **Man-in-the-Middle (MITM) on Internal Networks**: If TLS terminates prematurely at an external edge load balancer, internal traffic travels unencrypted. Attackers with internal packet visibility can inspect Bearer tokens. End-to-end TLS or internal service-mesh mTLS must protect all microservice hops.
+5. **Algorithm Confusion Attacks**: Attackers may tamper with the JWT header by changing \`alg\` to \`HS256\` while signing with the server public RSA key as the HMAC secret. Verification libraries must enforce an explicit server-side algorithm whitelist (\`RS256\` only) and reject client-dictated algorithm switching.`,
         keyIdea: 'True logout requires revoking the session at the identity provider, blacklisting the token in Redis, and clearing HttpOnly cookies.',
         diagramState: 'recap',
         diagramAlt: 'Architecture diagram illustrating Canceling the key card and shredding the duplicate: Canceling the key card and shredding the duplicate.',

@@ -15,7 +15,7 @@ const SNIPPETS_DIR = path.join(ROOT_DIR, '.snippets');
 const MANIFEST_PATH = path.join(SNIPPETS_DIR, 'manifest.json');
 const STUBS_SRC = path.join(SNIPPETS_DIR, 'stubs-src');
 const STUBS_BIN = path.join(SNIPPETS_DIR, 'stubs-bin');
-const TEMP_DIR = path.join(SNIPPETS_DIR, 'temp');
+const TEMP_DIR = path.join(SNIPPETS_DIR, `temp-${process.pid}`);
 
 const isJson = process.argv.includes('--json');
 
@@ -47,6 +47,9 @@ function discoverJavac() {
 
 // 2. Synthesize & Compile Lightweight Stubs Catalog
 function prepareStubs(javacPath) {
+  if (fs.existsSync(STUBS_BIN) && fs.readdirSync(STUBS_BIN).length >= 20) {
+    return;
+  }
   if (fs.existsSync(STUBS_SRC)) fs.rmSync(STUBS_SRC, { recursive: true, force: true });
   if (fs.existsSync(STUBS_BIN)) fs.rmSync(STUBS_BIN, { recursive: true, force: true });
   fs.mkdirSync(STUBS_SRC, { recursive: true });
@@ -79,7 +82,7 @@ function prepareStubs(javacPath) {
     'javax/servlet/ServletException.java': 'package javax.servlet; public class ServletException extends Exception { public ServletException() {} public ServletException(String m) { super(m); } }',
     'javax/servlet/Filter.java': 'package javax.servlet; public interface Filter { default void init(Object c) throws ServletException {} void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws java.io.IOException, ServletException; default void destroy() {} }',
     'javax/servlet/http/HttpServletRequest.java': 'package javax.servlet.http; import javax.servlet.*; public interface HttpServletRequest extends ServletRequest { String getHeader(String name); }',
-    'javax/servlet/http/HttpServletResponse.java': 'package javax.servlet.http; import javax.servlet.*; public interface HttpServletResponse extends ServletResponse { int SC_UNAUTHORIZED = 401; void sendError(int sc, String msg) throws java.io.IOException; }',
+    'javax/servlet/http/HttpServletResponse.java': 'package javax.servlet.http; import javax.servlet.*; public interface HttpServletResponse extends ServletResponse { int SC_UNAUTHORIZED = 401; void sendError(int sc, String msg) throws java.io.IOException; void setHeader(String name, String value); }',
 
     // jakarta.servlet stubs
     'jakarta/servlet/ServletRequest.java': 'package jakarta.servlet; public interface ServletRequest {}',
@@ -88,7 +91,15 @@ function prepareStubs(javacPath) {
     'jakarta/servlet/ServletException.java': 'package jakarta.servlet; public class ServletException extends Exception { public ServletException() {} public ServletException(String m) { super(m); } }',
     'jakarta/servlet/Filter.java': 'package jakarta.servlet; public interface Filter { default void init(Object c) throws ServletException {} void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws java.io.IOException, ServletException; default void destroy() {} }',
     'jakarta/servlet/http/HttpServletRequest.java': 'package jakarta.servlet.http; import jakarta.servlet.*; public interface HttpServletRequest extends ServletRequest { String getHeader(String name); }',
-    'jakarta/servlet/http/HttpServletResponse.java': 'package jakarta.servlet.http; import jakarta.servlet.*; public interface HttpServletResponse extends ServletResponse { int SC_UNAUTHORIZED = 401; void sendError(int sc, String msg) throws java.io.IOException; }',
+    'jakarta/servlet/http/HttpServletResponse.java': 'package jakarta.servlet.http; import jakarta.servlet.*; public interface HttpServletResponse extends ServletResponse { int SC_UNAUTHORIZED = 401; void sendError(int sc, String msg) throws java.io.IOException; void setHeader(String name, String value); }',
+
+    // Spring Security
+    'org/springframework/security/core/GrantedAuthority.java': 'package org.springframework.security.core; import java.io.Serializable; public interface GrantedAuthority extends Serializable { String getAuthority(); }',
+    'org/springframework/security/core/authority/SimpleGrantedAuthority.java': 'package org.springframework.security.core.authority; import org.springframework.security.core.GrantedAuthority; public final class SimpleGrantedAuthority implements GrantedAuthority { private final String role; public SimpleGrantedAuthority(String role) { this.role = role; } public String getAuthority() { return role; } }',
+    'org/springframework/security/core/Authentication.java': 'package org.springframework.security.core; import java.io.Serializable; import java.security.Principal; import java.util.Collection; public interface Authentication extends Principal, Serializable { Collection<? extends GrantedAuthority> getAuthorities(); Object getCredentials(); Object getDetails(); Object getPrincipal(); boolean isAuthenticated(); void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException; }',
+    'org/springframework/security/authentication/UsernamePasswordAuthenticationToken.java': 'package org.springframework.security.authentication; import org.springframework.security.core.*; import java.util.Collection; public class UsernamePasswordAuthenticationToken implements Authentication { private final Object principal; private final Object credentials; private final Collection<? extends GrantedAuthority> authorities; public UsernamePasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) { this.principal = principal; this.credentials = credentials; this.authorities = authorities; } public String getName() { return String.valueOf(principal); } public Object getCredentials() { return credentials; } public Object getDetails() { return null; } public Object getPrincipal() { return principal; } public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; } public boolean isAuthenticated() { return true; } public void setAuthenticated(boolean b) {} }',
+    'org/springframework/security/core/context/SecurityContext.java': 'package org.springframework.security.core.context; import java.io.Serializable; import org.springframework.security.core.Authentication; public interface SecurityContext extends Serializable { Authentication getAuthentication(); void setAuthentication(Authentication authentication); }',
+    'org/springframework/security/core/context/SecurityContextHolder.java': 'package org.springframework.security.core.context; import org.springframework.security.core.Authentication; public class SecurityContextHolder { private static SecurityContext context = new SecurityContext() { private Authentication a; public Authentication getAuthentication() { return a; } public void setAuthentication(Authentication a) { this.a = a; } }; public static SecurityContext getContext() { return context; } public static void setContext(SecurityContext c) { context = c; } public static void clearContext() { context = null; } }',
 
     // Spring web & filter
     'org/springframework/web/filter/OncePerRequestFilter.java': 'package org.springframework.web.filter; import java.io.IOException; import jakarta.servlet.*; import jakarta.servlet.http.*; public abstract class OncePerRequestFilter implements Filter { public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException { doFilterInternal((HttpServletRequest)req, (HttpServletResponse)res, chain); } protected abstract void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException; }',
@@ -212,6 +223,10 @@ function compileAllJavaSnippets(javacPath) {
       });
     }
   }
+
+  try {
+    if (fs.existsSync(TEMP_DIR)) fs.rmSync(TEMP_DIR, { recursive: true, force: true });
+  } catch {}
 
   return { total: javaSnippets.length, passedCount, failedCount, results };
 }
