@@ -14,7 +14,7 @@ export const collectionsLessons: Lesson[] = [
       'The core hierarchy: Collection vs Map, List, Set, Queue',
       'ArrayList vs LinkedList performance and memory locality',
       'HashMap internals: buckets, hashing, load factor, and treeification (Red-Black trees)',
-      'ConcurrentHashMap: striping, CAS, and thread-safe concurrent reads',
+      'ConcurrentHashMap: lock-free reads, CAS insertion, and bin-level synchronization',
       'Choosing the optimal data structure for time and space complexity',
     ],
     steps: [
@@ -60,7 +60,7 @@ In modern enterprise Java on real multicore hardware, **this textbook advice is 
 
 **Why? CPU Cache Locality**:
 1. **ArrayList** wraps a single contiguous array (\`Object[]\`) in memory. When your CPU fetches one element, hardware automatically pulls a 64-byte chunk (a cache line) into ultra-fast L1/L2 CPU cache. Reading the next element takes ~1 nanosecond!
-2. **LinkedList** allocates an independent \`Node\` object for every single element, scattering pointers across the heap and triggering expensive CPU cache misses. Plus, each node burns 24 bytes of pointer overhead!`,
+2. **LinkedList** allocates an independent \`Node\` object for every single element, scattering pointers across the heap and triggering expensive CPU cache misses. On a 64-bit JVM with compressed OOPs, each \`Node\` consumes 24 bytes of heap memory (12-byte header + three 4-byte references for item, next, and prev) solely to wrap a single reference!`,
         keyIdea: 'ArrayList groups elements together in contiguous memory so CPU caches can prefetch them, outperforming node-based LinkedList in almost every real benchmark.',
         codeExample: {
           language: 'java',
@@ -98,7 +98,8 @@ public class ListCapacityOptimization {
 - When you hand your jacket to the clerk, they take your name, do a quick math calculation on your name to pick a number between 0 and 15, and hang your coat in that specific bin (**The Hash Function & Bucket Index**).
 - When you return with your claim ticket, they calculate that same number, walk straight to that single bin, and hand you your coat in 1 second flat! That is **$O(1)$ constant time lookup**.
 - What if two people with different names get assigned to the same bin? That is a **Hash Collision**. The clerk simply hangs the second coat on a hanger hooked to the first coat (a linked list).
-- **The Upgrade (Treeification)**: In Java 8+, when hash collisions in a single bucket reach \`TREEIFY_THRESHOLD = 8\` and total table capacity is at least \`MIN_TREEIFY_CAPACITY = 64\`, the JVM reorganizes that bin from a linked list into a balanced **Red-Black Tree**! This speeds up lookups from $O(n)$ to **$O(\\log n)$**. If the table has fewer than 64 buckets, it resizes instead of treeifying.`,
+- **Load Factor and Rehashing**: A HashMap starts with an initial capacity of 16 buckets and a default **load factor of 0.75**. When the number of stored entries exceeds the threshold ($\text{threshold} = \text{capacity} \times \text{loadFactor} = 16 \times 0.75 = 12$), the map automatically doubles its bucket count to 32 and rehashes all existing entries to maintain $O(1)$ average lookup time.
+- **The Upgrade (Treeification)**: In Java 8+, when hash collisions in a single bucket reach \`TREEIFY_THRESHOLD = 8\` and total table capacity is at least \`MIN_TREEIFY_CAPACITY = 64\`, the JVM reorganizes that bin from a linked list into a balanced **Red-Black Tree**! This speeds up lookups from $O(n)$ to **$O(\log n)$**. If the table has fewer than 64 buckets, it resizes instead of treeifying.`,
         keyIdea: 'HashMap uses bucket arrays for O(1) lookups, converting crowded buckets into balanced Red-Black trees when collisions exceed 8 items.',
         codeExample: {
           language: 'java',
@@ -139,21 +140,27 @@ public class CustomerKey {
       },
       {
         id: 'step-4',
-        title: 'ConcurrentHashMap Lock Striping CAS',
-        subtitle: 'A library with 16 separate study rooms instead of 1 padlocked door',
+        title: 'ConcurrentHashMap CAS and Bin-Locking',
+        subtitle: 'Locking individual storage bins instead of an entire warehouse',
         duration: '3 min',
         type: 'insight',
-        content: `Imagine a library where 100 students want to study. 
-- If the librarian puts a single padlock on the front entrance door (\`Collections.synchronizedMap\`), only one student can be inside at a time. The other 99 students must wait outside in the rain, destroying throughput.
-- But what if the library has 16 separate study rooms (\`ConcurrentHashMap\`)? Students can read books anywhere without asking for a key. If someone needs to write notes on the whiteboard in Room 4, only Room 4 is briefly locked, while all other 15 rooms remain completely open!
+        content: `Imagine a warehouse where 100 workers need to store and retrieve items:
+- If the manager places a single padlock on the warehouse entrance (\`Collections.synchronizedMap\`), only one worker can enter at a time. The other 99 workers wait in line, destroying throughput.
+- In legacy Java 7, \`ConcurrentHashMap\` used Segment Lock Striping (dividing the map into 16 coarse partitions).
+- In modern Java 8+, \`ConcurrentHashMap\` abandons coarse segment locks in favor of fine-grained **bin-level locking**:
+  1. **Lock-Free Reads**: The \`get()\` method reads memory directly using volatile references without acquiring any lock at all!
+  2. **Atomic CAS (Compare-And-Swap)**: When inserting into an empty bucket, the JVM uses hardware-level atomic CPU instructions (\`compareAndSet\`) without thread blocking.
+  3. **Bin-Level Synchronization**: If multiple threads write to the same non-empty bucket, the JVM locks only that specific bucket's head node (\`synchronized(firstNode)\`), leaving all other buckets open for concurrent access!
 
-**ConcurrentHashMap** achieves high-throughput concurrency through three techniques:
-1. **Lock-Free Reads**: The \`get()\` method reads memory directly using volatile variables without acquiring any lock at all!
-2. **Atomic CAS (Compare-And-Swap)**: When inserting a new item into an empty bucket, the JVM uses hardware-level atomic CPU instructions without thread locking.
-3. **Bucket-Level Synchronization**: If multiple threads write to the same non-empty bucket at the same time, the JVM locks only that single bucket node (\`synchronized(node)\`), letting other threads continue reading and writing to all other buckets simultaneously.`,
+**Choosing the Optimal Collection**:
+- Fast index access and cache-friendly iteration: Use **ArrayList**.
+- Key-value mappings with fast lookups: Use **HashMap** (or **ConcurrentHashMap** for multithreaded workloads).
+- Sorted or range-based key navigation: Use **TreeMap** ($O(\\log n)$ Red-Black tree).
+- Unique elements without key-value mapping: Use **HashSet** (backed by HashMap).
+- FIFO queue or LIFO stack operations: Use **ArrayDeque** (avoids the synchronization overhead of legacy \`Stack\` and the 24-byte node overhead of \`LinkedList\`).`,
         keyIdea: 'ConcurrentHashMap allows completely lock-free reads and locks only individual bucket nodes during writes, delivering massive concurrency.',
         diagramState: 'concurrenthashmap-cas',
-        diagramAlt: 'Architecture diagram illustrating A library with 16 separate study rooms instead of 1 padlocked door: A library with 16 separate study rooms instead of 1 padlocked door.',
+        diagramAlt: 'Architecture diagram illustrating Locking individual storage bins instead of an entire warehouse: Warehouse storage bins with fine-grained locking.',
       },
     ],
   },
@@ -565,10 +572,13 @@ To ensure 100% backward compatibility, Java uses a clever mechanism called **Typ
 1. While you are writing code in your IDE, the compiler strictly enforces your generic types (\`List<String>\`).
 2. But once the compiler verifies everything is safe, it **erases** the generic type information from the bytecode! In the final \`.class\` file, \`List<String>\` simply becomes a plain old raw \`List\`.
 3. The compiler automatically inserts synthetic bridge methods to preserve polymorphic overrides in parameterized subclasses.
-4. Developers must be careful with raw types and varargs arrays to avoid heap pollution, where a generic reference points to an incompatible object at runtime.
 
-**What This Means for Beginners**:
-Because generic types are erased at runtime, you cannot check generic types at runtime! Code like \`new T()\` or \`list instanceof List<String>\` will not compile, because by the time the code runs on the JVM, the specific type \`String\` has already been erased.`,
+**Reifiable vs Non-Reifiable Types**:
+- **Reifiable Types**: Types whose complete type information remains available at runtime without erasure, including primitive types (\`int\`, \`double\`), non-parameterized classes (\`String\`), raw types (\`List\`), and arrays of reifiable types (\`String[]\`).
+- **Non-Reifiable Types**: Types whose formal type arguments are erased at compile-time by type erasure (\`List<String>\`, \`Map<K, V>\`). Because type information is discarded, the JVM cannot verify generic parameters at runtime—preventing operations like \`new T()\`, \`new List<String>[10]\`, or \`obj instanceof List<String>\`.
+
+**Heap Pollution**:
+Heap pollution occurs when a variable of a parameterized type points to an object that is not of that type, typically caused by mixing legacy raw types or unsafe generic varargs (\`@SafeVarargs\`). While the initial assignment may only trigger an unchecked compiler warning, it produces a deferred \`ClassCastException\` at an unrelated read site when casting the erased element.`,
         keyIdea: 'Type erasure removes generic types after compilation, synthesizing bridge methods and avoiding heap pollution while maintaining backward compatibility.',
         diagramState: 'recap',
         diagramAlt: 'Architecture diagram illustrating Erasing the pencil guidelines from the blueprint: Erasing the pencil guidelines from the blueprint.',

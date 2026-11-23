@@ -214,11 +214,11 @@ test.describe('Java Handbook - Core Platform & E2E Validation', () => {
 
       const practiceTab = page.getByTestId('tab-practice');
       await expect(practiceTab).toBeVisible();
-      await practiceTab.click();
+      await expect(practiceTab).toBeDisabled();
 
       const cheatsheetTab = page.getByTestId('tab-cheatsheets');
       await expect(cheatsheetTab).toBeVisible();
-      await cheatsheetTab.click();
+      await expect(cheatsheetTab).toBeDisabled();
     }
   });
 

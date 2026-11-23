@@ -48,7 +48,10 @@ function discoverJavac() {
 // 2. Synthesize & Compile Lightweight Stubs Catalog
 function prepareStubs(javacPath) {
   if (fs.existsSync(STUBS_BIN) && fs.readdirSync(STUBS_BIN).length >= 20) {
-    return;
+    const pmSrc = path.join(STUBS_SRC, 'PaymentMethod.java');
+    if (fs.existsSync(pmSrc) && fs.readFileSync(pmSrc, 'utf8').includes('long amountInCents')) {
+      return;
+    }
   }
   if (fs.existsSync(STUBS_SRC)) fs.rmSync(STUBS_SRC, { recursive: true, force: true });
   if (fs.existsSync(STUBS_BIN)) fs.rmSync(STUBS_BIN, { recursive: true, force: true });
@@ -58,7 +61,7 @@ function prepareStubs(javacPath) {
   const stubs = {
     // Companion domain records and classes in default package
     'Order.java': 'public class Order { public Order(int id) {} public void process() {} }',
-    'PaymentMethod.java': 'public interface PaymentMethod { boolean processPayment(double amount); }',
+    'PaymentMethod.java': 'public interface PaymentMethod { boolean processPayment(long amountInCents); }',
     'UserSession.java': 'public class UserSession { public UserSession(String id, String token) {} public String getUserId() { return "user"; } }',
     'CustomerProfile.java': 'public class CustomerProfile {}',
     'CoverageRider.java': 'public class CoverageRider {}',

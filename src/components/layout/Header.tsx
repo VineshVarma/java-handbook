@@ -59,33 +59,27 @@ export function Header({
         </button>
 
         <button
-          onClick={() =>
-            onShowToast(
-              'Practice is coming soon — hands-on Java JVM tuning & concurrent coding challenges!'
-            )
-          }
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/80 dark:text-cream-300/80 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors opacity-75"
+          disabled
+          aria-disabled="true"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/50 dark:text-cream-300/50 cursor-not-allowed opacity-50 select-none transition-colors"
           data-testid="tab-practice"
         >
-          <Target className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
+          <Target className="w-3.5 h-3.5 text-charcoal-400 dark:text-cream-500" />
           <span>Practice</span>
-          <span className="text-[9px] font-mono uppercase px-1 py-0.2 rounded bg-cream-300 dark:bg-charcoal-700 text-charcoal-600 dark:text-cream-400">
+          <span className="text-[9px] font-mono uppercase px-1 py-0.2 rounded bg-cream-300/50 dark:bg-charcoal-700/50 text-charcoal-500 dark:text-cream-400">
             Soon
           </span>
         </button>
 
         <button
-          onClick={() =>
-            onShowToast(
-              'Cheatsheets are coming soon — quick reference cards for Collections, CompletableFuture, and GC flags!'
-            )
-          }
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/80 dark:text-cream-300/80 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors opacity-75"
+          disabled
+          aria-disabled="true"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/50 dark:text-cream-300/50 cursor-not-allowed opacity-50 select-none transition-colors"
           data-testid="tab-cheatsheets"
         >
-          <FileText className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
+          <FileText className="w-3.5 h-3.5 text-charcoal-400 dark:text-cream-500" />
           <span>Cheatsheets</span>
-          <span className="text-[9px] font-mono uppercase px-1 py-0.2 rounded bg-cream-300 dark:bg-charcoal-700 text-charcoal-600 dark:text-cream-400">
+          <span className="text-[9px] font-mono uppercase px-1 py-0.2 rounded bg-cream-300/50 dark:bg-charcoal-700/50 text-charcoal-500 dark:text-cream-400">
             Soon
           </span>
         </button>

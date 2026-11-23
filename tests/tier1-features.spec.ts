@@ -95,7 +95,7 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     await expect(h1).toContainText('Collections Framework Deep Dive');
   });
 
-  test('F1.4: Header tabs render cleanly and inactive tabs show toast notification', async ({ page }) => {
+  test('F1.4: Header tabs render cleanly and inactive tabs are disabled', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
 
     const learnTab = page.getByTestId('tab-learn');
@@ -103,22 +103,15 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
 
     const practiceTab = page.getByTestId('tab-practice');
     await expect(practiceTab).toBeVisible();
-    await practiceTab.click();
-
-    // Assert coming-soon toast appears
-    const toast = page.locator('div[role="status"], .fixed.bottom-8, .z-50').filter({
-      hasText: /Practice is coming soon/i,
-    });
-    await expect(toast).toBeVisible();
+    await expect(practiceTab).toBeDisabled();
 
     const cheatsheetTab = page.getByTestId('tab-cheatsheets');
     await expect(cheatsheetTab).toBeVisible();
-    await cheatsheetTab.click();
+    await expect(cheatsheetTab).toBeDisabled();
 
-    const toastCheatsheets = page.locator('div[role="status"], .fixed.bottom-8, .z-50').filter({
-      hasText: /Cheatsheets are coming soon/i,
-    });
-    await expect(toastCheatsheets).toBeVisible();
+    // Inactive tabs are disabled and do not trigger toast notifications
+    const toast = page.locator('div[role="status"], .fixed.bottom-8, .z-50');
+    await expect(toast).not.toBeVisible();
   });
 
   test('F1.5: Theme toggle alternates html element class between light and dark', async ({ page }) => {

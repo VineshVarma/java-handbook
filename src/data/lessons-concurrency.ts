@@ -80,7 +80,7 @@ The \`volatile\` keyword establishes formal happens-before relationships defined
    - Acquire barrier on volatile read: Subsequent ordinary reads and writes cannot be reordered before the volatile read.
    - Full barrier: A volatile write followed by a volatile read prevents reordering between them.
 
-**Crucial Warning**: \`volatile\` does **NOT** make \`count++\` thread-safe! \`count++\` involves 3 separate bytecode operations: read (\`getfield\` or \`iload\`), increment (\`iadd\`), and write (\`putfield\` or \`istore\`). If multiple threads execute this concurrently, increments are lost. For thread-safe atomic arithmetic, use \`AtomicInteger\` or \`AtomicLong\`.
+**Crucial Warning**: \`volatile\` does **NOT** make \`count++\` thread-safe! A field increment \`count++\` involves four separate bytecode instructions: read field (\`getfield\`), push constant 1 (\`iconst_1\`), add (\`iadd\`), and write back (\`putfield\`). If multiple threads execute this concurrently, increments are lost. For thread-safe atomic arithmetic, use \`AtomicInteger\` or \`AtomicLong\`.
 
 **Atomic variables and hardware Compare-And-Swap (CAS)**: Atomic variables (\`AtomicInteger\`, \`AtomicReference\`) provide lock-free thread safety using CPU Compare-And-Swap (CAS) instructions to update state without monitor locks.`,
         keyIdea: 'volatile establishes happens-before relationships using CPU memory barriers and cache coherence, but does not make compound operations atomic.',
@@ -114,7 +114,7 @@ The \`volatile\` keyword establishes formal happens-before relationships defined
     }
 }`,
         },
-        interviewTip: 'Is count++ thread-safe if count is declared volatile? No! count++ involves 3 separate bytecode operations: read (getfield or iload), increment (iadd), and write (putfield or istore). If multiple threads execute this concurrently, increments can be lost. Use AtomicInteger.incrementAndGet() instead.',
+        interviewTip: 'Is count++ thread-safe if count is declared volatile? No! A field increment count++ involves four separate bytecode instructions: read (getfield), push constant (iconst_1), add (iadd), and write back (putfield). If multiple threads execute this concurrently, increments can be lost. Use AtomicInteger.incrementAndGet() instead.',
         diagramState: 'running-state',
         diagramAlt: 'Architecture diagram illustrating VolatileFlagPattern.java: A private pocket notepad vs a central town square billboard.',
       },
@@ -187,7 +187,7 @@ The default \`ForkJoinPool.commonPool()\` is sized strictly to match your comput
 
 If you submit slow network HTTP calls or database queries to \`ForkJoinPool.commonPool()\`, all worker threads will quickly become frozen waiting for network sockets. Suddenly, your entire JVM is starved of threads, freezing other parts of your app!
 
-**Best Practice**: Pass a dedicated, sized ExecutorService when making external API calls.`,
+**Best Practice**: Pass a dedicated, sized custom Executor (ExecutorService) when making external API calls.`,
         keyIdea: 'Avoid using the default ForkJoinPool.commonPool() for blocking network or database calls; supply a dedicated thread pool sized for downstream latency.',
         codeExample: {
           language: 'java',
@@ -287,9 +287,11 @@ public class AsyncChainingExamples {
         type: 'solution',
         content: `Think of a flight comparison website like Skyscanner. When you search for flights, the website calls 5 different airlines at the same time:
 - It doesn't query them one after another (which would take 15 seconds). It fires all 5 requests in parallel using \`CompletableFuture.allOf()\`.
-- What if one airline's API is down or takes too long? The search engine doesn't crash your screen with a scary 500 error! It attaches a timeout rule (\`orTimeout()\`) and provides a fallback note saying "Airline C temporarily unavailable" using \`exceptionally()\`.
+- What if one airline's API is down or takes too long? The search engine doesn't crash your screen with a scary 500 error! Java 9+ provides two native timeout handlers:
+  1. \`orTimeout(timeout, unit)\`: Exceptionally completes the future with a \`TimeoutException\` if the operation exceeds the deadline, triggering downstream \`exceptionally()\` recovery.
+  2. \`completeOnTimeout(fallbackValue, timeout, unit)\`: Gracefully completes the future with a default fallback value if the deadline elapses, avoiding exception creation overhead!
 
-By combining parallel fan-out with timeouts and fallback error handlers, your microservices remain blazing fast and resilient to downstream outages!`,
+By combining parallel fan-out with timeouts (\`orTimeout\`, \`completeOnTimeout\`) and fallback error handlers, your microservices remain blazing fast and resilient to downstream outages!`,
         keyIdea: 'Use allOf() to query multiple downstream services in parallel, and attach exceptionally() or handle() to return cached fallbacks if one fails.',
         codeExample: {
           language: 'java',
@@ -305,9 +307,9 @@ public class ResilientOrchestration {
             .orTimeout(500, TimeUnit.MILLISECONDS)
             .exceptionally(ex -> "Policy service temporarily unavailable");
 
+        // completeOnTimeout gracefully returns a fallback value on timeout without throwing an exception
         CompletableFuture<String> billingF = CompletableFuture.supplyAsync(() -> "Balance: $0.00")
-            .orTimeout(500, TimeUnit.MILLISECONDS)
-            .exceptionally(ex -> "Billing cache fallback: Paid");
+            .completeOnTimeout("Billing cache fallback: Paid", 500, TimeUnit.MILLISECONDS);
 
         return CompletableFuture.allOf(policyF, billingF)
             .thenApply(v -> new Dashboard(policyF.join(), billingF.join()));
@@ -615,11 +617,11 @@ public class SafeVirtualThreadLocking {
           question: 'Why does holding a synchronized monitor across blocking network I/O cause severe problems with Virtual Threads?',
           options: [
             'It corrupts the virtual thread call stack',
-            'It pins the virtual thread to its OS carrier thread, preventing unmounting and freezing the carrier thread pool',
             'It forces the JVM to switch into C1 compilation tier',
+            'It pins the virtual thread to its OS carrier thread, preventing unmounting and freezing the carrier thread pool',
           ],
-          answerIndex: 1,
-          explanation: 'The current HotSpot implementation cannot detach call stacks when an object monitor lock is held, locking the OS carrier thread in place.',
+          answerIndex: 2,
+          explanation: 'In JDK 21 LTS, HotSpot pins the virtual thread to its underlying OS carrier thread when a synchronized monitor is held during blocking operations because the call stack cannot be detached from the carrier. JDK 24 (JEP 491) removes this carrier pinning limitation, but ReentrantLock remains the portable best practice across LTS versions.',
         },
         diagramState: 'thread-pinning',
         diagramAlt: 'Architecture diagram illustrating RefactorSynchronizedToReentrantLock.java: Supergluing yourself to the shuttle van seat.',
@@ -719,11 +721,11 @@ public class HighThroughputCounter {
         microCheck: {
           question: 'What is the root hardware cause of False Sharing in Java multithreaded systems?',
           options: [
-            'Heap fragmentation in the Old Generation',
             'Independent variables modified by different CPU cores residing in the same 64-byte CPU cache line',
+            'Heap fragmentation in the Old Generation',
             'Deadlock caused by synchronized monitors',
           ],
-          answerIndex: 1,
+          answerIndex: 0,
           explanation: 'CPUs fetch and invalidate memory in 64-byte cache lines. Mutating one variable invalidates the entire cache line across other CPU core caches via the hardware coherence protocol.',
         },
         diagramState: 'contended-padding',

@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { LessonStep, StepType } from '@/lib/types';
-import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Terminal, HelpCircle, Check, Copy } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Terminal, HelpCircle, Check, Copy, RotateCcw } from 'lucide-react';
+import { allLessons } from '@/data/lessons';
 import { Badge } from '@/components/ui/Badge';
 import { KeyIdea } from '@/components/ui/KeyIdea';
 import { InterviewTip } from '@/components/ui/InterviewTip';
@@ -288,6 +289,9 @@ export function StepContent({
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
   const [copiedCli, setCopiedCli] = useState(false);
 
+  const totalLessonsCount = allLessons.length;
+  const totalCourseSteps = allLessons.reduce((acc, l) => acc + (l.steps?.length || 0), 0);
+
   // Reset quiz selection on step change
   useEffect(() => {
     setSelectedQuizOption(null);
@@ -427,11 +431,21 @@ export function StepContent({
               })}
             </div>
             {selectedQuizOption !== null && (
-              <div className="pt-2 border-t border-sky-200 dark:border-sky-800/60 text-[11px] font-sans leading-relaxed text-charcoal-800 dark:text-cream-200">
-                <strong>
-                  {selectedQuizOption === step.microCheck.answerIndex ? '✓ Correct! ' : '✗ Incorrect. '}
-                </strong>
-                {step.microCheck.explanation}
+              <div className="pt-2 border-t border-sky-200 dark:border-sky-800/60 text-[11px] font-sans leading-relaxed text-charcoal-800 dark:text-cream-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <strong>
+                    {selectedQuizOption === step.microCheck.answerIndex ? '✓ Correct! ' : '✗ Incorrect. '}
+                  </strong>
+                  {step.microCheck.explanation}
+                </div>
+                <button
+                  onClick={() => setSelectedQuizOption(null)}
+                  className="self-start sm:self-auto flex items-center gap-1 px-2.5 py-1 rounded-lg border border-sky-300 dark:border-sky-700 bg-white dark:bg-charcoal-800 text-sky-900 dark:text-sky-200 hover:bg-sky-100 dark:hover:bg-charcoal-700 text-xs font-mono font-medium transition-colors cursor-pointer"
+                  data-testid="microcheck-retry-button"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Retry</span>
+                </button>
               </div>
             )}
           </div>
@@ -465,14 +479,14 @@ export function StepContent({
                 <span>🏆</span> Course Completed
               </span>
               <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300">
-                27 / 27 Lessons Done
+                {totalLessonsCount} / {totalLessonsCount} Lessons Done
               </span>
             </div>
             <p className="text-sm font-bold font-mono text-charcoal-900 dark:text-cream-50">
               You Have Mastered the Java Handbook!
             </p>
             <p className="text-xs font-sans text-charcoal-600 dark:text-cream-300 leading-relaxed">
-              You have completed all 27 lessons and 96 interactive steps covering JVM internals, modern concurrency, Spring Boot architecture, and cloud operations.
+              You have completed all {totalLessonsCount} lessons and {totalCourseSteps} interactive steps covering JVM internals, modern concurrency, Spring Boot architecture, and cloud operations.
             </p>
             <div className="flex items-center gap-2 pt-1">
               <a

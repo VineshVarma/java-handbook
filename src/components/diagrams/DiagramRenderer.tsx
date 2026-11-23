@@ -182,7 +182,7 @@ function HashMapCollectionsStage({
           { label: 'DATA STRUCTURE', value: 'ArrayList vs LinkedList' },
           { label: 'CPU L1/L2 CACHE', value: '64-Byte Cache Line Hit' },
           { label: 'ARRAYLIST TIME', value: 'O(1) Random Access' },
-          { label: 'LINKEDLIST COST', value: '24B Pointer Misses' },
+          { label: 'LINKEDLIST COST', value: '24B Total Node Footprint' },
         ]}
         viewMode={viewMode}
         diagramAlt={diagramAlt}
@@ -2017,7 +2017,16 @@ function StageContainer({
   return (
     <div className="relative w-full h-full flex flex-col justify-between overflow-hidden bg-[#161513] text-cream-100 select-none">
       {/* Top Telemetry Metrics Row: responsive auto-columns on mobile, 4-col on desktop */}
-      <div className="grid grid-flow-col auto-cols-[minmax(115px,1fr)] sm:grid-flow-row sm:grid-cols-4 gap-2 px-3 pt-2.5 pb-1 z-20 flex-shrink-0 overflow-x-auto scrollbar-none">
+      <div className="px-3 pt-2 pb-0.5 flex items-center justify-between text-[10px] font-mono text-cream-400/60 uppercase tracking-wider z-20 flex-shrink-0">
+        <span className="flex items-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          HUD Telemetry
+        </span>
+        <span className="text-[9px] text-cream-400/50 normal-case font-mono">
+          (Illustrative Simulation)
+        </span>
+      </div>
+      <div className="grid grid-flow-col auto-cols-[minmax(115px,1fr)] sm:grid-flow-row sm:grid-cols-4 gap-2 px-3 pt-1 pb-1 z-20 flex-shrink-0 overflow-x-auto scrollbar-none">
         {effectiveTelemetry.map((t, idx) => (
           <div
             key={idx}

@@ -196,7 +196,7 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
     await expect(nextBtn).toBeEnabled();
   });
 
-  test('B2.4: Microcheck: toggling selection from incorrect to correct updates feedback text and styling', async ({ page }) => {
+  test('B2.4: Microcheck: toggling selection from incorrect to correct updates feedback text and styling, and retry button resets selection', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
 
     const step3Pill = page.locator('button[title*="ClassLoader Hierarchy"]').or(
@@ -210,6 +210,13 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
     });
     await incorrectOption.click();
     await expect(page.getByText('✗ Incorrect.')).toBeVisible();
+
+    // Verify retry button appears and resets quiz selection
+    const retryBtn = page.getByTestId('microcheck-retry-button');
+    await expect(retryBtn).toBeVisible();
+    await retryBtn.click();
+    await expect(page.getByText('✗ Incorrect.')).not.toBeVisible();
+    await expect(retryBtn).not.toBeVisible();
 
     // Toggle to correct option
     const correctOption = page.locator('button').filter({

@@ -14,7 +14,7 @@ export const securityLessons: Lesson[] = [
       'Resource URI naming standards (nouns vs verbs, pluralization)',
       'Idempotency and safety across HTTP methods (GET, POST, PUT, PATCH, DELETE)',
       'HTTP status code semantics (200, 201, 204, 400, 401, 403, 404, 409, 500)',
-      'Pagination, filtering, and sorting using Spring Pageable',
+      'Pagination and sorting using Spring Pageable alongside Spring Data query filtering',
       'API versioning strategies: URI path vs Header vs Query params',
     ],
     steps: [
@@ -43,7 +43,7 @@ Nested resources naturally express parent-child relationships:
 
 **Resource URI naming standards**: RESTful conventions use plural nouns rather than verbs (\`/policies\`), standardizing pluralization across endpoint paths.
 
-**Pagination, filtering, and sorting using Spring Pageable**: Controllers accept \`Pageable pageable\` to handle offset pagination, multi-field sorting, and filtering over large resource datasets.
+**Pagination and sorting using Spring Pageable with query filtering**: Controllers accept \`Pageable pageable\` to handle page boundaries and multi-field sorting, while filtering criteria are passed as query parameters and evaluated via Spring Data derived repository queries or dynamic \`Specification\` predicates over large resource collections.
 
 **API versioning strategies**: Version API contracts via URI path (\`/api/v1\`), custom headers, or query params depending on caching and deprecation needs.`,
         keyIdea: 'Use clean plural nouns for resource URLs, and let standard HTTP verbs specify the action.',

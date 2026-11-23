@@ -162,7 +162,7 @@ public class PolicyCustomRepository {
       'Automated testing and Maven lifecycle phases (compile, test, package, verify)',
       'SonarQube quality gates: code coverage, technical debt, and code smells',
       'Fortify Static Application Security Testing (SAST) for vulnerability remediation',
-      'Containerizing Spring Boot apps into hardened Docker images for WildFly/Cloud',
+      'Containerizing Spring Boot apps into hardened, minimal container images (Distroless/Alpine)',
     ],
     steps: [
       {
@@ -232,7 +232,7 @@ Before any Java application can be deployed, it must pass automated **Quality Ga
 
 The result? Continuous service availability, negligible transaction disruption, and repeatable deployments!
 
-**Containerizing Spring Boot apps into hardened Docker images for WildFly/Cloud**: Multi-stage Docker pipelines package Spring Boot applications or WildFly runtimes into minimal, hardened container images optimized for secure cloud deployment.`,
+**Containerizing Spring Boot apps into hardened, minimal container images (Distroless/Alpine)**: Multi-stage Docker pipelines package Spring Boot applications into minimal, hardened container images (such as Google Distroless or Alpine Linux) optimized for secure cloud deployment without heavyweight application server baggage.`,
         keyIdea: 'Automated CI/CD pipelines and rolling updates let engineering teams ship features frequently maintaining continuous service availability.',
         diagramState: 'recap',
         diagramAlt: 'Architecture diagram illustrating Boarding the new train while the old train is still running: Boarding the new train while the old train is still running.',
@@ -363,24 +363,24 @@ If native memory or direct byte buffers leak, Kubernetes will terminate your pod
           output: `1:
 Native Memory Tracking:
 
-Total: reserved=4821MB, committed=3954MB
+Total: reserved=5996MB, committed=3954MB
 -                 Java Heap (reserved=2048MB, committed=1450MB)
 -                    Class (reserved=1120MB, committed=180MB)
 -                   Thread (reserved=350MB, committed=350MB) (340 threads)
 -                     Code (reserved=250MB, committed=98MB)
 -                       GC (reserved=180MB, committed=180MB)
--            Internal/Arena (reserved=2048MB, committed=1696MB) <-- LEAK!`,
-          explanation: 'Native Memory Tracking (NMT) categorizes total process memory. Notice that committed native Arena memory reaches 1696MB (committed <= reserved).',
+-                 Internal (reserved=2048MB, committed=1696MB)`,
+          explanation: 'Native Memory Tracking (NMT) categorizes total process memory. Notice that committed native Internal memory reaches 1696MB (committed <= reserved), accounting for off-heap allocations outside the Java heap.',
         },
         microCheck: {
           question: 'If a JVM container has -Xmx4g and runs on an 8GB RAM host, what happens if application code allocates 5GB of off-heap memory via malloc/FFM?',
           options: [
             'Java throws java.lang.OutOfMemoryError: Java heap space immediately.',
-            'The JVM will run normally if physical host RAM is available, but Linux will OOMKill it if container cgroup limit is exceeded.',
-            'Garbage collection will automatically shrink the JVM heap to compensate for the native memory.',
             'The off-heap memory is automatically swapped to disk by the JIT compiler.',
+            'Garbage collection will automatically shrink the JVM heap to compensate for the native memory.',
+            'The JVM will run normally if physical host RAM is available, but Linux will OOMKill it if container cgroup limit is exceeded.',
           ],
-          answerIndex: 1,
+          answerIndex: 3,
           explanation: 'Off-heap memory allocations bypass JVM heap tracking. As long as host memory is available, allocations succeed; once the container cgroup limit is breached, the Linux kernel terminates the process via SIGKILL.',
         },
         diagramState: 'offheap-vs-heap',
@@ -463,9 +463,9 @@ Total: reserved=5120MB (+299MB), committed=4320MB (+366MB)
 -                 Java Heap (reserved=2048MB, committed=1450MB) (no change)
 -                    Class (reserved=1120MB, committed=182MB (+2MB))
 -                   Thread (reserved=350MB, committed=350MB)
--            Arena / OffHeap (reserved=2048MB (+297MB), committed=1696MB (+294MB))
+-                 Internal (reserved=2048MB (+297MB), committed=1696MB (+294MB))
              [0x00007f9a14000000 - 0x00007f9a26000000] malloc at NativeBufferPipeline.main`,
-          explanation: 'Shows Java Heap had negligible change, while Arena/OffHeap native memory grew by +294MB (committed <= reserved), pinpointing the exact allocation source.',
+          explanation: 'Shows Java Heap had negligible change, while Internal native memory grew by +294MB (committed <= reserved), pinpointing the exact allocation source.',
         },
         diagramState: 'nmt-inspection',
         diagramAlt: 'Architecture diagram illustrating Taking an X-ray of your building\: Taking an X-ray of your building\.',

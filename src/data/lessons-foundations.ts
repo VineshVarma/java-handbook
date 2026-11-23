@@ -225,7 +225,7 @@ In the JVM, memory is split the same way:
 - **JVM Stack (Per-Thread)**: Each thread gets its own private call stack. Every time you call a method, a new **Stack Frame** is created holding your local variables and parameters. When the method finishes, the frame disappears immediately.
 - **Heap Memory (Shared)**: All objects created with \`new\` live here. The heap is shared across all threads and automatically tidied up by the Garbage Collector.
 - **Metaspace (Native OS Memory)**: Holds class definitions, constant pools, and method templates in host OS memory (replacing the old Java 7 PermGen).`,
-        keyIdea: 'Method variables and references live on the fast, private thread Stack; actual objects live on the shared, GC-managed Heap.',
+        keyIdea: 'Method variables and references live on the thread Stack; objects reside on the shared Heap by default, unless eliminated via escape analysis scalar replacement or allocated off-heap using the Foreign Function & Memory (FFM) API.',
         codeExample: {
           language: 'java',
           title: 'MemoryAllocation.java',
@@ -308,28 +308,28 @@ In modern Java 16+, **Java Records** make encapsulation even easier by providing
           title: 'BankAccount.java (Enforcing Invariants)',
           code: `public class BankAccount {
     private final String accountNumber;
-    private double balance; // Protected from external modification
+    private long balanceInCents; // Stored in minor currency units (cents) to eliminate floating-point error
 
-    public BankAccount(String accountNumber, double initialDeposit) {
+    public BankAccount(String accountNumber, long initialDepositInCents) {
         if (accountNumber == null || accountNumber.isBlank()) {
             throw new IllegalArgumentException("Invalid account number");
         }
-        if (initialDeposit < 0) {
+        if (initialDepositInCents < 0) {
             throw new IllegalArgumentException("Initial deposit cannot be negative");
         }
         this.accountNumber = accountNumber;
-        this.balance = initialDeposit;
+        this.balanceInCents = initialDepositInCents;
     }
 
-    public synchronized void withdraw(double amount) {
-        if (amount <= 0 || amount > balance) {
+    public synchronized void withdraw(long amountInCents) {
+        if (amountInCents <= 0 || amountInCents > balanceInCents) {
             throw new IllegalStateException("Insufficient funds or invalid amount");
         }
-        this.balance -= amount;
+        this.balanceInCents -= amountInCents;
     }
 
-    public double getBalance() {
-        return balance;
+    public long getBalanceInCents() {
+        return balanceInCents;
     }
 
     public String getAccountNumber() {
@@ -355,19 +355,20 @@ While this sounds convenient, deep inheritance trees create a famous trap called
 
 To prevent chaotic inheritance:
 1. Java allows extending only **one** class (single inheritance), avoiding confusing diamond-shaped family trees.
-2. In modern Java 17+, **Sealed Classes** (\`sealed\` and \`permits\`) let a base class explicitly declare exactly which child classes are permitted to extend it.`,
+2. In modern Java 17+, **Sealed Classes** (\`sealed\` and \`permits\`) let a base class explicitly declare exactly which child classes are permitted to extend it.
+3. **Composition over Inheritance**: In enterprise software, favor composition (HAS-A) over class inheritance (IS-A). Instead of creating deep inheritance hierarchies where subclasses inherit internal state and methods they do not need, assemble behavior by injecting specialized collaborator components. Composition provides loose coupling, clean test isolation, and flexible runtime behavior substitution.`,
         keyIdea: 'Use inheritance only when a genuine IS-A relationship exists; otherwise, prefer assembling smaller parts (composition).',
         codeExample: {
           language: 'java',
           title: 'Modern Sealed Class Hierarchy (Java 17+)',
           code: `// Strictly control inheritance with sealed classes
 public sealed interface PaymentMethod permits CreditCard, PayPal, ApplePay {
-    boolean processPayment(double amount);
+    boolean processPayment(long amountInCents);
 }
 
 final class CreditCard implements PaymentMethod {
     @Override
-    public boolean processPayment(double amount) {
+    public boolean processPayment(long amountInCents) {
         // Authorize with credit card gateway
         return true;
     }
@@ -375,7 +376,7 @@ final class CreditCard implements PaymentMethod {
 
 final class PayPal implements PaymentMethod {
     @Override
-    public boolean processPayment(double amount) {
+    public boolean processPayment(long amountInCents) {
         // Authorize with PayPal wallet
         return true;
     }
@@ -383,7 +384,7 @@ final class PayPal implements PaymentMethod {
 
 final class ApplePay implements PaymentMethod {
     @Override
-    public boolean processPayment(double amount) {
+    public boolean processPayment(long amountInCents) {
         // Authorize with Apple Pay biometric token
         return true;
     }
@@ -413,11 +414,11 @@ At runtime, for class inheritance, the JVM indexes a **Virtual Method Table (vta
           title: 'PolymorphicPaymentService.java',
           code: `public class OrderCheckoutService {
     // The checkout service works with ANY PaymentMethod without caring about the details
-    public void checkout(PaymentMethod paymentMethod, double totalAmount) {
-        System.out.println("Initiating checkout for amount: $" + totalAmount);
+    public void checkout(PaymentMethod paymentMethod, long totalAmountInCents) {
+        System.out.println("Initiating checkout for amount in cents: " + totalAmountInCents);
         
         // The JVM dynamically calls the right subclass implementation at runtime!
-        boolean success = paymentMethod.processPayment(totalAmount);
+        boolean success = paymentMethod.processPayment(totalAmountInCents);
         if (!success) {
             throw new IllegalStateException("Payment was declined by provider");
         }
@@ -496,7 +497,7 @@ Mastering these four principles is the secret to writing clean, maintainable ent
     duration: '14 min',
     difficulty: 'Intermediate',
     youllLearn: [
-      'The generational hypothesis: why 98% of objects die young',
+      'The generational hypothesis: why 95%+ of objects die young',
       'Eden, Survivor (S0/S1), and Tenured Old Generation memory pools',
       'Minor Young GC vs Major / Full GC mechanics',
       'Modern GC algorithms: G1 GC, ZGC, and Parallel GC',
@@ -987,11 +988,12 @@ java -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -jar microser
         microCheck: {
           question: 'What is the primary benefit of Project Lilliput in modern Java runtimes?',
           options: [
-            'It enables manual memory deallocation like C++',
             'It shrinks object headers from 12-16 bytes down to 8 bytes, saving 10-20% memory across millions of objects',
+            'It enables manual memory deallocation like C++',
             'It disables garbage collection entirely for short-lived records',
+            'It replaces the JIT compiler with an AOT compiler for all classes',
           ],
-          answerIndex: 1,
+          answerIndex: 0,
           explanation: 'Lilliput shrinks the header by packing class pointer metadata directly into unused bits of the mark word, saving massive amounts of memory across object-heavy collections.',
         },
         diagramState: 'lilliput-headers',
@@ -1139,10 +1141,10 @@ HotSpot classifies every object into these three exact states:
           question: 'What happens to a NoEscape object during Scalar Replacement?',
           options: [
             'It is serialized into off-heap direct memory',
-            'Its fields are decomposed directly into CPU registers or stack slots, and no heap object is ever created',
             'It is moved immediately to the Tenured Old Generation',
+            'Its fields are decomposed directly into CPU registers or stack slots, and no heap object is ever created',
           ],
-          answerIndex: 1,
+          answerIndex: 2,
           explanation: 'Scalar replacement dismantles the object into individual primitive fields that live directly in CPU registers or stack frames, bypassing the heap entirely.',
         },
         diagramState: 'scalar-replacement',
@@ -1222,13 +1224,13 @@ worker threads avoid multi-millisecond stop-the-world pauses while the Garbage C
 java -XX:+UseZGC -Xmx16g -Xlog:gc*:file=gc.log:time,uptime -jar app.jar`,
         },
         microCheck: {
-          question: 'How does ZGC prevent Stop-The-World pauses when relocating objects in memory?',
+          question: 'How does ZGC minimize Stop-The-World pauses to sub-millisecond durations when relocating objects in memory?',
           options: [
-            'It never relocates objects, leaving memory permanently fragmented',
             'It uses colored pointer bits and load barriers that self-heal references on-the-fly when application threads read them',
+            'It never relocates objects, leaving memory permanently fragmented',
             'It moves all objects to native off-heap storage using Project Panama',
           ],
-          answerIndex: 1,
+          answerIndex: 0,
           explanation: 'ZGC inspects the reference color on read via JIT load barriers. If an object is in the process of moving, the load barrier self-heals the pointer to the new address immediately.',
         },
         diagramState: 'colored-pointers',

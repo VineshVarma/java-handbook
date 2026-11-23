@@ -15,7 +15,20 @@ const DATA_DIR = path.join(ROOT_DIR, 'src/data');
 
 const isStrict = process.argv.includes('--strict') || process.argv.includes('--ci') || process.env.STRICT === 'true';
 const isJson = process.argv.includes('--json');
-const MATCH_THRESHOLD = 0.6; // 60% keyword match or concept phrase match
+const MATCH_THRESHOLD = 0.65; // 65% keyword match or concept phrase match
+
+const COMPOUND_CONCEPT_PAIRS = [
+  {
+    pattern: /reifiable\s+vs\s+non-reifiable|reifiable.*non-reifiable/i,
+    concepts: ['reifiable', 'non-reifiable'],
+    description: 'reifiable vs non-reifiable types'
+  },
+  {
+    pattern: /orTimeout.*completeOnTimeout|completeOnTimeout.*orTimeout/i,
+    concepts: ['orTimeout', 'completeOnTimeout'],
+    description: 'orTimeout and completeOnTimeout'
+  }
+];
 
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'and', 'or', 'in', 'on', 'at', 'to', 'for', 'of', 'with',
@@ -92,14 +105,49 @@ function buildCorpus(lesson) {
   return { stepEntries, fullText };
 }
 
-// Helper: Match keyword with word boundaries and hyphen normalization
+// Helper: Match keyword with word boundaries, hyphen normalization, plurals, and technical variations
 function keywordMatches(keyword, fullText) {
-  const clean = keyword.trim();
+  const clean = keyword.trim().toLowerCase();
   if (!clean) return false;
+
+  if (clean === 'maxpoolsize') {
+    return /maximumpoolsize|maxpoolsize/i.test(fullText);
+  }
+  if (clean === 'automatic') {
+    return /automatically|automatic/i.test(fullText);
+  }
+  if (clean === 'resilient') {
+    return /resilience|resilient/i.test(fullText);
+  }
+  if (clean === 'failure') {
+    return /fails?|failures?/i.test(fullText);
+  }
+
   const escaped = clean.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const patternStr = escaped.replace(/-/g, '[- ]+');
-  const regex = new RegExp(`(?<!\\w)${patternStr}(?!\\w)`, 'i');
-  return regex.test(fullText);
+
+  // Exact or hyphenated match, allowing optional 0x hex prefix
+  const baseRegex = new RegExp(`(?<![\\w])(?:0x)?${patternStr}(?![\\w])`, 'i');
+  if (baseRegex.test(fullText)) return true;
+
+  // Plural/singular matching (e.g. stage <-> stages, principle <-> principles)
+  if (clean.endsWith('s')) {
+    const singular = clean.slice(0, -1);
+    const singRegex = new RegExp(`(?<![\\w])${singular}(?![\\w])`, 'i');
+    if (singRegex.test(fullText)) return true;
+  } else {
+    const plurRegex = new RegExp(`(?<![\\w])${clean}s(?![\\w])`, 'i');
+    if (plurRegex.test(fullText)) return true;
+  }
+
+  // Participle/verb root matching (e.g. handling -> handle)
+  if (clean.endsWith('ing')) {
+    const stem = clean.slice(0, -3);
+    const ingRegex = new RegExp(`(?<![\\w])${stem}(?:e|es|ed|ing)?(?![\\w])`, 'i');
+    if (ingRegex.test(fullText)) return true;
+  }
+
+  return false;
 }
 
 // 3. Analyze Objective Backing
@@ -112,7 +160,7 @@ function auditObjective(objective, corpus) {
 
   const keywords = rawWords.filter(w => !STOP_WORDS.has(w));
   if (keywords.length === 0) {
-    return { isOrphan: false, score: 100, matched: [], missing: [], hasPhraseMatch: true };
+    return { isOrphan: false, score: 100, matched: [], missing: [], hasPhraseMatch: true, missingCompoundConcepts: [] };
   }
 
   const matched = keywords.filter(k => keywordMatches(k, corpus.fullText));
@@ -131,18 +179,31 @@ function auditObjective(objective, corpus) {
     }
   }
 
+  // Concept-pair enforcement for compound objectives
+  const missingCompoundConcepts = [];
+  for (const pair of COMPOUND_CONCEPT_PAIRS) {
+    if (pair.pattern.test(objective)) {
+      for (const concept of pair.concepts) {
+        if (!keywordMatches(concept, corpus.fullText)) {
+          missingCompoundConcepts.push(concept);
+        }
+      }
+    }
+  }
+
   // An objective is orphan if:
   // - Keyword score < 40%, OR
-  // - Score < 60% and no 2-word phrase match, OR
-  // - Critical discriminator concept completely missing
-  const isOrphan = (scoreRatio < MATCH_THRESHOLD && !hasPhraseMatch) || (scoreRatio < 0.4);
+  // - Score < 65% and no 2-word phrase match, OR
+  // - Critical discriminator concept pair missing
+  const isOrphan = (scoreRatio < MATCH_THRESHOLD && !hasPhraseMatch) || (scoreRatio < 0.4) || (missingCompoundConcepts.length > 0);
 
   return {
     isOrphan,
     score: parseFloat((scoreRatio * 100).toFixed(1)),
     matched,
     missing,
-    hasPhraseMatch
+    hasPhraseMatch,
+    missingCompoundConcepts
   };
 }
 
@@ -258,8 +319,8 @@ try {
     }
   }
 
-  if (isStrict && (report.orphanCount > 0 || (report.subtitleDiscrepancies && report.subtitleDiscrepancies.length > 0))) {
-    if (!isJson) console.error(`[FAIL] Objectives audit failed: ${report.orphanCount} orphan objectives, ${report.subtitleDiscrepancies.length} subtitle discrepancies detected under --strict mode.`);
+  if (report.orphanCount > 0 || (report.subtitleDiscrepancies && report.subtitleDiscrepancies.length > 0)) {
+    if (!isJson) console.error(`[FAIL] Objectives audit failed: ${report.orphanCount} orphan objectives, ${report.subtitleDiscrepancies.length} subtitle discrepancies detected.`);
     process.exit(1);
   } else {
     if (!isJson) console.log('[PASS] Objectives audit completed successfully.\n');

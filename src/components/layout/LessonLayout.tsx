@@ -84,7 +84,7 @@ export function LessonLayout({
   const handleFinishCourse = () => {
     markStepComplete(currentLesson.slug, currentStepIndex);
     goToLesson(allLessons[0].slug, 0);
-    setToastMessage('🎉 Congratulations! You completed all 27 lessons of the Java Handbook!');
+    setToastMessage(`🎉 Congratulations! You completed all ${totalLessonsCount} lessons of the Java Handbook!`);
   };
 
   const completedStepsInCurrentLesson =
