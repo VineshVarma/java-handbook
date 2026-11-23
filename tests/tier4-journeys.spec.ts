@@ -123,7 +123,7 @@ test.describe('Tier 4: Real-World Learner Journeys (S1 - S6)', () => {
     await nextBtn.click();
 
     await expect(page.getByRole('heading', { name: /Colored Pointers/i })).toBeVisible();
-    await expect(page.getByText(/-XX:\+UseZGC/i)).toBeVisible();
+    await expect(page.getByText(/-XX:\+UseZGC/i).first()).toBeVisible();
 
     // Verify diagram SVG remains mounted
     await expect(page.locator('.touch-pan-y')).toBeVisible();
@@ -214,7 +214,7 @@ test.describe('Tier 4: Real-World Learner Journeys (S1 - S6)', () => {
     await expect(page.locator('.touch-pan-y')).toBeVisible();
 
     // 3. Toggle via segment switcher
-    const notesTab = page.getByRole('button', { name: 'Notes', exact: true });
+    const notesTab = page.getByRole('tab', { name: 'Notes' }).or(page.getByRole('button', { name: 'Notes', exact: true }));
     await notesTab.click();
     await expect(notesAside).toBeVisible();
 

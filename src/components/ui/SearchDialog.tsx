@@ -40,6 +40,10 @@ export function SearchDialog({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [query]);
+
   const results = useMemo(() => {
     if (!query.trim()) {
       // Suggest first 5 lessons

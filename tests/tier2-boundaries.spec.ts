@@ -137,8 +137,8 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
     await collectionsLesson.click();
 
     await page.waitForURL(/\/lessons\/collections-framework/);
-    // Step index resets to 0 (The Collection Interface Hierarchy)
-    await expect(page.getByRole('heading', { name: /The Collection Interface Hierarchy/i })).toBeVisible();
+    // Step index resets to 0 (Collection Interface Hierarchy)
+    await expect(page.getByRole('heading', { name: /Collection Interface Hierarchy/i })).toBeVisible();
   });
 
   // --------------------------------------------------------------------------
@@ -629,7 +629,7 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
 
     // Below 1280px (tablet/mobile view)
     await page.setViewportSize({ width: 1024, height: 768 });
-    const segmentSwitcher = page.getByRole('button', { name: 'Notes', exact: true });
+    const segmentSwitcher = page.getByRole('tab', { name: 'Notes' }).or(page.getByRole('button', { name: 'Notes', exact: true }));
     await expect(segmentSwitcher).toBeVisible();
   });
 

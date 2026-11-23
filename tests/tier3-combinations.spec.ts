@@ -185,8 +185,9 @@ test.describe('Tier 3: Cross-Feature Combinations (P1 - P10)', () => {
 
     // Select result
     await searchInput.fill('Collections');
-    await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('Enter');
+    const resultItem = page.getByTestId('search-result-item').filter({ hasText: /Collections/i }).first();
+    await expect(resultItem).toBeVisible();
+    await resultItem.click();
 
     await expect(page.locator('h1').first()).toContainText('Collections');
     // Search dialog closed

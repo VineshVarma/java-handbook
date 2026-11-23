@@ -66,7 +66,6 @@ export function Header({
           }
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/80 dark:text-cream-300/80 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors opacity-75"
           data-testid="tab-practice"
-          aria-disabled="true"
         >
           <Target className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
           <span>Practice</span>
@@ -83,7 +82,6 @@ export function Header({
           }
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/80 dark:text-cream-300/80 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors opacity-75"
           data-testid="tab-cheatsheets"
-          aria-disabled="true"
         >
           <FileText className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
           <span>Cheatsheets</span>
