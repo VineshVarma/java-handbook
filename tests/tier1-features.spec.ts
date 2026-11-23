@@ -217,8 +217,8 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     await page.goto('/lessons/offheap-ffm-api');
 
     // Navigate to step 3 (last step)
-    const step3Pill = page.locator('button[title*="MemorySegment"]').or(
-      page.locator('button[title*="Off-Heap"]')
+    const step3Pill = page.locator('button[title*="Native Memory"]').or(
+      page.locator('button[title*="Tracking"]')
     ).last();
     if (await step3Pill.isVisible()) {
       await step3Pill.click();
@@ -574,7 +574,7 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/lessons/how-java-runs');
 
-    const notesBtn = page.getByRole('button', { name: 'Notes', exact: true });
+    const notesBtn = page.getByRole('tab', { name: 'Notes' }).or(page.getByRole('button', { name: 'Notes', exact: true }));
     await expect(notesBtn).toBeVisible();
     await notesBtn.click();
 
@@ -582,7 +582,7 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     const aside = page.locator('aside').filter({ hasText: /Step 1/i });
     await expect(aside).toBeVisible();
 
-    const simBtn = page.getByRole('button', { name: 'Diagram', exact: true });
+    const simBtn = page.getByRole('tab', { name: 'Diagram' }).or(page.getByRole('button', { name: 'Diagram', exact: true }));
     await simBtn.click();
     await expect(page.locator('.touch-pan-y')).toBeVisible();
   });

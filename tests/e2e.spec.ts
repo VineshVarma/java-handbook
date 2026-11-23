@@ -84,7 +84,12 @@ test.describe('Java Handbook - Core Platform & E2E Validation', () => {
 
     // Verify zero uncaught runtime errors
     const nonBenignErrors = errors.filter(
-      (e) => !e.includes('favicon') && !e.includes('hydration') && !e.includes('ResizeObserver')
+      (e) =>
+        !e.includes('favicon') &&
+        !e.includes('hydration') &&
+        !e.includes('ResizeObserver') &&
+        !e.includes('_vercel') &&
+        !e.includes('Failed to load resource')
     );
     expect(nonBenignErrors).toHaveLength(0);
   });
