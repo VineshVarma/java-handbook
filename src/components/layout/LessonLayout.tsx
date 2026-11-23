@@ -65,6 +65,10 @@ export function LessonLayout({
       ? allLessons[currentLessonIndex + 1]
       : undefined;
 
+  const isLastLesson = currentLessonIndex === allLessons.length - 1;
+  const isLastStep = currentStepIndex === currentLesson.steps.length - 1;
+  const isCourseComplete = isLastLesson && isLastStep;
+
   const nextStepTitle =
     currentStepIndex < currentLesson.steps.length - 1
       ? currentLesson.steps[currentStepIndex + 1]?.title
@@ -75,6 +79,12 @@ export function LessonLayout({
   const handleNextWithProgress = () => {
     markStepComplete(currentLesson.slug, currentStepIndex);
     nextStep();
+  };
+
+  const handleFinishCourse = () => {
+    markStepComplete(currentLesson.slug, currentStepIndex);
+    goToLesson(allLessons[0].slug, 0);
+    setToastMessage('🎉 Congratulations! You completed all 27 lessons of the Java Handbook!');
   };
 
   const completedStepsInCurrentLesson =
@@ -114,9 +124,17 @@ export function LessonLayout({
         <main className="flex-1 lg:pl-72 flex flex-col h-full min-h-0 overflow-hidden relative">
           {/* Mobile & Tablet Segmented View Switcher (Visible only below xl) */}
           <div className="xl:hidden flex items-center justify-between px-3 py-2 bg-cream-200/90 dark:bg-charcoal-900 border-b border-cream-300 dark:border-charcoal-800 flex-shrink-0 z-20">
-            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-cream-300/60 dark:bg-charcoal-800 text-xs font-mono">
+            <div
+              role="tablist"
+              aria-label="Workspace view panes"
+              className="flex items-center gap-1 p-0.5 rounded-xl bg-cream-300/60 dark:bg-charcoal-800 text-xs font-mono"
+            >
               <button
                 onClick={() => setMobileTab('diagram')}
+                role="tab"
+                id="tab-diagram"
+                aria-selected={mobileTab === 'diagram'}
+                aria-controls="diagram-pane"
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
                   mobileTab === 'diagram'
                     ? 'bg-emerald-600 text-white font-bold shadow-xs'
@@ -124,10 +142,14 @@ export function LessonLayout({
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                <span>Simulation</span>
+                <span>Diagram</span>
               </button>
               <button
                 onClick={() => setMobileTab('content')}
+                role="tab"
+                id="tab-notes"
+                aria-selected={mobileTab === 'content'}
+                aria-controls="notes-pane"
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
                   mobileTab === 'content'
                     ? 'bg-emerald-600 text-white font-bold shadow-xs'
@@ -135,7 +157,7 @@ export function LessonLayout({
                 }`}
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>Notes & Code</span>
+                <span>Notes</span>
               </button>
             </div>
 
@@ -148,6 +170,9 @@ export function LessonLayout({
           <div className="flex-1 min-h-0 flex flex-col xl:flex-row overflow-hidden">
             {/* Column 2: Center Interactive Simulation Stage */}
             <section
+              id="diagram-pane"
+              role="tabpanel"
+              aria-labelledby="tab-diagram"
               className={`${
                 mobileTab === 'diagram' ? 'flex' : 'hidden'
               } xl:flex flex-1 h-full min-h-0 flex-col overflow-hidden relative`}
@@ -171,6 +196,9 @@ export function LessonLayout({
 
             {/* Column 3: Educational Reading Card */}
             <aside
+              id="notes-pane"
+              role="tabpanel"
+              aria-labelledby="tab-notes"
               className={`${
                 mobileTab === 'content' ? 'flex' : 'hidden'
               } xl:flex w-full xl:w-[420px] 2xl:w-[460px] xl:flex-shrink-0 h-full min-h-0 flex-col overflow-hidden border-t xl:border-t-0 border-l border-cream-300 dark:border-charcoal-700 bg-cream-50/70 dark:bg-charcoal-900/60`}
@@ -185,6 +213,8 @@ export function LessonLayout({
                 hasPrev={hasPrev}
                 nextStepTitle={nextStepTitle}
                 youllLearn={currentLesson.youllLearn}
+                isCourseComplete={isCourseComplete}
+                onCompleteCourse={handleFinishCourse}
               />
             </aside>
           </div>
@@ -197,16 +227,17 @@ export function LessonLayout({
               }
               className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-bold shadow-lg shadow-emerald-900/20 active:scale-95 transition-all border border-emerald-500/40"
               data-testid="mobile-toggle-tab"
+              aria-label={mobileTab === 'diagram' ? 'Switch to Notes' : 'Switch to Diagram'}
             >
               {mobileTab === 'diagram' ? (
                 <>
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>Read Notes</span>
+                  <span>Notes</span>
                 </>
               ) : (
                 <>
                   <Layers className="w-3.5 h-3.5" />
-                  <span>View Diagram</span>
+                  <span>Diagram</span>
                 </>
               )}
             </button>

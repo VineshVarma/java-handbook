@@ -8,7 +8,7 @@ export const collectionsLessons: Lesson[] = [
     subtitle: 'Navigate the collection hierarchy and master ArrayList, LinkedList, and HashMap bucket internals.',
     moduleId: '02',
     moduleTitle: '02. Collections & Streams',
-    duration: '15 min',
+    duration: '12 min',
     difficulty: 'Intermediate',
     youllLearn: [
       'The core hierarchy: Collection vs Map, List, Set, Queue',
@@ -22,6 +22,7 @@ export const collectionsLessons: Lesson[] = [
         id: 'step-1',
         title: 'Collection Interface Hierarchy',
         subtitle: 'A kitchen storage system with specialized drawers',
+        duration: '3 min',
         type: 'concept',
         content: `Think of organizing a commercial kitchen. You don't dump all your spoons, spices, order slips, and recipes into one giant cardboard box. Instead, you use specialized organizers:
 - A silverware tray with ordered slots where each fork has a numbered position (\`List\`).
@@ -34,9 +35,11 @@ The Java Collections Framework sits in \`java.util\` and organizes your data usi
 At the root sits \`Iterable<T>\`, which allows any collection to be walked through in a \`for-each\` loop. Extending it is \`Collection<T>\`, which forks into three main families:
 1. \`List<E>\`: An ordered list of elements with index numbers (e.g., item 0, item 1). Duplicates are welcome.
 2. \`Set<E>\`: A collection of unique elements. Duplicates are strictly rejected using \`equals()\` and \`hashCode()\`.
-3. \`Queue<E>\` & \`Deque<E>\`: For task queues and pipelines. While queues commonly follow First-In, First-Out (FIFO) order, implementations differ: \`PriorityQueue\` orders elements by natural ordering or a \`Comparator\` (min-heap, not FIFO), while \`ArrayDeque\` implements a high-performance resizable circular buffer with zero node allocation overhead, outperforming \`LinkedList\` for both FIFO and LIFO operations.
+3. \`Queue<E>\` & \`Deque<E>\`: For task queues and pipelines. While queues commonly follow First-In, First-Out (FIFO) order, implementations differ: \`PriorityQueue\` orders elements by natural ordering or a \`Comparator\` (min-heap, not FIFO), while \`ArrayDeque\` implements a high-performance resizable circular buffer without per-node pointer allocation overhead, outperforming \`LinkedList\` for both FIFO and LIFO operations.
 
-**Why Map is on its own**: \`Map<K, V>\` does not implement \`Collection\` because it holds pairs (keys and values) rather than standalone elements.`,
+**Why Map is on its own**: \`Map<K, V>\` does not implement \`Collection\` because it holds pairs (keys and values) rather than standalone elements.
+
+**Choosing the optimal data structure for time and space complexity**: Select collections based on access patterns: \`ArrayList\` for $O(1)$ indexed reads and compact memory space, \`LinkedList\` or \`ArrayDeque\` for queue operations, and \`HashMap\` or \`HashSet\` for $O(1)$ amortized lookup time with configurable load factor.`,
         keyIdea: 'List, Set, and Queue share the common Collection interface; Map is an independent family dedicated to key-value pairs.',
         diagramState: 'hierarchy',
         diagramAlt: 'Architecture diagram illustrating A kitchen storage system with specialized drawers: A kitchen storage system with specialized drawers.',
@@ -45,6 +48,7 @@ At the root sits \`Iterable<T>\`, which allows any collection to be walked throu
         id: 'step-2',
         title: 'ArrayList vs LinkedList Performance',
         subtitle: 'An egg carton vs a scavenger hunt across town',
+        duration: '3 min',
         type: 'trade-off',
         content: `Imagine grabbing eggs from an egg carton. All 12 eggs sit side-by-side in a single molded cardboard row. When you reach for the 3rd egg, your eyes and hand already see eggs 4, 5, and 6 right next to it (**ArrayList**). 
 
@@ -52,7 +56,7 @@ Now imagine a scavenger hunt (**LinkedList**). Clue 1 is in your kitchen, but it
 
 Many introductory textbooks say: *"LinkedList has O(1) insertions, so use it whenever you add or remove items often."*
 
-In modern enterprise Java on real multicore hardware, **this textbook advice is almost always wrong! ArrayList almost always beats LinkedList.**
+In modern enterprise Java on real multicore hardware, **this textbook advice is frequently misleading! ArrayList typically outperforms LinkedList across production workloads.**
 
 **Why? CPU Cache Locality**:
 1. **ArrayList** wraps a single contiguous array (\`Object[]\`) in memory. When your CPU fetches one element, hardware automatically pulls a 64-byte chunk (a cache line) into ultra-fast L1/L2 CPU cache. Reading the next element takes ~1 nanosecond!
@@ -88,6 +92,7 @@ public class ListCapacityOptimization {
         id: 'step-3',
         title: 'HashMap Internals and Treeification',
         subtitle: 'The hotel coat check with smart organizing bins',
+        duration: '3 min',
         type: 'solution',
         content: `Think of a busy hotel coat check room with 16 numbered bins along the wall:
 - When you hand your jacket to the clerk, they take your name, do a quick math calculation on your name to pick a number between 0 and 15, and hang your coat in that specific bin (**The Hash Function & Bucket Index**).
@@ -126,7 +131,7 @@ public class CustomerKey {
         result = 31 * result + (countryCode != null ? countryCode.hashCode() : 0);
         return result;
     }
-}`,
+} `,
         },
         interviewTip: 'What happens if two different keys return the same hashCode() in a HashMap? A hash collision occurs. Both key-value pairs are stored in the same bucket. When retrieving, the JVM compares keys using .equals() to find the exact matching item.',
         diagramState: 'hashmap-buckets-treeify',
@@ -136,6 +141,7 @@ public class CustomerKey {
         id: 'step-4',
         title: 'ConcurrentHashMap Lock Striping CAS',
         subtitle: 'A library with 16 separate study rooms instead of 1 padlocked door',
+        duration: '3 min',
         type: 'insight',
         content: `Imagine a library where 100 students want to study. 
 - If the librarian puts a single padlock on the front entrance door (\`Collections.synchronizedMap\`), only one student can be inside at a time. The other 99 students must wait outside in the rain, destroying throughput.
@@ -143,7 +149,7 @@ public class CustomerKey {
 
 **ConcurrentHashMap** achieves high-throughput concurrency through three techniques:
 1. **Lock-Free Reads**: The \`get()\` method reads memory directly using volatile variables without acquiring any lock at all!
-2. **Atomic CAS (Compare-And-Swap)**: When inserting a new item into an empty bucket, the JVM uses hardware-level atomic CPU instructions with zero locks.
+2. **Atomic CAS (Compare-And-Swap)**: When inserting a new item into an empty bucket, the JVM uses hardware-level atomic CPU instructions without thread locking.
 3. **Bucket-Level Synchronization**: If multiple threads write to the same non-empty bucket at the same time, the JVM locks only that single bucket node (\`synchronized(node)\`), letting other threads continue reading and writing to all other buckets simultaneously.`,
         keyIdea: 'ConcurrentHashMap allows completely lock-free reads and locks only individual bucket nodes during writes, delivering massive concurrency.',
         diagramState: 'concurrenthashmap-cas',
@@ -155,10 +161,10 @@ public class CustomerKey {
     id: 'streams-api',
     slug: 'streams-api',
     title: 'Streams Pipeline & Functional Dataflow',
-    subtitle: 'From imperative loops to declarative pipelines — filter, map, flatMap, and lazy evaluation.',
+    subtitle: 'Stream pipeline stages, lazy evaluation short-circuiting, map and flatMap flattening, and collectors',
     moduleId: '02',
     moduleTitle: '02. Collections & Streams',
-    duration: '12 min',
+    duration: '10 min',
     difficulty: 'Intermediate',
     youllLearn: [
       'The anatomy of a Stream: Source -> Intermediate Operations -> Terminal Operation',
@@ -170,8 +176,9 @@ public class CustomerKey {
     steps: [
       {
         id: 'step-1',
-        title: 'Anatomy of a Stream Pipeline',
+        title: 'Stream Pipeline Architecture',
         subtitle: 'The automated factory conveyor belt',
+        duration: '3 min',
         type: 'concept',
         content: `Think of an automated soda bottling factory:
 - Empty bottles enter at one end on a conveyor belt (**The Source**).
@@ -183,7 +190,9 @@ A **Java Stream** is not a data structure—it does not store data on its own. I
 Every stream pipeline has three stages:
 1. **Source**: Where elements come from (a List, Set, or array via \`list.stream()\`).
 2. **Intermediate Operations (0 or more)**: Step-by-step transformations like \`filter()\`, \`map()\`, or \`sorted()\`. They return a new stream.
-3. **Terminal Operation (Exactly 1)**: Triggers the conveyor belt to start moving and collects the final result (like \`toList()\`, \`count()\`, or \`findFirst()\`).`,
+3. **Terminal Operation (Exactly 1)**: Triggers the conveyor belt to start moving and collects the final result (like \`toList()\`, \`count()\`, or \`findFirst()\`).
+
+Streams replace imperative loops with declarative pipelines, expressing transformation logic concisely.`,
         keyIdea: 'Streams do not store elements; they transform data on-the-fly as elements flow from a source to a terminal operation.',
         diagramState: 'stream-pipeline',
         diagramAlt: 'Architecture diagram illustrating The automated factory conveyor belt: The automated factory conveyor belt.',
@@ -192,8 +201,9 @@ Every stream pipeline has three stages:
         id: 'step-2',
         title: 'Lazy Evaluation Short-Circuiting',
         subtitle: 'The video streaming service that buffers only what you watch',
+        duration: '3 min',
         type: 'insight',
-        content: `Think of watching a movie on an internet streaming app. When you press play on Episode 1, the app doesn't download all 10 hours of the season to your phone before starting. It downloads only the first few seconds of video, buffering more only when your screen needs it. If you close the app after 3 minutes, the remaining 9 hours and 57 minutes are never downloaded.
+        content: `Think of watching a movie on an internet streaming app. When you press play on Episode 1, the app doesn't download all 10 hours of the season to your phone before starting. It downloads only the first few seconds of video, buffering more only when your screen needs it. If you close the app after 3 minutes, the remaining 9 hours and 57 minutes are not fetched or processed.
 
 In Java streams, intermediate operations like \`.filter()\` and \`.map()\` are **Lazy**:
 - When you call \`.filter()\`, Java does not actually run your filter code yet! It just connects the pipe.
@@ -243,6 +253,7 @@ public class StreamLazinessDemo {
         id: 'step-3',
         title: 'Map vs FlatMap Flattening',
         subtitle: 'Changing one item vs unpacking a box of items',
+        duration: '2 min',
         type: 'solution',
         content: `Imagine opening your daily mail:
 - **map() (1-to-1)**: You receive an envelope with an invoice. You stamp the envelope "PAID" and hand it back. One envelope in, one stamped envelope out.
@@ -250,7 +261,9 @@ public class StreamLazinessDemo {
 
 In Java:
 - Use \`map()\` when transforming an object into another single object (e.g., converting a \`Customer\` into their \`String\` email address).
-- Use \`flatMap()\` when each object contains a collection of child items (e.g., each \`Order\` has a \`List<OrderItem>\`), and you want a single flat stream of all items across all orders.`,
+- Use \`flatMap()\` when each object contains a collection of child items (e.g., each \`Order\` has a \`List<OrderItem>\`), and you want a single flat stream of all items across all orders.
+
+**The critical difference between map() and flatMap()**: While \`map()\` transforms each stream element into a single output item, \`flatMap()\` flattens multiple child streams into one continuous stream.`,
         keyIdea: 'Use map() for simple 1-to-1 transformations; use flatMap() to unpack nested collections into a single flat stream.',
         codeExample: {
           language: 'java',
@@ -287,6 +300,7 @@ public class FlatMapEnterprisePattern {
         id: 'step-4',
         title: 'Complex Collectors GroupingBy',
         subtitle: 'Sorting mail into cubbies by department',
+        duration: '2 min',
         type: 'concept',
         content: `Think of a company mailroom. Letters arrive from all over the world. The mail clerk doesn't just leave them in a messy heap; they sort them into labeled cubbies on the wall: one cubby for Marketing, one for Finance, and one for Engineering.
 
@@ -294,7 +308,9 @@ In Java Streams, \`Collectors\` is the powerhouse tool that gathers your stream 
 
 - \`groupingBy()\`: The equivalent of SQL \`GROUP BY\`. It groups items into a \`Map<Key, List<Value>>\` based on a property (like grouping policies by status).
 - \`partitioningBy()\`: A specialized binary grouping that splits items into two buckets: \`true\` and \`false\` (e.g., separating active accounts from inactive ones).
-- \`joining()\`: Glues text together into a single string with delimiters (like \`"A, B, C"\`).`,
+- \`joining()\`: Glues text together into a single string with delimiters (like \`"A, B, C"\`).
+
+**When parallel streams hurt performance vs when they help**: Calling \`parallelStream()\` leverages \`ForkJoinPool.commonPool()\` to accelerate CPU-bound calculations over large contiguous datasets. However, parallel streams hurt performance when applied to small collections, blocking I/O tasks, or non-splittable sources where thread synchronization overhead dwarfs execution time.`,
         keyIdea: 'Collectors turn flat stream pipelines into rich, structured multi-level maps and aggregated summaries.',
         codeExample: {
           language: 'java',
@@ -339,7 +355,7 @@ public class GroupingByPattern {
     subtitle: 'From anonymous inner classes to invokedynamic lambdas, method references, and null-safe Optional.',
     moduleId: '02',
     moduleTitle: '02. Collections & Streams',
-    duration: '10 min',
+    duration: '7 min',
     difficulty: 'Intermediate',
     youllLearn: [
       'Anonymous inner classes vs Lambdas and invokedynamic execution',
@@ -353,6 +369,7 @@ public class GroupingByPattern {
         id: 'step-1',
         title: 'Lambda Expressions and Desugaring',
         subtitle: 'Sending a quick text message instead of a 3-page formal letter',
+        duration: '3 min',
         type: 'concept',
         content: `Before Java 8, if you wanted to pass a small piece of logic to another method (like telling a list how to sort itself), you had to write a verbose **Anonymous Inner Class**. You had to write six lines of boilerplate code with \`new Comparator<...>()\`, method signatures, and curly braces just to say "compare by ID".
 
@@ -362,7 +379,9 @@ Java 8 introduced **Lambda Expressions (\`() -> {}\`)**:
 - A lambda is a quick, lightweight way to pass a function as if it were a variable.
 - Under the hood, lambdas do not generate clumsy inner class files! Instead, the JVM uses an \`invokedynamic\` bytecode instruction linked via \`LambdaMetafactory\` to spin call sites on-demand at runtime with minimal overhead.
 
-Any interface that has **exactly one abstract method** is called a **Functional Interface** (often marked with \`@FunctionalInterface\`) and can be written as a clean lambda.`,
+Any interface that has **exactly one abstract method** is called a **Functional Interface** (often marked with \`@FunctionalInterface\`) and can be written as a clean lambda.
+
+**Method references syntax and forms**: Method references provide shorthand notation for lambdas: static method references (\`Math::max\`), bound instance method references (\`System.out::println\`), unbound instance method references (\`String::toLowerCase\`), and constructor references (\`ArrayList::new\`).`,
         keyIdea: 'Lambdas provide concise syntax and use invokedynamic under the hood to execute functional logic with minimal memory overhead.',
         codeExample: {
           language: 'java',
@@ -394,6 +413,7 @@ public class LambdaExample {
         id: 'step-2',
         title: 'The Core Functional Interfaces',
         subtitle: 'The 4 fundamental roles in an office team',
+        duration: '2 min',
         type: 'solution',
         content: `Think of an office team where four specialists handle different tasks:
 1. **The Inspector (\`Predicate<T>\`)**: Takes an item, checks it, and answers **Yes or No** (\`T -> boolean\`). For example: *"Is this policy active?"*
@@ -401,7 +421,9 @@ public class LambdaExample {
 3. **The Worker (\`Consumer<T>\`)**: Accepts an item, performs an action with it, and **returns nothing** (\`T -> void\`). For example: *"Print this invoice to the printer."*
 4. **The Supplier (\`Supplier<T>\`)**: Takes no input, but **creates or provides** an item when asked (\`() -> T\`). For example: *"Generate a new random confirmation code."*
 
-These four interfaces sit in \`java.util.function\` and form the foundation for all functional programming in modern Java. You can even chain them together, such as \`predicate.and(otherPredicate)\` or \`function.andThen(otherFunction)\`.`,
+These four interfaces sit in \`java.util.function\` and form the foundation for all functional programming in modern Java. You can even chain them together, such as \`predicate.and(otherPredicate)\` or \`function.andThen(otherFunction)\`.
+
+**Function composition using andThen() and compose()**: The \`Function\` interface supports higher-order composition: \`f1.andThen(f2)\` applies \`f1\` then \`f2\`, whereas \`f1.compose(f2)\` applies \`f2\` first, enabling modular pipeline composition.`,
         keyIdea: 'The four core functional interfaces standardize testing (Predicate), transforming (Function), acting (Consumer), and providing (Supplier).',
         diagramState: 'functional-interfaces',
         diagramAlt: 'Architecture diagram illustrating The 4 fundamental roles in an office team: The 4 fundamental roles in an office team.',
@@ -410,6 +432,7 @@ These four interfaces sit in \`java.util.function\` and form the foundation for 
         id: 'step-3',
         title: 'Optional Null-Safety Best Practices',
         subtitle: 'The transparent gift box that prevents empty surprises',
+        duration: '2 min',
         type: 'recap',
         content: `Computer scientist Tony Hoare famously called the invention of \`null\` his "billion-dollar mistake" because unhandled null values cause millions of application crashes worldwide.
 
@@ -455,7 +478,7 @@ public class OptionalBestPractice {
     subtitle: 'Type safety at compile-time, wildcard bounds (extends/super), and JVM type erasure mechanics.',
     moduleId: '02',
     moduleTitle: '02. Collections & Streams',
-    duration: '10 min',
+    duration: '8 min',
     difficulty: 'Intermediate',
     youllLearn: [
       'Why Generics exist: eliminating runtime ClassCastExceptions',
@@ -469,6 +492,7 @@ public class OptionalBestPractice {
         id: 'step-1',
         title: 'Generics Compile-Time Type Safety',
         subtitle: 'Labeling storage containers in a chemistry lab',
+        duration: '2 min',
         type: 'concept',
         content: `Imagine working in a science lab. If all bottles on the shelf are unlabeled glass jars holding mystery liquids, someone might accidentally pour vinegar into a beaker meant for pure water and ruin the experiment. But if every jar has a clear, permanent label like *"Distilled Water Only"*, nobody makes a mistake.
 
@@ -485,6 +509,7 @@ Before Java 5, collections were like those unlabeled jars—they stored raw \`Ob
         id: 'step-2',
         title: 'The PECS Principle',
         subtitle: 'The fruit buffet tray vs the fruit compost bin',
+        duration: '3 min',
         type: 'insight',
         content: `One of the most famous rules in Java is the **PECS Principle** (coined by Joshua Bloch in *Effective Java*): **Producer Extends, Consumer Super**.
 
@@ -495,8 +520,10 @@ Think of two different fruit stations:
    - But you **cannot** put new items onto the tray! If the tray is actually a special \`List<Apple>\`, putting an orange in would ruin the apple tray.
 2. **The Fruit Compost Bin (Consumer Super - \`? super Apple\`)**:
    - You walk up to this bin to **put apple cores in** (the bin *consumes* apples from you).
-   - You can safely toss any \`Apple\` into the bin, because whether the bin is labeled for Apples, all Fruit, or all Objects, an Apple is always accepted!
-   - But you cannot safely pull items out to eat, because all you know is that it's an unknown \`Object\`.`,
+   - You can safely toss any \`Apple\` into the bin, because whether the bin is labeled for Apples, all Fruit, or all Objects, an Apple is reliably accepted by the consumer!
+   - But you cannot safely pull items out to eat, because all you know is that it's an unknown \`Object\`.
+
+**Upper-bounded (? extends T) vs Lower-bounded (? super T) wildcards**: Upper-bounded wildcards (\`? extends T\`) restrict types to subtypes of \`T\` for safe reading, while lower-bounded wildcards (\`? super T\`) restrict types to supertypes of \`T\` for safe writing.`,
         keyIdea: 'Use ? extends T when reading items out of a collection (Producer); use ? super T when adding items into a collection (Consumer).',
         codeExample: {
           language: 'java',
@@ -528,8 +555,9 @@ public class PecsInPractice {
       },
       {
         id: 'step-3',
-        title: 'Type Erasure and Bridge Methods',
+        title: 'Type Erasure Bridge Methods',
         subtitle: 'Erasing the pencil guidelines from the blueprint',
+        duration: '3 min',
         type: 'recap',
         content: `When Java 5 introduced Generics in 2004, the designers faced a massive challenge: there were already billions of lines of older Java 1.4 code running in production worldwide. If the new Java broke older programs, companies would refuse to upgrade.
 

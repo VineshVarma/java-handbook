@@ -154,7 +154,7 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     await page.goto('/lessons/how-java-runs');
 
     // Step 1 check
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     const nextBtn = page.getByTestId('next-step-button');
     await expect(nextBtn).toBeVisible();
@@ -183,19 +183,19 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
 
     // Click Back
     await prevBtn.click();
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
     await expect(prevBtn).toBeDisabled();
   });
 
   test('F2.3: Keyboard navigation (ArrowRight / ArrowLeft) advances and reverses steps', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     await page.keyboard.press('ArrowRight');
     await expect(page.getByRole('heading', { name: /javac Compiles/i })).toBeVisible();
 
     await page.keyboard.press('ArrowLeft');
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
   });
 
   test('F2.4: Markdown content renders lists, bold formatting, inline code, and key idea callouts cleanly', async ({ page }) => {
@@ -232,7 +232,7 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     const nextBtn = page.getByTestId('next-step-button');
     await expect(nextBtn).toBeVisible();
     await expect(nextBtn).toContainText(/Finish Course/i);
-    await expect(nextBtn).toBeDisabled();
+    await expect(nextBtn).toBeEnabled();
   });
 
   // --------------------------------------------------------------------------
@@ -570,11 +570,11 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     await expect(sidebar).toHaveClass(/translate-x-0/);
   });
 
-  test('F7.2: Mobile segment switcher alternates between Simulation and Notes & Code', async ({ page }) => {
+  test('F7.2: Mobile segment switcher alternates between Diagram and Notes', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/lessons/how-java-runs');
 
-    const notesBtn = page.getByRole('button', { name: 'Notes & Code', exact: true });
+    const notesBtn = page.getByRole('button', { name: 'Notes', exact: true });
     await expect(notesBtn).toBeVisible();
     await notesBtn.click();
 
@@ -582,7 +582,7 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
     const aside = page.locator('aside').filter({ hasText: /Step 1/i });
     await expect(aside).toBeVisible();
 
-    const simBtn = page.getByRole('button', { name: 'Simulation', exact: true });
+    const simBtn = page.getByRole('button', { name: 'Diagram', exact: true });
     await simBtn.click();
     await expect(page.locator('.touch-pan-y')).toBeVisible();
   });
@@ -593,13 +593,13 @@ test.describe('Tier 1: Feature Coverage (F1 - F7)', () => {
 
     const peekBtn = page.getByTestId('mobile-toggle-tab');
     await expect(peekBtn).toBeVisible();
-    await expect(peekBtn).toContainText(/Read Notes/i);
+    await expect(peekBtn).toContainText(/Notes/i);
 
     await peekBtn.click();
-    await expect(peekBtn).toContainText(/View Diagram/i);
+    await expect(peekBtn).toContainText(/Diagram/i);
 
     await peekBtn.click();
-    await expect(peekBtn).toContainText(/Read Notes/i);
+    await expect(peekBtn).toContainText(/Notes/i);
   });
 
   test('F7.4: Diagram canvas includes .touch-pan-y class to ensure vertical scrolling is not hijacked', async ({ page }) => {

@@ -16,6 +16,10 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
+  const lessonCount = allLessons.length;
+  const moduleCount = modules.length;
+  const stepCount = allLessons.reduce((acc, l) => acc + l.steps.length, 0);
+
   return (
     <>
       {/* Semantic Server Rendered HTML for Web Crawlers & Reviewers */}
@@ -25,7 +29,7 @@ export default function HomePage() {
             Java Handbook — Interactive Architecture & JVM Guide
           </h1>
           <p className="text-base text-gray-700">
-            27 interactive deep-dive lessons covering JVM internal mechanics, memory models, garbage collection algorithms, modern concurrency, Spring Boot request lifecycles, and cloud observability.
+            {lessonCount} interactive deep-dive lessons across {moduleCount} modules ({stepCount} interactive steps) covering JVM internal mechanics, memory models, garbage collection algorithms, modern concurrency, Spring Boot request lifecycles, and cloud observability.
           </p>
 
           <nav aria-label="Curriculum Modules">

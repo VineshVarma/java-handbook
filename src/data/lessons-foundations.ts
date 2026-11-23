@@ -5,10 +5,10 @@ export const foundationsLessons: Lesson[] = [
     id: 'how-java-runs',
     slug: 'how-java-runs',
     title: 'How Java Runs Your Code',
-    subtitle: 'Follow your code from a friendly text file through the compiler to lightning-fast execution on the JVM.',
+    subtitle: 'Trace source code compilation, bytecode verification, ClassLoader delegation, and HotSpot JIT execution on the JVM',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '12 min',
+    duration: '21 min',
     difficulty: 'Beginner',
     youllLearn: [
       'What happens when you run javac vs java',
@@ -20,12 +20,13 @@ export const foundationsLessons: Lesson[] = [
     steps: [
       {
         id: 'step-1',
-        title: 'Hit Enter: Write Java Source Code',
+        title: 'Writing Java Source Code',
         subtitle: 'From human-readable ideas to disk',
+        duration: '3 min',
         type: 'problem',
-        content: `Imagine writing down a gourmet recipe for chocolate chip cookies. You write it in plain English so any human can understand the ingredients and steps. But if you hand that paper note to a robotic kitchen mixer, the mixer has no idea what "stir gently" means. The machine needs exact mechanical instructions.
+        content: `Java execution operates across three distinct architectural phases: Source Code (.java) -> Bytecode (.class) -> Native CPU Instructions.
 
-In the software world, your handwritten note is your **\`.java\` source code file**. 
+In the software world, your written program is your **\`.java\` source code file**. 
 
 Computers don't run Java text directly. Languages like C or Go translate code directly into native machine instructions for one specific processor (like an Intel x86 or Apple Silicon ARM chip). If you build a C program on a Mac, it won't run on Windows without being recompiled.
 
@@ -57,10 +58,11 @@ public class PaymentProcessor {
         id: 'step-2',
         title: 'javac Compiles to Bytecode',
         subtitle: 'Turning human words into universal bytecode',
+        duration: '3 min',
         type: 'concept',
-        content: `Think of a music composer writing a melody. The composer might hum a tune, but to let musicians anywhere in the world play it, they write it down in standard sheet music notation. Sheet music is universal—a pianist in Tokyo and a violinist in London can both read the exact same notes.
+        content: `The javac compiler lowers high-level syntax trees into portable bytecode opcodes defined by the Java Virtual Machine Specification.
 
-The tool that turns your Java words into universal sheet music is **\`javac\` (the Java compiler)**.
+The tool that turns your Java words into universal instructions is **\`javac\` (the Java compiler)**.
 
 When you run \`javac PaymentProcessor.java\`, the compiler:
 1. **Checks your grammar and spelling**: Verifies syntax and makes sure variable types match.
@@ -104,8 +106,9 @@ public class com.bank.payment.PaymentProcessor {
         id: 'step-3',
         title: 'ClassLoader Hierarchy',
         subtitle: 'The 3-tier security gate before code runs',
+        duration: '3 min',
         type: 'concept',
-        content: `Think of entering a high-security international airport. Before you can reach your gate, you don't just walk in; your passport is checked by the Federal Customs Authority first, then by Regional Airport Security, and finally by your specific Airline Gate Agent. Each officer checks up the chain of authority before stamping your ticket.
+        content: `The ClassLoader subsystem enforces runtime security and modular namespace separation using parent-first delegation.
 
 When you start your program with \`java PaymentProcessor\`, the JVM launches its **ClassLoader subsystem**, which loads \`.class\` files using this exact chain of command, called the **Parent Delegation Model**:
 
@@ -152,6 +155,7 @@ When you start your program with \`java PaymentProcessor\`, the JVM launches its
         id: 'step-4',
         title: 'Bytecode Verification & Linking',
         subtitle: 'The airport security scanner protecting your computer',
+        duration: '3 min',
         type: 'solution',
         content: `Before you step onto an airplane, your luggage goes through an X-ray scanner to ensure no dangerous items sneak aboard. You wouldn't want someone bringing unverified, unsafe items into the cabin.
 
@@ -172,8 +176,9 @@ Once the safety scan passes, the class is **Linked**:
       },
       {
         id: 'step-5',
-        title: 'Execution Engine: Interpreter & JIT',
+        title: 'Interpreter and JIT Compilation',
         subtitle: 'From a live translator to a speed-printing press',
+        duration: '3 min',
         type: 'insight',
         content: `Imagine traveling in a foreign country with a personal language guide. 
 - At first, when someone speaks to you, the guide translates sentence-by-sentence in real time. You don't have to wait for them to translate an entire book before you understand the first greeting (**The Interpreter**).
@@ -181,7 +186,7 @@ Once the safety scan passes, the class is **Linked**:
 
 The HotSpot JVM combines both approaches through **Tiered Compilation (Levels 0–4)**:
 
-- **Level 0 (Interpreter)**: Starts executing your bytecode immediately, line by line, with zero delay. While running, it counts how often each method and loop runs.
+- **Level 0 (Interpreter)**: Starts executing your bytecode immediately, line by line, with minimal startup overhead. While running, it counts how often each method and loop runs.
 - **Levels 1–3 (C1 Client Compiler)**: Quickly compiles frequently used methods into basic native CPU machine code to speed things up.
 - **Level 4 (C2 Server Compiler)**: When a method becomes "hot" (called thousands of times), C2 takes over. It studies how your code actually behaves and compiles ultra-optimized native machine code with loop unrolling, method inlining, and direct hardware instructions.
 
@@ -210,12 +215,11 @@ java -XX:+PrintCompilation -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining Pay
       },
       {
         id: 'step-6',
-        title: 'Stack vs Heap: Runtime Data Areas',
+        title: 'Stack and Heap Memory',
         subtitle: 'The chef\'s cutting board vs the central walk-in pantry',
+        duration: '3 min',
         type: 'trade-off',
-        content: `Imagine a busy restaurant kitchen:
-- **The Stack (Personal Cutting Board)**: Each chef has their own private cutting board right in front of them. It holds the ingredients for the exact single dish they are preparing right now. As soon as the dish is plated, the cutting board is wiped clean instantly. No other chef can touch it.
-- **The Heap (Central Walk-In Pantry)**: A large shared room at the back of the kitchen where all the big ingredients, stored soups, and shared supplies live. Any chef can walk in and grab what they need. Because it's shared, a dedicated cleaning staff (**The Garbage Collector**) periodically walks through to throw away empty containers that nobody is using anymore.
+        content: `JVM memory is partitioned into thread-private call stacks and a globally shared heap.
 
 In the JVM, memory is split the same way:
 - **JVM Stack (Per-Thread)**: Each thread gets its own private call stack. Every time you call a method, a new **Stack Frame** is created holding your local variables and parameters. When the method finishes, the frame disappears immediately.
@@ -239,21 +243,22 @@ In the JVM, memory is split the same way:
       // The Order object on the Heap is now unreferenced and eligible for Garbage Collection.
 }`,
         },
-        interviewTip: 'What is the difference between a StackOverflowError and an OutOfMemoryError? A StackOverflowError happens when a thread runs out of stack memory (almost always caused by infinite recursion). An OutOfMemoryError happens when the shared heap has no room left to allocate new objects and the Garbage Collector cannot reclaim enough space.',
+        interviewTip: 'What is the difference between a StackOverflowError and an OutOfMemoryError? A StackOverflowError happens when a thread runs out of stack memory (frequently caused by infinite recursion or deep call stacks). An OutOfMemoryError happens when the shared heap has no room left to allocate new objects and the Garbage Collector cannot reclaim enough space.',
         diagramState: 'memory-stack-heap',
         diagramAlt: 'Architecture diagram illustrating MemoryAllocation.java: The chef\.',
       },
       {
         id: 'step-7',
-        title: 'Recap: The Complete Lifecycle',
+        title: 'Java Execution Lifecycle Recap',
         subtitle: 'The full execution pipeline from source to machine code',
+        duration: '3 min',
         type: 'recap',
         content: `Let's bring the whole picture together:
 
 1. **Source Code (\`.java\`)**: You write clean, human-readable logic.
 2. **Compiler (\`javac\`)**: Translates your source code into universal, verified bytecode in a \`.class\` file with the \`0xCAFEBABE\` header.
 3. **ClassLoader**: Uses the Parent Delegation Model to safely load your classes without tampering with core Java classes.
-4. **Bytecode Verifier**: Scans the code to guarantee memory safety before execution.
+4. **Bytecode Verifier**: Scans the code to enforce type and memory safety constraints before execution.
 5. **Execution Engine**: Starts running right away with the Interpreter, then compiles hot code into native machine code with the C1/C2 JIT compiler.
 6. **Memory Division**: Uses fast thread-private Stacks for method calls and a shared Heap for objects, kept tidy by the Garbage Collector.
 
@@ -272,7 +277,7 @@ Now you understand the powerful engine humming beneath every Java application!`,
     subtitle: 'Master Encapsulation, Inheritance, Polymorphism, and Abstraction with clean production patterns.',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '15 min',
+    duration: '14 min',
     difficulty: 'Beginner',
     youllLearn: [
       'Encapsulation and immutability using Java Records and private access',
@@ -284,16 +289,17 @@ Now you understand the powerful engine humming beneath every Java application!`,
     steps: [
       {
         id: 'step-1',
-        title: 'Encapsulation: Protecting Invariants',
+        title: 'Encapsulation and Data Invariants',
         subtitle: 'The bank vault door for your data',
+        duration: '3 min',
         type: 'concept',
-        content: `Think of an ATM cash machine. You don't open up the back panel of the machine with a screwdriver, reach into the cash tray, and adjust the currency counter by hand. Instead, the cash is safely locked behind a steel door. You interact only through a clean keypad that enforces strict rules: you must enter a valid PIN and you cannot withdraw more money than your balance.
+        content: `Encapsulation conceals internal field representations behind accessor methods to enforce invariants.
 
 In software, this protective wall is **Encapsulation**.
 
 Encapsulation means bundling data (fields) and the rules that operate on that data (methods) inside a single class, while keeping internal details hidden behind \`private\` access. 
 
-True encapsulation is not just generating mindless getters and setters for every field. It ensures that an object can **never enter an invalid state (an invariant)**. If someone tries to deposit a negative amount or withdraw more than they have, the object rejects the action right away.
+True encapsulation is not just generating mindless getters and setters for every field. It ensures that an object avoids invalid state transitions, preserving defined class invariants. If someone tries to deposit a negative amount or withdraw more than they have, the object rejects the action right away.
 
 In modern Java 16+, **Java Records** make encapsulation even easier by providing compact, immutable data containers out of the box.`,
         keyIdea: 'Encapsulation keeps internal data private and forces all changes through validated methods, preventing corrupted states.',
@@ -337,8 +343,9 @@ In modern Java 16+, **Java Records** make encapsulation even easier by providing
       },
       {
         id: 'step-2',
-        title: 'Inheritance: Code Reuse & Hierarchy',
+        title: 'Inheritance and Class Hierarchies',
         subtitle: 'Family genetics and the risk of tangled family trees',
+        duration: '3 min',
         type: 'trade-off',
         content: `Think of family traits. A child inherits their parents' eye color or hair type without having to reinvent genetics from scratch. Similarly, a SportsCar IS-A Vehicle, so it naturally shares wheels, an engine, and brakes with all vehicles.
 
@@ -388,10 +395,11 @@ final class ApplePay implements PaymentMethod {
       },
       {
         id: 'step-3',
-        title: 'Polymorphism: Dynamic Method Dispatch',
+        title: 'Polymorphism and Dynamic Dispatch',
         subtitle: 'One universal remote, many different devices',
+        duration: '3 min',
         type: 'solution',
-        content: `Think of a universal TV remote control. The remote has a single "Power" button. When you point it at a Sony TV and press Power, the screen turns on. When you point it at an audio soundbar and press Power, the speakers turn on. You don't need a different finger or a completely different remote for each device—the same command behaves appropriately depending on which device receives it.
+        content: `Polymorphism enables uniform method invocation across distinct subtypes via dynamic vtable dispatch.
 
 In Greek, **Polymorphism** means "many forms". It lets you treat different objects through a common shared interface:
 
@@ -422,8 +430,9 @@ At runtime, for class inheritance, the JVM indexes a **Virtual Method Table (vta
       },
       {
         id: 'step-4',
-        title: 'Abstraction: Contracts Over Details',
+        title: 'Abstraction and Interface Contracts',
         subtitle: 'The car steering wheel and pedals',
+        duration: '3 min',
         type: 'insight',
         content: `Think of driving a car. You sit down, turn the steering wheel, press the gas pedal, and the car moves. You don't need to know the fuel-air combustion ratio in cylinder 3, the exact electrical voltage in the battery, or the fluid dynamics of the transmission. The complex mechanical details are hidden behind a simple, intuitive driving interface.
 
@@ -459,8 +468,9 @@ In enterprise software, coding against interfaces allows you to swap out impleme
       },
       {
         id: 'step-5',
-        title: 'Recap: The OOP Architecture Blueprint',
+        title: 'Object Oriented Architecture Recap',
         subtitle: 'How the four pillars build strong applications',
+        duration: '2 min',
         type: 'recap',
         content: `Here is how the four pillars work together to build reliable software:
 
@@ -480,10 +490,10 @@ Mastering these four principles is the secret to writing clean, maintainable ent
     id: 'memory-and-gc',
     slug: 'memory-and-gc',
     title: 'Memory Model & Garbage Collection',
-    subtitle: 'Where objects live, how generations age, and how the G1 GC collects garbage with minimal pause.',
+    subtitle: 'Heap generation layout, young generation allocation, tenuring thresholds, and G1 GC region-based collection',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '12 min',
+    duration: '14 min',
     difficulty: 'Intermediate',
     youllLearn: [
       'The generational hypothesis: why 98% of objects die young',
@@ -497,13 +507,14 @@ Mastering these four principles is the secret to writing clean, maintainable ent
         id: 'step-1',
         title: 'The Generational Hypothesis',
         subtitle: 'Sticky notes vs filing cabinets',
+        duration: '3 min',
         type: 'concept',
         content: `Think of the notes on your office desk:
 - Most notes are quick reminders written on sticky notes (like a temporary phone number or a grocery item). Within ten minutes, you finish the task, crumple the sticky note, and toss it in the wastebasket.
 - But a few important documents (like your birth certificate or a signed lease contract) survive for years. You file those into a permanent steel filing cabinet.
 
 Decades of analyzing real-world Java applications revealed this exact same pattern, known as the **Weak Generational Hypothesis**:
-1. **Most objects die very young**: Over 95% of objects (like temporary strings and method calculation results) are created, used for a millisecond, and never needed again.
+1. **Most objects die very young**: Over 95% of objects (like temporary strings and method calculation results) are created, used for a brief duration, and rarely retained past minor GC.
 2. **Objects that survive stay alive a long time**: The few objects that survive multiple cleaning passes (like database connection pools and application settings) tend to live as long as the application runs.
 
 Instead of scanning gigabytes of memory every single second, the JVM divides the Heap into age groups:
@@ -515,11 +526,12 @@ Instead of scanning gigabytes of memory every single second, the JVM divides the
       },
       {
         id: 'step-2',
-        title: 'Minor GC: The Young Generation Cycle',
+        title: 'Young Generation Minor GC',
         subtitle: 'The rapid cleanup of the nursery',
+        duration: '3 min',
         type: 'solution',
-        content: `Imagine a children's play area with a toy bin (**Eden space**). When the bin fills up with toys:
-1. The play supervisor pauses the game for a split second (**Stop-The-World** pause).
+        content: `Eden space acts as the primary allocation nursery where new objects are created via bump-the-pointer allocation. When the bin fills up:
+1. The supervisor pauses the game for a split second (**Stop-The-World** pause).
 2. The supervisor looks only for the toys the kids are actively holding in their hands (**GC Roots**—variables on the active thread stacks).
 3. The toys still in use are gently moved to a side table (**Survivor space S0**). All the abandoned toys left on the floor are swept into the bin instantly!
 4. The next time the bin fills, the supervisor sweeps toys from both Eden and S0 over to a second table (**Survivor space S1**), incrementing an age counter on each toy that survived.
@@ -531,8 +543,9 @@ This rapid cleanup is called a **Minor GC**. Because the collector only has to p
       },
       {
         id: 'step-3',
-        title: 'Object Promotion to Old Generation',
+        title: 'Old Generation Object Promotion',
         subtitle: 'Graduating to the permanent archive',
+        duration: '2 min',
         type: 'insight',
         content: `Objects cannot bounce between the two Survivor tables forever. 
 
@@ -547,8 +560,9 @@ Because the Old Generation is much larger, cleaning it (**Major GC / Full GC**) 
       },
       {
         id: 'step-4',
-        title: 'G1 GC: Region-Based Low Latency',
+        title: 'G1 GC Region Architecture',
         subtitle: 'The checkerboard cleanup crew',
+        duration: '3 min',
         type: 'solution',
         content: `Think of a giant warehouse floor. If you wait until the entire floor is messy before sweeping, you have to shut down the entire warehouse for hours to clean it. But what if you divide the floor into a grid of 2,000 equal square tiles? A cleaning crew can easily spot the tiles with the most empty soda cans, clean just those few tiles in 50 milliseconds, and let workers keep moving!
 
@@ -556,7 +570,9 @@ This is the brilliant idea behind the **Garbage-First (G1) Collector**, the defa
 
 - Instead of huge unbroken chunks of memory, G1 divides the entire heap into thousands of equal-sized **Regions** (from 1MB to 32MB each).
 - Any region can act as Eden, Survivor, or Old Gen dynamically.
-- G1 constantly tracks which regions hold the most garbage. When it's time to clean, it collects the dirtiest regions first (**"Garbage-First"**) within a target pause time that you specify (e.g. \`-XX:MaxGCPauseMillis=100\`).`,
+- G1 constantly tracks which regions hold the most garbage. When it's time to clean, it collects the dirtiest regions first (**"Garbage-First"**) within a target pause time that you specify (e.g. \`-XX:MaxGCPauseMillis=100\`).
+
+**Modern GC algorithms**: HotSpot provides specialized garbage collection algorithms: **Parallel GC** emphasizes multi-threaded throughput, **G1 GC** maintains balanced pause times via region compaction, and **ZGC** provides concurrent sub-millisecond pauses for low-latency workloads.`,
         keyIdea: 'G1 GC slices heap memory into thousands of flexible regions, collecting the regions with the most garbage first to keep pause times predictable.',
         codeExample: {
           language: 'bash',
@@ -576,8 +592,9 @@ java -XX:+UseG1GC \\
       },
       {
         id: 'step-5',
-        title: 'Memory Leaks & OutOfMemoryError in Java',
+        title: 'Memory Leaks and OutOfMemoryError',
         subtitle: 'Why the garbage collector cannot save you from hoarding',
+        duration: '3 min',
         type: 'trade-off',
         content: `A common myth among beginners is: *"Java has automatic garbage collection, so unintentional object retention causes memory leaks when strong references linger unnecessarily."*
 
@@ -625,7 +642,7 @@ In reality, a Java **Memory Leak** happens when you forget that an object is sti
     subtitle: 'Master the 8 primitives, wrapper classes, autoboxing pitfalls, and String pool memory allocation.',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '10 min',
+    duration: '9 min',
     difficulty: 'Beginner',
     youllLearn: [
       'The 8 primitive types, byte sizes, and default values',
@@ -637,8 +654,9 @@ In reality, a Java **Memory Leak** happens when you forget that an object is sti
     steps: [
       {
         id: 'step-1',
-        title: 'The 8 Primitive Data Types',
+        title: 'Java Primitive Data Types',
         subtitle: 'Pocket change vs a bank safe deposit box',
+        duration: '3 min',
         type: 'concept',
         content: `Think of carrying pocket change. When you have a quarter in your pocket, the coin itself is right there in your hand. You can spend it instantly without asking anyone for permission. But if you have valuable jewelry locked in a bank safety deposit box, you don't carry the jewelry in your pocket—you carry a small key that points to the box in the bank vault.
 
@@ -652,8 +670,10 @@ Java provides **8 primitive types**:
 3. **Characters**: \`char\` (16-bit UTF-16 code unit, \\u0000 to \\uffff; supplementary code points like emojis require a 32-bit surrogate pair of two chars)
 4. **True/False**: \`boolean\` (represented as 1 byte in arrays, and compiled into 4 bytes on operand stack slots per JVMS §2.3.4)
 
-**Crucial Financial Rule**: Never use \`float\` or \`double\` for money! Because binary hardware cannot perfectly represent fractions like 0.1, rounding errors accumulate (e.g. \`0.1 + 0.2\` becomes \`0.30000000000000004\`). Always use \`BigDecimal\` or store amounts as whole cents!`,
-        keyIdea: 'Primitives store raw values directly on the stack for speed; always use BigDecimal for currency to avoid rounding errors.',
+**Crucial Financial Rule**: Avoid using \`float\` or \`double\` for monetary calculations! Because binary hardware cannot perfectly represent fractions like 0.1, rounding errors accumulate (e.g. \`0.1 + 0.2\` becomes \`0.30000000000000004\`). Standardize on \`BigDecimal\` or store amounts as whole cents!
+
+**Local Variable Type Inference (var) in modern Java**: Java 10 introduced \`var\` for local variable declarations (\`var count = 10;\`, \`var message = "hello";\`). The compiler performs static type inference at compile time from the initializer expression while preserving full type safety.`,
+        keyIdea: 'Primitives store raw values directly on the stack for speed; utilize BigDecimal for currency to avoid rounding errors.',
         codeExample: {
           language: 'java',
           title: 'FinancialPrecision.java',
@@ -673,14 +693,15 @@ public class FinancialPrecision {
     }
 }`,
         },
-        interviewTip: 'Why should you never use double or float for currency? Floating-point numbers use IEEE 754 binary scientific notation, which cannot represent base-10 decimal fractions like 0.1 exactly. Use BigDecimal or store values in integer cents.',
+        interviewTip: 'Why should you avoid double or float for currency? Floating-point numbers use IEEE 754 binary scientific notation, which cannot represent base-10 decimal fractions like 0.1 exactly. Use BigDecimal or store values in integer cents.',
         diagramState: 'primitives-stack',
         diagramAlt: 'Architecture diagram illustrating FinancialPrecision.java: Pocket change vs a bank safe deposit box.',
       },
       {
         id: 'step-2',
-        title: 'The String Pool & Immutability',
+        title: 'String Pool and Immutability',
         subtitle: 'The public book lending library',
+        duration: '3 min',
         type: 'insight',
         content: `Think of a town public library. If 1,000 students all need to read the same classic novel for school, the town doesn't buy a printing press and print 1,000 separate brand-new books from scratch. Instead, they share copies from a central library shelf.
 
@@ -688,12 +709,12 @@ Because text strings make up over 30% of memory in typical Java applications, th
 
 - When you write \`String s1 = "hello";\`, the JVM checks the pool first. If \`"hello"\` is already there, it reuses that exact reference instead of creating a new object!
 - If you explicitly call \`String s2 = new String("hello");\`, you force the JVM to bypass the pool and create an extra duplicate on the heap.
-- In Java, strings are **immutable** (they can never be changed once created). When you do \`str = str + " world"\`, you aren't changing the original string; you are creating an entirely new string.
+- In Java, strings are **immutable** (their character sequences cannot be modified once instantiated). When you do \`str = str + " world"\`, you aren't changing the original string; you are creating an entirely new string.
 
 **Why Immutability Matters**:
 1. **Security**: Passwords and database connection URLs cannot be altered behind your back once validated.
-2. **Thread Safety**: Multiple threads can read the same string at the same time with zero locking.
-3. **Fast Map Lookups**: Because a string cannot change, its hash code never changes, making it the perfect key for a \`HashMap\`.`,
+2. **Thread Safety**: Multiple threads can read the same string at the same time without synchronization locks.
+3. **Fast Map Lookups**: Because a string cannot change, its hash code remains stable across lookups, making it the ideal key for a \`HashMap\`.`,
         keyIdea: 'Strings are immutable and cached in the String Pool to save memory, protect security, and ensure thread safety.',
         codeExample: {
           language: 'java',
@@ -723,6 +744,7 @@ Because text strings make up over 30% of memory in typical Java applications, th
         id: 'step-3',
         title: 'Autoboxing, Unboxing & NullPointerExceptions',
         subtitle: 'The surprise inside an empty gift box',
+        duration: '3 min',
         type: 'trade-off',
         content: `Imagine gift boxes. If you have a shiny wrist watch (a primitive \`int\`), you can wrap it in a decorative gift box (an \`Integer\` object) so it can sit under the Christmas tree alongside other boxed gifts. Unwrapping the box gives you your watch back.
 
@@ -733,7 +755,7 @@ Java does this wrapping and unwrapping automatically:
 **The Hidden Beginner Trap**:
 What happens if someone hands you a beautifully wrapped gift box, but when you open it, the box is completely empty (\`null\`)? You can't put an invisible watch on your wrist!
 
-In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \`int\`, the compiler invisibly calls \`.intValue()\` on that null reference, causing an instant \`NullPointerException\`! Always be careful when reading nullable columns from a database or JSON payload.`,
+In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \`int\`, the compiler invisibly calls \`.intValue()\` on that null reference, causing an instant \`NullPointerException\`! Exercise caution when reading nullable columns from a database or JSON payload.`,
         keyIdea: 'Unboxing an Integer wrapper that contains null triggers a silent, unexpected NullPointerException at runtime.',
         codeExample: {
           language: 'java',
@@ -769,20 +791,21 @@ In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \
     subtitle: 'Checked vs Unchecked exceptions, try-with-resources, and designing resilient enterprise error flows.',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '10 min',
+    duration: '8 min',
     difficulty: 'Beginner',
     youllLearn: [
       'The Throwable class hierarchy: Error vs Exception',
       'Checked Exceptions vs Unchecked RuntimeExceptions',
       'Automatic resource management with try-with-resources (AutoCloseable)',
       'Designing domain-specific Custom Exception hierarchies',
-      'Best practices: why you should never swallow exceptions',
+      'Best practices: why you should avoid swallowed exceptions',
     ],
     steps: [
       {
         id: 'step-1',
         title: 'The Throwable Hierarchy',
         subtitle: 'A kitchen fire vs a missing ingredient',
+        duration: '3 min',
         type: 'concept',
         content: `Think of cooking dinner in a restaurant kitchen:
 - **Case 1: The oven explodes and the kitchen catches fire (an \`Error\`)**. This is a catastrophic disaster. You don't grab a spatula and keep cooking; you pull the fire alarm, evacuate the building, and shut down.
@@ -790,7 +813,7 @@ In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \
 
 In Java, all error conditions descend from \`java.lang.Throwable\`:
 
-1. **\`Error\` (The Fire)**: Serious hardware or JVM problems (like \`OutOfMemoryError\` or \`StackOverflowError\`). Your application should never attempt to catch these.
+1. **\`Error\` (The Fire)**: Serious hardware or JVM problems (like \`OutOfMemoryError\` or \`StackOverflowError\`). Applications should generally avoid catching or recovering from these fatal conditions.
 2. **\`Exception\` (The Missing Ingredient)**: Conditions your program can handle:
    - **Checked Exceptions**: Subclasses of \`Exception\` (like \`IOException\` or \`SQLException\`). The compiler forces you to handle them with \`try-catch\` or declare them with \`throws\`.
    - **Unchecked Exceptions (\`RuntimeException\`)**: Programming bugs or logic errors (like \`NullPointerException\` or \`IllegalArgumentException\`). The compiler doesn't force you to declare them.`,
@@ -801,15 +824,16 @@ In Java, all error conditions descend from \`java.lang.Throwable\`:
       {
         id: 'step-2',
         title: 'try-with-resources (AutoCloseable)',
-        subtitle: 'The automatic sensor faucet that never overflows',
+        subtitle: 'Deterministic resource cleanup via AutoCloseable',
+        duration: '3 min',
         type: 'solution',
-        content: `Think of a smart sensor sink in a modern restroom. In the old days, if someone washed their hands and forgot to turn off the physical faucet, the water ran all night and flooded the floor. With an automatic sensor faucet, as soon as your hands leave the basin, the water turns off automatically.
+        content: `The try-with-resources statement provides deterministic resource cleanup via compiler-generated desugaring.
 
 In older Java versions, closing database connections or files required messy, nested \`finally\` blocks. If an error happened in both the \`try\` block and the \`finally\` block, the \`finally\` error silently erased the original root cause!
 
 Java 7 introduced \`try-with-resources\`:
 - Any resource that implements \`AutoCloseable\` (like files, sockets, and database connections) is declared inside parentheses after \`try (...)\`.
-- The javac compiler desugars the construct into a robust try-finally block where close() is guaranteed to execute, using Throwable.addSuppressed() to preserve secondary closing exceptions rather than letting them mask the primary error!
+- The javac compiler desugars the construct into a robust try-finally block where close() executes deterministically on scope exit, using Throwable.addSuppressed() to preserve secondary closing exceptions rather than letting them mask the primary error!
 - Resources are closed in **reverse order** of creation, and any secondary closing errors are preserved as suppressed exceptions.`,
         keyIdea: 'try-with-resources automatically closes files and database connections, preventing resource leaks and preserving error messages.',
         codeExample: {
@@ -847,11 +871,13 @@ public class TryWithResourcesModern {
         id: 'step-3',
         title: 'Enterprise Custom Exception Design',
         subtitle: 'Clear medical charts instead of vague complaints',
+        duration: '2 min',
         type: 'recap',
         content: `If a patient walks into a clinic, a good doctor doesn't write "Patient is sick" on their chart. They write a specific diagnosis: "Acute throat infection". That way, the pharmacist knows exactly which medicine to dispense.
 
 In clean backend development:
-- **Never throw raw generic \`Exception\`**: Callers have no way of knowing what specifically went wrong.
+- **Avoid throwing raw generic \`Exception\`**: Callers have no structured way of knowing what specifically went wrong.
+- **Avoid swallowed exceptions**: Do not discard caught exceptions in empty catch blocks; preserve the causal chain with structured logging or rethrowing.
 - **Create clear domain exceptions**: Extend \`RuntimeException\` with clear names like \`PolicyNotFoundException\` or \`InsufficientBalanceException\`.
 - **Include helpful context**: Add error codes and relevant IDs (like the missing policy number) so your logging and monitoring tools can pinpoint bugs instantly.`,
         keyIdea: 'Custom domain exceptions give your errors clear business meaning and make debugging production issues effortless.',
@@ -867,7 +893,7 @@ In clean backend development:
     subtitle: 'Inside the Heap: Mark Word, Klass Pointer, Compact Object Headers (Project Lilliput), and lock-free TLAB allocation.',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '14 min',
+    duration: '11 min',
     difficulty: 'Advanced',
     youllLearn: [
       'The exact 16-byte memory footprint of an empty new Object()',
@@ -880,8 +906,9 @@ In clean backend development:
     steps: [
       {
         id: 'step-1',
-        title: 'The 16-Byte Mystery of new Object()',
+        title: 'Java Object Header Layout',
         subtitle: 'The shipping box that is bigger than the gift',
+        duration: '3 min',
         type: 'problem',
         productionSymptom: 'A high-throughput cache holding 50 million small objects ran out of memory on a 16GB server even though data fields were only 4 bytes each! Why does Java add 12-16 bytes of invisible overhead to every single object?',
         content: `Imagine ordering a tiny memory card online. When the package arrives on your doorstep, it isn't just the bare card. It arrives inside a sturdy cardboard shipping box with a shipping barcode label, a fragile sticker, packing paper, and tape. The shipping packaging weighs ten times more than the memory card itself!
@@ -895,7 +922,7 @@ In Java, you cannot create an object that contains "just the fields". Every sing
 2. **Klass Pointer (32 or 64 bits)**: A reference pointer that tells the JVM what kind of class this object is.
 3. **8-Byte Alignment Padding**: For fast CPU hardware reads, the JVM pads all objects to multiples of 8 bytes.
 
-An empty object with zero fields still takes up 8 bytes (Mark Word) + 4 bytes (Klass Word) + 4 bytes (padding) = **16 bytes on the Heap**!`,
+An empty object with no declared instance fields still takes up 8 bytes (Mark Word) + 4 bytes (Klass Word) + 4 bytes (padding) = **16 bytes on the Heap**!`,
         keyIdea: 'Every Java object carries an invisible header containing a Mark Word and a Klass pointer, padded to 8-byte boundaries.',
         cliInspection: {
           command: 'java -jar jol-cli.jar internals java.lang.Object',
@@ -907,15 +934,16 @@ An empty object with zero fields still takes up 8 bytes (Mark Word) + 4 bytes (K
       },
       {
         id: 'step-2',
-        title: 'Compressed OOPs & The 32GB Heap Ceiling',
+        title: 'Compressed OOPs Heap Limits',
         subtitle: 'Numbering houses on an 8-meter lot',
+        duration: '3 min',
         type: 'concept',
         content: `Imagine a planned neighborhood where every single house lot is exactly 8 meters wide. If you need to tell the postman where someone lives, you don't have to write the exact centimeter distance from the start of the street (which would require huge numbers). You simply write the house number: House 1, House 2, House 3... The postman simply multiplies that number by 8 to reach the front door!
 
 On 64-bit computers, standard memory pointers take 8 bytes (64 bits). In a large application with millions of objects, pointers alone can waste gigabytes of RAM.
 
 HotSpot solves this using **Compressed OOPs (Ordinary Object Pointers)**:
-- Because every Java object is aligned to multiples of 8 bytes, the lowest 3 bits of every memory address are always \`000\`.
+- Because every Java object is aligned to multiples of 8 bytes, the lowest 3 bits of every 8-byte aligned memory address evaluate to \`000\`.
 - The JVM drops those 3 trailing zeros and stores compact 32-bit pointers. When reading, it shifts left by 3 bits to restore the full 64-bit address.
 - With 32 bits, you can address $2^{32} \\times 8 \\text{ bytes} = \\mathbf{32\\text{ GB}}$ of memory!
 
@@ -937,8 +965,9 @@ java -XX:+PrintFlagsFinal -version | grep -i UseCompressedOops
       },
       {
         id: 'step-3',
-        title: 'Project Lilliput: Compact Object Headers',
+        title: 'Project Lilliput Compact Headers',
         subtitle: 'Shrinking the shipping label in modern Java',
+        duration: '2 min',
         type: 'solution',
         content: `For over 25 years, every 64-bit Java object required a bulky header of 12 to 16 bytes. When building modern cloud microservices holding millions of objects in memory, that overhead felt like shipping a marble in a refrigerator box.
 
@@ -970,8 +999,9 @@ java -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -jar microser
       },
       {
         id: 'step-4',
-        title: 'TLAB: Lock-Free Bump-The-Pointer Allocation',
+        title: 'Lock Free TLAB Allocation',
         subtitle: 'Personal parchment paper for every chef',
+        duration: '3 min',
         type: 'insight',
         content: `Imagine a bakery with 20 pastry chefs. If all 20 chefs have to share a single tape dispenser at the front counter to package every cookie, they will spend all morning bumping into each other and waiting in line. But if the bakery manager hands each chef their own personal roll of tape right at their station, every chef can wrap pastries at lightning speed without waiting.
 
@@ -980,7 +1010,7 @@ In the JVM, memory is shared across hundreds of threads. If every thread had to 
 HotSpot solves this with **TLAB (Thread-Local Allocation Buffer)**:
 - Every thread gets a private chunk of memory inside Eden space (~100KB to 1MB).
 - When a thread creates an object, it simply slides a pointer forward: \`top += size\`.
-- This **"Bump-the-Pointer"** allocation takes zero locks and finishes in just 1 or 2 CPU clock cycles!
+- This **"Bump-the-Pointer"** allocation operates without contention locks and finishes in just 1 or 2 CPU clock cycles!
 - Only when a thread's private TLAB fills up does it briefly coordinate with the main heap to grab a fresh buffer.`,
         keyIdea: 'TLAB provides a lock-free thread-local buffer in Eden space for bump-pointer allocation; shared heap synchronization occurs only during buffer refill.',
         cliInspection: {
@@ -1000,7 +1030,7 @@ HotSpot solves this with **TLAB (Thread-Local Allocation Buffer)**:
     subtitle: 'Dispelling the myth that all objects live on the Heap: C2 scalar replacement and lock elision.',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '12 min',
+    duration: '7 min',
     difficulty: 'Advanced',
     youllLearn: [
       'The three escape states: GlobalEscape, ArgEscape, and NoEscape',
@@ -1012,15 +1042,16 @@ HotSpot solves this with **TLAB (Thread-Local Allocation Buffer)**:
     steps: [
       {
         id: 'step-1',
-        title: 'The Escape Analysis Myth',
+        title: 'Escape Analysis JVM Optimization',
         subtitle: 'Do all Java objects really live on the Heap?',
+        duration: '2 min',
         type: 'problem',
         productionSymptom: 'A junior engineer avoided creating small immutable Record objects in a high-frequency trading loop, fearing that 10,000,000 allocations per second would drown the Garbage Collector in Eden space. Yet in production, GC pauses were 0ms! How did the JVM eliminate allocations completely?',
         content: `Almost every Java beginner is taught: *"In C++ you allocate on the stack, but in Java, every single object created with \`new\` goes onto the Heap."*
 
 In modern Java, **this is actually a myth!**
 
-Through a compiler technique called **Escape Analysis**, the HotSpot C2 compiler inspects your code to see where an object's reference travels. If an object is created inside a method, used for a quick calculation, and never handed off to another method or thread, the JVM realizes: *"Nobody outside this method will ever know this object existed."*
+Through a compiler technique called **Escape Analysis**, the HotSpot C2 compiler inspects your code to see where an object's reference travels. If an object is created inside a method, used for a quick calculation, and not passed beyond the method boundary, the JVM realizes: *"Nobody outside this method will ever know this object existed."*
 
 When that happens, the JVM does **not** allocate the object on the heap at all!`,
         keyIdea: 'Escape analysis proves whether an object escapes its method, allowing the JIT compiler to eliminate heap allocations entirely.',
@@ -1045,16 +1076,16 @@ When that happens, the JVM does **not** allocate the object on the heap at all!`
         id: 'step-2',
         title: 'The Three Escape States',
         subtitle: 'Confined to the room vs escaping to the street',
+        duration: '3 min',
         type: 'concept',
         content: `Think of a private secret:
-1. **\`NoEscape\` (Whispered in a locked room)**: You think of a secret and write it on a sticky note. You read it, calculate an answer, and shred the note before leaving the room. The note never escapes!
-2. **\`ArgEscape\` (Shown to a trusted friend)**: You show the note to a friend in the hallway, but they don't take a photo or share it. It escaped the room, but not the conversation.
+1. **\`NoEscape\` (Whispered in a locked room)**: You think of a secret and write it on a sticky note. You read it, calculate an answer, and shred the note before leaving the room. The allocated instance does not escape method scope! 2. ArgEscape (Shown to a trusted friend): You show the note to a friend in the hallway, but they don't take a photo or share it. It escaped the room, but not the conversation.
 3. **\`GlobalEscape\` (Published on a billboard)**: You post the secret on social media. Now anyone in the world can see it, and it must live forever on the web.
 
 HotSpot classifies every object into these three exact states:
 - **GlobalEscape**: The object is returned from a method, stored in a static field, or passed to a background thread. It **must** live on the shared Heap.
 - **ArgEscape**: Passed into another method as an argument, but that method doesn't store it.
-- **NoEscape**: The object never leaves the current method boundary.`,
+- **NoEscape**: The object remains confined to the current method invocation.`,
         keyIdea: 'Only NoEscape objects qualify for scalar replacement, allowing the JIT to eliminate the heap object completely.',
         cliInspection: {
           command: 'java -XX:+UnlockDiagnosticVMOptions -XX:+PrintEscapeAnalysis PointDemo',
@@ -1069,19 +1100,20 @@ HotSpot classifies every object into these three exact states:
       },
       {
         id: 'step-3',
-        title: 'Scalar Replacement & Lock Elision',
+        title: 'Scalar Replacement Lock Elision',
         subtitle: 'Dismantling the object into raw CPU numbers',
+        duration: '2 min',
         type: 'solution',
         content: `When an object is categorized as \`NoEscape\`, the HotSpot JIT compiler applies two brilliant optimizations:
 
 1. **Scalar Replacement**:
    The compiler literally dismantles the object into its individual raw numbers (scalars). If you created a \`Point(int x, int y)\`, the compiler puts \`x\` directly into CPU hardware register R1 and \`y\` into register R2.
    - No object header is created.
-   - Zero bytes are allocated on the Heap.
-   - The Garbage Collector has zero work to do!
+   - No memory is allocated on the heap.
+   - The garbage collector incurs no allocation overhead!
 
 2. **Lock Elision (Removing Locks)**:
-   If a local method acquires a lock on an object that never escapes (e.g., using a legacy \`StringBuffer\` or a local \`synchronized\` block), the JIT compiler completely deletes the locking instructions because no other thread could ever compete for it!`,
+   If a local method acquires a lock on an object that does not escape (e.g., using a legacy \`StringBuffer\` or a local \`synchronized\` block), the JIT compiler completely deletes the locking instructions because no other thread could ever compete for it!`,
         keyIdea: 'Scalar replacement breaks an object into raw primitive variables in CPU registers, eliminating heap allocations and GC pauses.',
         codeExample: {
           language: 'java',
@@ -1125,7 +1157,7 @@ HotSpot classifies every object into these three exact states:
     subtitle: 'Region evacuation STW pauses in G1GC vs colored pointers and load barriers in Generational ZGC (<1ms pauses).',
     moduleId: '01',
     moduleTitle: '01. Java Foundations',
-    duration: '15 min',
+    duration: '6 min',
     difficulty: 'Advanced',
     youllLearn: [
       'Why traditional Stop-The-World (STW) pauses occur during region evacuation',
@@ -1138,8 +1170,9 @@ HotSpot classifies every object into these three exact states:
     steps: [
       {
         id: 'step-1',
-        title: 'The Stop-The-World Latency Barrier',
+        title: 'Stop The World Latency',
         subtitle: 'Freezing time in the supermarket',
+        duration: '3 min',
         type: 'problem',
         productionSymptom: 'During peak market open, an algorithmic order router experienced 80ms p99 latency spikes that triggered connection timeouts on client sockets. Investigation showed that G1GC was pausing all application threads to evacuate Survivor and Old regions.',
         content: `Imagine a busy supermarket where thousands of shoppers are walking up and down the aisles picking up groceries. Suddenly, a siren sounds, and a loud voice says: *"FREEZE!"* Every shopper must freeze like a statue in place for two seconds while the store cleaning crew moves cereal boxes from Aisle 2 to Aisle 4.
@@ -1148,7 +1181,9 @@ In traditional garbage collectors (like Parallel GC and G1GC), this is known as 
 - When the collector needs to move living objects from a fragmented memory region to a fresh one, it pauses all your application threads.
 - Why? Because if your program tried to read or change an object while the Garbage Collector was halfway through moving it, your data would get corrupted!
 
-While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems, multiplayer games, and high-speed web services cannot tolerate even a 50ms pause. That is why **ZGC** was created, achieving sub-millisecond (<1ms) pauses.`,
+While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems, multiplayer games, and high-speed web services cannot tolerate even a 50ms pause. That is why **ZGC** was created, achieving sub-millisecond (<1ms) pauses.
+
+**Real-world GC logging and jstat monitoring**: Production diagnostics combine unified logging via \`-Xlog:gc*\` to capture pause phases with real-time \`jstat\` sampling to track generational capacity and memory allocation rates.`,
         keyIdea: 'Stop-The-World pauses occur because legacy garbage collectors cannot safely allow application threads to access objects while they are being moved in memory.',
         cliInspection: {
           command: 'jstat -gcutil <pid> 1000',
@@ -1160,8 +1195,9 @@ While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems
       },
       {
         id: 'step-2',
-        title: 'ZGC Innovation: Colored Pointers & Load Barriers',
+        title: 'Colored Pointers Load Barriers',
         subtitle: 'Moving houses while guests are still visiting',
+        duration: '3 min',
         type: 'solution',
         content: `Imagine moving houses while friends are still visiting. Instead of canceling the party and locking all doors for 3 days, you put a friendly assistant at the front door. If a friend arrives at the old house, the assistant hands them a note with the new address on the spot, and they head straight to the party without delay!
 
@@ -1173,7 +1209,7 @@ It accomplishes this through two foundational ideas:
 2. **Load Barriers (Self-Healing Reads)**:
    When your application thread reads an object reference (like \`customer.getName()\`), the JIT compiler inserts an ultra-fast hardware check. If the pointer's color indicates that the object is currently being moved to a new memory address, the thread itself updates the pointer to the new address instantly and keeps running!
 
-Your application threads never experience multi-millisecond pauses while the Garbage Collector relocates objects; pause phases (Pause Mark Start, Pause Mark End, Pause Relocate Start) are strictly sub-millisecond (<1ms).`,
+worker threads avoid multi-millisecond stop-the-world pauses while the Garbage Collector relocates objects; pause phases (Pause Mark Start, Pause Mark End, Pause Relocate Start) are strictly sub-millisecond (<1ms).`,
         keyIdea: 'ZGC uses Colored Pointers and self-healing Load Barriers to move objects concurrently without pausing application threads.',
         codeExample: {
           language: 'bash',

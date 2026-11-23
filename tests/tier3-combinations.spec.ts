@@ -254,7 +254,7 @@ test.describe('Tier 3: Cross-Feature Combinations (P1 - P10)', () => {
     }
 
     await expect(nextBtn).toContainText(/Finish Course/i);
-    await expect(nextBtn).toBeDisabled();
+    await expect(nextBtn).toBeEnabled();
 
     // Expand Module 01 in Sidebar if collapsed
     const sidebar = page.locator('aside').filter({ hasText: 'Curriculum' });
@@ -267,7 +267,7 @@ test.describe('Tier 3: Cross-Feature Combinations (P1 - P10)', () => {
     await lesson1Btn.click();
 
     await page.waitForURL(/\/lessons\/how-java-runs/);
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
     await expect(page.getByTestId('prev-step-button')).toBeDisabled();
   });
 

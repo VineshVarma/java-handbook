@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Java Internals - Core Platform & E2E Validation', () => {
+test.describe('Java Handbook - Core Platform & E2E Validation', () => {
 
   test('1. Core Lesson Flow & Interactive Controls', async ({ page, context, isMobile }) => {
     // Monitor uncaught errors
@@ -43,7 +43,7 @@ test.describe('Java Internals - Core Platform & E2E Validation', () => {
     }
 
     // Verify initial step (Step 1)
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     // Test Next Step
     const nextBtn = page.getByTestId('next-step-button');
@@ -163,7 +163,8 @@ test.describe('Java Internals - Core Platform & E2E Validation', () => {
 
     // Check localStorage has saved progress
     const stored = await page.evaluate(() => {
-      return localStorage.getItem('java_internals_progress_v1');
+      return localStorage.getItem('java_handbook_progress_v1') ||
+             localStorage.getItem('java_internals_progress_v1');
     });
     expect(stored).not.toBeNull();
     const parsed = JSON.parse(stored || '{}');
@@ -174,7 +175,8 @@ test.describe('Java Internals - Core Platform & E2E Validation', () => {
     await page.waitForTimeout(500);
 
     const reloadedStored = await page.evaluate(() => {
-      return localStorage.getItem('java_internals_progress_v1');
+      return localStorage.getItem('java_handbook_progress_v1') ||
+             localStorage.getItem('java_internals_progress_v1');
     });
     expect(reloadedStored).toContain('how-java-runs');
   });

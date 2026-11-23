@@ -37,8 +37,8 @@ test.describe('Tier 4: Real-World Learner Journeys (S1 - S6)', () => {
     await expect(page).toHaveTitle(/How Java Runs/i);
     await expect(page.locator('h1').first()).toContainText('How Java Runs');
 
-    // Step 1: Hit Enter
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    // Step 1: Writing Java Source Code
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
     await expect(page.getByText(/Key Idea/i)).toBeVisible();
 
     // 2. Advances to Step 2: javac Compiles
@@ -122,7 +122,7 @@ test.describe('Tier 4: Real-World Learner Journeys (S1 - S6)', () => {
     const nextBtn = page.getByTestId('next-step-button');
     await nextBtn.click();
 
-    await expect(page.getByRole('heading', { name: /ZGC Innovation/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Colored Pointers/i })).toBeVisible();
     await expect(page.getByText(/-XX:\+UseZGC/i)).toBeVisible();
 
     // Verify diagram SVG remains mounted
@@ -205,16 +205,16 @@ test.describe('Tier 4: Real-World Learner Journeys (S1 - S6)', () => {
     // 2. Toggle views using floating mobile peek button
     const peekBtn = page.getByTestId('mobile-toggle-tab');
     await expect(peekBtn).toBeVisible();
-    await peekBtn.click(); // Switches to Read Notes
+    await peekBtn.click(); // Switches to Notes
 
     const notesAside = page.locator('aside').filter({ hasText: /Step 1/i });
     await expect(notesAside).toBeVisible();
 
-    await peekBtn.click(); // Switches back to View Diagram
+    await peekBtn.click(); // Switches back to Diagram
     await expect(page.locator('.touch-pan-y')).toBeVisible();
 
     // 3. Toggle via segment switcher
-    const notesTab = page.getByRole('button', { name: 'Notes & Code', exact: true });
+    const notesTab = page.getByRole('button', { name: 'Notes', exact: true });
     await notesTab.click();
     await expect(notesAside).toBeVisible();
 
@@ -234,7 +234,7 @@ test.describe('Tier 4: Real-World Learner Journeys (S1 - S6)', () => {
   // --------------------------------------------------------------------------
   test('S5: Keyboard-Only Power User Journey', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     // 1. Search via Cmd+K / Ctrl+K
     await page.keyboard.press('Control+k');

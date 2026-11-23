@@ -5,10 +5,10 @@ export const securityLessons: Lesson[] = [
     id: 'rest-api-design',
     slug: 'rest-api-design',
     title: 'REST API Design & Best Practices',
-    subtitle: 'Build robust, resource-oriented RESTful APIs with correct HTTP methods, status codes, and DTO contracts.',
+    subtitle: 'Resource-oriented URI design, HTTP method idempotency, status code precision, and pagination',
     moduleId: '05',
     moduleTitle: '05. REST API & Security',
-    duration: '10 min',
+    duration: '8 min',
     difficulty: 'Intermediate',
     youllLearn: [
       'Resource URI naming standards (nouns vs verbs, pluralization)',
@@ -22,10 +22,11 @@ export const securityLessons: Lesson[] = [
         id: 'step-1',
         title: 'Resource-Oriented URI Design',
         subtitle: 'Labeling folders with nouns instead of shouting action verbs',
+        duration: '2 min',
         type: 'concept',
         content: `Think of a physical filing cabinet in an office:
 - You label the drawers with clear nouns: **"Customers"**, **"Invoices"**, and **"Policies"**. Inside the Policies drawer, each folder has an ID number like \`POL-101\`.
-- You would never label a drawer with a long action sentence like *"PleaseUpdateThisCustomerRecordImmediately"*.
+- Avoid labeling resource endpoints with action verbs or RPC phrases.
 
 A common beginner mistake in API design is treating REST like Remote Procedure Calls (RPC), creating URLs with action verbs like \`/api/getPolicies\` or \`/api/updateCustomer\`.
 
@@ -38,15 +39,22 @@ True REST APIs model **Resources** using clean plural nouns, letting the standar
 - \`DELETE /api/v1/policies/{id}\` (Remove the policy)
 
 Nested resources naturally express parent-child relationships:
-\`GET /api/v1/policies/{policyId}/claims\``,
+\`GET /api/v1/policies/{policyId}/claims\`
+
+**Resource URI naming standards**: RESTful conventions use plural nouns rather than verbs (\`/policies\`), standardizing pluralization across endpoint paths.
+
+**Pagination, filtering, and sorting using Spring Pageable**: Controllers accept \`Pageable pageable\` to handle offset pagination, multi-field sorting, and filtering over large resource datasets.
+
+**API versioning strategies**: Version API contracts via URI path (\`/api/v1\`), custom headers, or query params depending on caching and deprecation needs.`,
         keyIdea: 'Use clean plural nouns for resource URLs, and let standard HTTP verbs specify the action.',
         diagramState: 'resource-uri',
         diagramAlt: 'Architecture diagram illustrating Labeling folders with nouns instead of shouting action verbs: Labeling folders with nouns instead of shouting action verbs.',
       },
       {
         id: 'step-2',
-        title: 'HTTP Method Safety and Idempotency',
+        title: 'HTTP Safety and Idempotency',
         subtitle: 'Flipping a light switch vs vending a soda can',
+        duration: '3 min',
         type: 'insight',
         content: `Think of everyday physical actions:
 - **Safe (Read-Only)**: Reading a book on a shelf. Merely looking at the book does not change or harm the book in any way. In HTTP, \`GET (safe, idempotent)\`, \`HEAD\`, and \`OPTIONS\` are safe operations that do not modify server state.
@@ -60,12 +68,13 @@ Nested resources naturally express parent-child relationships:
         id: 'step-3',
         title: 'HTTP Status Code Precision',
         subtitle: 'Clear delivery receipts instead of mystery packages',
+        duration: '3 min',
         type: 'solution',
         content: `Imagine receiving a package from a delivery courier. You open the box, and inside is a piece of paper that says: *"Everything is Great (Success)"*, but written in tiny handwriting at the bottom is *"Actually, your item was stolen and we don't have it."* That would be infuriating!
 
 Yet many beginner APIs make this exact mistake: they return an \`HTTP 200 OK\` header while the body contains \`{ "error": true, "message": "Failed" }\`.
 
-Always use standard HTTP status codes:
+Adhere to standard HTTP status codes:
 - **2xx (Success)**:
   - \`200 OK\`: Standard successful response.
   - \`201 Created\`: A new record was successfully created (include a \`Location\` header with the new URL).
@@ -92,7 +101,7 @@ Always use standard HTTP status codes:
     subtitle: 'From ForgeRock Access Management (AM) authentication to stateless JWT validation and secure cookie refresh.',
     moduleId: '05',
     moduleTitle: '05. REST API & Security',
-    duration: '15 min',
+    duration: '14 min',
     difficulty: 'Advanced',
     youllLearn: [
       'Authentication vs Authorization and OAuth2 roles',
@@ -104,8 +113,9 @@ Always use standard HTTP status codes:
     steps: [
       {
         id: 'step-1',
-        title: 'Authentication vs Authorization & OAuth2 Roles',
+        title: 'Authentication Authorization OAuth2 Roles',
         subtitle: 'Your photo ID card vs your VIP backstage wristband',
+        duration: '4 min',
         type: 'concept',
         content: `Think of attending an enterprise music festival:
 - **Authentication (AuthN - Who are you?)**: You present your government photo ID card at the perimeter gate. The guard verifies your identity and confirms your credentials.
@@ -139,8 +149,9 @@ For browser Single-Page Apps and mobile apps where client secrets cannot be secu
       },
       {
         id: 'step-2',
-        title: 'The Structure of a JSON Web Token (JWT)',
+        title: 'JSON Web Token Structure',
         subtitle: 'The tamper-evident wax seal on an official passport',
+        duration: '4 min',
         type: 'insight',
         content: `Think of an official wax seal on an ancient royal decree. The document contains three elements:
 1. The type of wax and official stamp used (**The Header**).
@@ -317,8 +328,9 @@ public class JwtValidationFilter extends OncePerRequestFilter {
       },
       {
         id: 'step-3',
-        title: 'ForgeRock AM Integration: Token Refresh & Re-Signing',
+        title: 'Token Refresh and Rotation',
         subtitle: 'A 15-minute temporary room key with a renewal card',
+        duration: '2 min',
         type: 'solution',
         content: `Imagine staying at a luxury hotel where your plastic room key card expires every 15 minutes for security. If someone steals your key card out of your jacket pocket, it becomes a useless piece of plastic within minutes!
 
@@ -334,8 +346,9 @@ This automatic renewal cycle gives users a seamless experience while keeping sec
       },
       {
         id: 'step-4',
-        title: 'Secure Logout & Cookie Cleanup',
+        title: 'Secure Logout Cookie Revocation',
         subtitle: 'Canceling the key card and shredding the duplicate',
+        duration: '4 min',
         type: 'trade-off',
         content: `Because signed JWTs are self-contained and immutable, an application cannot simply delete a token from remote memory once minted. If an attacker captures an access token, they could use it until its expiration timestamp elapses.
 

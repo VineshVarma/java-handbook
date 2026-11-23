@@ -18,6 +18,8 @@ interface StepContentProps {
   hasPrev: boolean;
   nextStepTitle?: string;
   youllLearn: string[];
+  isCourseComplete?: boolean;
+  onCompleteCourse?: () => void;
 }
 
 const typeBadgeVariants: Record<StepType, 'default' | 'success' | 'warning' | 'danger' | 'info'> = {
@@ -280,6 +282,8 @@ export function StepContent({
   hasPrev,
   nextStepTitle,
   youllLearn,
+  isCourseComplete,
+  onCompleteCourse,
 }: StepContentProps) {
   const [selectedQuizOption, setSelectedQuizOption] = useState<number | null>(null);
   const [copiedCli, setCopiedCli] = useState(false);
@@ -454,7 +458,38 @@ export function StepContent({
         )}
 
         {/* Next Up Lesson Footer Callout (shown on final step of lesson) */}
-        {stepIndex === totalSteps - 1 && nextStepTitle && (
+        {isCourseComplete ? (
+          <div className="mt-4 p-4 rounded-xl border border-emerald-400 dark:border-emerald-700 bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-950 dark:text-emerald-100 space-y-3 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                <span>🏆</span> Course Completed
+              </span>
+              <span className="text-[11px] font-mono font-bold text-emerald-700 dark:text-emerald-300">
+                27 / 27 Lessons Done
+              </span>
+            </div>
+            <p className="text-sm font-bold font-mono text-charcoal-900 dark:text-cream-50">
+              You Have Mastered the Java Handbook!
+            </p>
+            <p className="text-xs font-sans text-charcoal-600 dark:text-cream-300 leading-relaxed">
+              You have completed all 27 lessons and 96 interactive steps covering JVM internals, modern concurrency, Spring Boot architecture, and cloud operations.
+            </p>
+            <div className="flex items-center gap-2 pt-1">
+              <a
+                href="/"
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition-colors"
+              >
+                Course Overview
+              </a>
+              <button
+                onClick={onCompleteCourse}
+                className="px-3 py-1.5 rounded-lg text-xs font-mono font-semibold border border-emerald-600/30 dark:border-emerald-400/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/10 transition-colors"
+              >
+                Review from Beginning
+              </button>
+            </div>
+          </div>
+        ) : stepIndex === totalSteps - 1 && nextStepTitle ? (
           <div className="mt-4 p-4 rounded-xl border border-emerald-300 dark:border-emerald-850 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-100 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
@@ -471,7 +506,7 @@ export function StepContent({
               Continue your journey to master internal JVM architecture and distributed systems.
             </p>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Pinned Bottom Navigation Action Bar */}
@@ -491,21 +526,32 @@ export function StepContent({
             <span>Back</span>
           </button>
 
-          <button
-            onClick={onNext}
-            disabled={!hasNext}
-            className={`min-h-[44px] flex-1 px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-between transition-all ${
-              hasNext
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95'
-                : 'opacity-50 cursor-not-allowed bg-emerald-600/50 text-white'
-            }`}
-            data-testid="next-step-button"
-          >
-            <span className="truncate">
-              Next: {nextStepTitle || 'Next Step'}
-            </span>
-            <ArrowRight className="w-4 h-4 flex-shrink-0 ml-2" />
-          </button>
+          {isCourseComplete ? (
+            <button
+              onClick={onCompleteCourse || onNext}
+              className="min-h-[44px] flex-1 px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-between transition-all bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95"
+              data-testid="next-step-button"
+            >
+              <span className="truncate">Finish Course (Overview)</span>
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 ml-2" />
+            </button>
+          ) : (
+            <button
+              onClick={onNext}
+              disabled={!hasNext}
+              className={`min-h-[44px] flex-1 px-4 py-2 rounded-xl text-xs font-mono font-bold flex items-center justify-between transition-all ${
+                hasNext
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-95'
+                  : 'opacity-50 cursor-not-allowed bg-emerald-600/50 text-white'
+              }`}
+              data-testid="next-step-button"
+            >
+              <span className="truncate">
+                Next: {nextStepTitle || 'Next Step'}
+              </span>
+              <ArrowRight className="w-4 h-4 flex-shrink-0 ml-2" />
+            </button>
+          )}
         </div>
 
         {/* Keyboard shortcut hints: visible only on desktop */}

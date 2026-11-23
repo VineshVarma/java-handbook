@@ -55,47 +55,88 @@ export function SearchDialog({
     }
 
     const q = query.toLowerCase();
-    const list: SearchResult[] = [];
+    const scoredList: { item: SearchResult; score: number }[] = [];
 
     // Search lessons
-    for (const l of lessons) {
-      if (
-        l.title.toLowerCase().includes(q) ||
-        l.subtitle.toLowerCase().includes(q) ||
-        l.moduleTitle.toLowerCase().includes(q)
-      ) {
-        list.push({
-          category: 'Lessons',
-          lessonSlug: l.slug,
-          lessonTitle: l.title,
-          stepIndex: 0,
-          title: l.title,
-          subtitle: l.subtitle,
-          tag: l.difficulty,
+    lessons.forEach((l) => {
+      let lessonScore = 0;
+      const titleLower = l.title.toLowerCase();
+      const subtitleLower = l.subtitle.toLowerCase();
+      const moduleLower = l.moduleTitle.toLowerCase();
+      const matchesYoullLearn = (l.youllLearn || []).some((y) =>
+        y.toLowerCase().includes(q)
+      );
+
+      if (titleLower === q) lessonScore += 100;
+      else if (titleLower.startsWith(q)) lessonScore += 80;
+      else if (titleLower.includes(q)) lessonScore += 60;
+      if (subtitleLower.includes(q)) lessonScore += 30;
+      if (moduleLower.includes(q)) lessonScore += 20;
+      if (matchesYoullLearn) lessonScore += 25;
+
+      if (lessonScore > 0) {
+        scoredList.push({
+          item: {
+            category: 'Lessons',
+            lessonSlug: l.slug,
+            lessonTitle: l.title,
+            stepIndex: 0,
+            title: l.title,
+            subtitle: `${l.moduleTitle} · ${l.duration}`,
+            tag: l.difficulty,
+          },
+          score: lessonScore,
         });
       }
 
       // Search steps & concepts
       l.steps.forEach((s, idx) => {
-        if (
-          s.title.toLowerCase().includes(q) ||
-          s.subtitle.toLowerCase().includes(q) ||
-          s.content.toLowerCase().includes(q)
-        ) {
-          list.push({
-            category: s.keyIdea ? 'Concepts' : 'Steps',
-            lessonSlug: l.slug,
-            lessonTitle: l.title,
-            stepIndex: idx,
-            title: s.title,
-            subtitle: `${l.title} · Step ${idx + 1}`,
-            tag: s.type,
+        let stepScore = 0;
+        const stepTitleLower = s.title.toLowerCase();
+        const stepSubtitleLower = (s.subtitle || '').toLowerCase();
+        const stepContentLower = (s.content || '').toLowerCase();
+        const stepKeyIdeaLower = (s.keyIdea || '').toLowerCase();
+        const stepInterviewLower = (s.interviewTip || '').toLowerCase();
+        const codeTitleLower = (s.codeExample?.title || '').toLowerCase();
+        const codeBodyLower = (s.codeExample?.code || '').toLowerCase();
+
+        if (stepTitleLower === q) stepScore += 90;
+        else if (stepTitleLower.startsWith(q)) stepScore += 70;
+        else if (stepTitleLower.includes(q)) stepScore += 50;
+        if (stepKeyIdeaLower.includes(q)) stepScore += 45;
+        if (stepSubtitleLower.includes(q)) stepScore += 25;
+        if (stepInterviewLower.includes(q)) stepScore += 25;
+        if (codeTitleLower.includes(q)) stepScore += 25;
+        if (codeBodyLower.includes(q)) stepScore += 15;
+        if (stepContentLower.includes(q)) stepScore += 10;
+
+        if (stepScore > 0) {
+          // Semantically distinguish Concepts vs Steps
+          const isConcept =
+            s.type === 'concept' ||
+            (stepKeyIdeaLower.includes(q) && !stepTitleLower.includes(q));
+
+          scoredList.push({
+            item: {
+              category: isConcept ? 'Concepts' : 'Steps',
+              lessonSlug: l.slug,
+              lessonTitle: l.title,
+              stepIndex: idx,
+              title: s.title,
+              subtitle: `${l.title} · Step ${idx + 1}`,
+              tag: s.type,
+            },
+            score: stepScore,
           });
         }
       });
-    }
+    });
 
-    return list.slice(0, 15);
+    // Sort descending by relevance score
+    return scoredList
+      .sort((a, b) => b.score - a.score)
+      .map((entry) => entry.item)
+      .slice(0, 15);
   }, [query, lessons]);
 
   // Handle keyboard navigation

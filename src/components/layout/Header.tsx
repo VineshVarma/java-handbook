@@ -48,7 +48,7 @@ export function Header({
         </a>
       </div>
 
-      {/* Center: Tabs matching designed-to-scale */}
+      {/* Center: Curriculum Navigation Tabs */}
       <nav className="hidden md:flex items-center gap-1 bg-cream-200/60 dark:bg-charcoal-800 p-1 rounded-xl border border-cream-300/80 dark:border-charcoal-700 text-xs font-medium">
         <button
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white shadow-sm font-semibold transition-all"
@@ -64,11 +64,15 @@ export function Header({
               'Practice is coming soon — hands-on Java JVM tuning & concurrent coding challenges!'
             )
           }
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700 dark:text-cream-300 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/80 dark:text-cream-300/80 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors opacity-75"
           data-testid="tab-practice"
+          aria-disabled="true"
         >
           <Target className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
           <span>Practice</span>
+          <span className="text-[9px] font-mono uppercase px-1 py-0.2 rounded bg-cream-300 dark:bg-charcoal-700 text-charcoal-600 dark:text-cream-400">
+            Soon
+          </span>
         </button>
 
         <button
@@ -77,11 +81,15 @@ export function Header({
               'Cheatsheets are coming soon — quick reference cards for Collections, CompletableFuture, and GC flags!'
             )
           }
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700 dark:text-cream-300 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-charcoal-700/80 dark:text-cream-300/80 hover:bg-cream-300/60 dark:hover:bg-charcoal-700 transition-colors opacity-75"
           data-testid="tab-cheatsheets"
+          aria-disabled="true"
         >
           <FileText className="w-3.5 h-3.5 text-charcoal-500 dark:text-cream-400" />
           <span>Cheatsheets</span>
+          <span className="text-[9px] font-mono uppercase px-1 py-0.2 rounded bg-cream-300 dark:bg-charcoal-700 text-charcoal-600 dark:text-cream-400">
+            Soon
+          </span>
         </button>
       </nav>
 

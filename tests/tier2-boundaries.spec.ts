@@ -111,8 +111,8 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
   test('B1.4: Negative step index in URL hash clamps to step 0', async ({ page }) => {
     await page.goto('/lessons/how-java-runs#/how-java-runs/-5');
 
-    // Negative step clamped to step 0 (Hit Enter)
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    // Negative step clamped to step 0 (Writing Java Source Code)
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
   });
 
   test('B1.5: Navigating between lessons with differing step counts resets step index cleanly', async ({ page }) => {
@@ -146,7 +146,7 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
   // --------------------------------------------------------------------------
   test('B2.1: Pressing ArrowLeft on step 1 of lesson 1 does not throw error and keeps step at 0', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     // Press ArrowLeft multiple times
     await page.keyboard.press('ArrowLeft');
@@ -154,14 +154,14 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
     await page.keyboard.press('ArrowLeft');
 
     // Should remain on Step 1
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
     const prevBtn = page.getByTestId('prev-step-button');
     await expect(prevBtn).toBeDisabled();
   });
 
   test('B2.2: Rapid double-pressing ArrowRight advances smoothly without skipping steps', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('ArrowRight');
@@ -224,7 +224,7 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
 
   test('B2.5: Pressing keyboard shortcuts while an input or modal is focused does NOT advance steps', async ({ page }) => {
     await page.goto('/lessons/how-java-runs');
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
 
     // Open search dialog
     const searchBtn = page.getByTestId('search-button');
@@ -242,7 +242,7 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
     await page.keyboard.press('Escape');
 
     // Step should NOT have advanced
-    await expect(page.getByRole('heading', { name: /Hit Enter/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Writing Java Source Code/i })).toBeVisible();
   });
 
   // --------------------------------------------------------------------------
@@ -629,7 +629,7 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
 
     // Below 1280px (tablet/mobile view)
     await page.setViewportSize({ width: 1024, height: 768 });
-    const segmentSwitcher = page.getByRole('button', { name: 'Notes & Code', exact: true });
+    const segmentSwitcher = page.getByRole('button', { name: 'Notes', exact: true });
     await expect(segmentSwitcher).toBeVisible();
   });
 
@@ -679,8 +679,8 @@ test.describe('Tier 2: Boundary & Corner Cases (B1 - B7)', () => {
     await peekBtn.click();
     await peekBtn.click();
 
-    // Final state should be Read Notes
-    await expect(peekBtn).toContainText(/Read Notes/i);
+    // Final state should be Notes
+    await expect(peekBtn).toContainText(/Notes/i);
   });
 
   test('B7.5: Search modal on small mobile screen fits within viewport height (max-h-[75vh]) with internal scroll', async ({ page }) => {

@@ -71,6 +71,7 @@ export interface LessonStep {
   microCheck?: MicroCheck;
   diagramState: DiagramState;
   diagramAlt?: string;
+  duration?: string;
 }
 
 export interface Lesson {

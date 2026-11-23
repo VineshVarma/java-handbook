@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Lesson, CourseProgress } from '@/lib/types';
 
-const STORAGE_KEY = 'java_internals_progress_v1';
+const STORAGE_KEY = 'java_handbook_progress_v1';
+const LEGACY_STORAGE_KEY = 'java_internals_progress_v1';
 
 export function useProgress(allLessons: Lesson[]) {
   const [progress, setProgress] = useState<CourseProgress>({
@@ -14,7 +15,9 @@ export function useProgress(allLessons: Lesson[]) {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved =
+        localStorage.getItem(STORAGE_KEY) ||
+        localStorage.getItem(LEGACY_STORAGE_KEY);
       if (saved) {
         setProgress(JSON.parse(saved));
       }
@@ -27,6 +30,7 @@ export function useProgress(allLessons: Lesson[]) {
     setProgress(newProgress);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newProgress));
+      localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(newProgress));
     } catch (e) {
       console.warn('Failed to save progress to localStorage', e);
     }
@@ -47,6 +51,7 @@ export function useProgress(allLessons: Lesson[]) {
         };
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(updated));
         } catch (e) {
           console.warn('Failed to save progress', e);
         }
