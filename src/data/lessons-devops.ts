@@ -37,7 +37,7 @@ Now imagine a relational SQL database: to store that same photo, you must take s
       },
       {
         id: 'step-2',
-        title: 'Schema Design: Embed vs Reference',
+        title: 'Schema Design Document Patterns',
         subtitle: 'Your pocket wallet vs a basement storage unit',
         type: 'trade-off',
         content: `When designing your database schema in MongoDB, ask yourself one golden question: **"Do these items live and die together, or do they grow forever?"**
@@ -45,13 +45,14 @@ Now imagine a relational SQL database: to store that same photo, you must take s
 1. **Embedding (Your Pocket Wallet - 1-to-Few)**:
    - You carry your driver's license, credit card, and insurance ID right inside your pocket wallet. They are bounded in size and you always use them together.
    - In MongoDB, embed sub-documents (like a Policy's list of coverage riders or home addresses) directly inside the main document.
-   - *Limitation*: MongoDB enforces a strict **16MB maximum document size limit**.
+   - *Limitation*: MongoDB enforces a strict 16MB BSON document limit, making an unbounded array anti-pattern dangerous for document health.
 
 2. **Referencing (The Basement Storage Unit - 1-to-Many Unbounded)**:
    - You wouldn't stuff 10 years of tax receipts and utility bills into your pocket wallet; your wallet would burst at the seams! You store older records in labeled boxes in a storage unit.
    - When data grows indefinitely (like 10,000 audit log events or payment histories over 5 years), store them in a separate collection and link them using an \`ObjectId\` or foreign key.`,
         keyIdea: 'Embed child data when items are queried together and bounded in size; reference across collections when data grows indefinitely.',
         codeExample: {
+          language: 'java',
           title: 'PolicyDocumentSchema.java',
           code: `import java.time.LocalDateTime;
 import java.util.List;
@@ -90,19 +91,20 @@ public class PolicyDocument {
       },
       {
         id: 'step-3',
-        title: 'MongoTemplate: Atomic Updates & Filtered Queries',
+        title: 'MongoTemplate Atomic Updates',
         subtitle: 'Editing one line in a shared doc vs re-uploading an entire 500-page PDF',
         type: 'solution',
         content: `Imagine collaborating with a teammate:
 - **The Slow, Dangerous Way**: You download an entire 500-page PDF document to your laptop, change a single typo on page 4 over 10 minutes, and re-upload the entire 500-page file. If your teammate was editing page 10 at the same time, your upload overwrites and destroys their work (**Read-Modify-Write Race Condition**)!
 - **The Smart, Atomic Way**: You use an online live doc to edit just that single sentence on page 4 in-place. Your teammate's edits are completely safe!
 
-In Spring Boot microservices, **\`MongoTemplate\`** executes surgical, atomic updates directly on the database server:
-- **\`$set\`**: Changes a single field in-place without loading the whole document into Java memory.
-- **\`$push\` / \`$addToSet\`**: Appends a new item into a nested array atomically.
-- **\`$inc\`**: Increments numeric counters atomically without locks.`,
+In Spring Boot microservices, \`MongoTemplate\` executes surgical, atomic updates directly on the database server:
+- \`$set\`: Changes a single field in-place without loading the whole document into Java memory.
+- \`$push\` / \`$addToSet\`: Appends a new item into a nested array atomically.
+- \`$inc\`: Increments numeric counters atomically without locks.`,
         keyIdea: 'Use MongoTemplate in-place atomic operators ($set, $push) to modify documents directly on the server without race conditions.',
         codeExample: {
+          language: 'java',
           title: 'MongoTemplateAtomicUpdate.java',
           code: `import java.time.LocalDateTime;
 import com.mongodb.client.result.UpdateResult;
@@ -176,10 +178,10 @@ In modern software delivery, this automated track is **Continuous Integration (C
       },
       {
         id: 'step-2',
-        title: 'Maven Build & Automated Test Execution',
+        title: 'Maven Build Automated Testing',
         subtitle: 'Driving through the rain chamber and brake test track',
         type: 'solution',
-        content: `Once the pipeline starts, it executes **\`mvn clean verify\`**:
+        content: `Once the pipeline starts, it executes \`mvn clean verify\`:
 - **Unit Tests (JUnit 5 & Mockito)**: Runs hundreds of lightning-fast unit tests to verify business logic, calculation formulas, and error handlers with zero external dependencies.
 - **Integration Tests (Testcontainers)**: Spawns real, temporary Docker containers running genuine MongoDB and PostgreSQL instances so your code is tested against real database engines under authentic network conditions!
 
@@ -210,14 +212,14 @@ Before any Java application can be deployed, it must pass automated **Quality Ga
       },
       {
         id: 'step-4',
-        title: 'Canary & Rolling Production Releases',
+        title: 'Canary and Rolling Releases',
         subtitle: 'Boarding the new train while the old train is still running',
         type: 'recap',
         content: `Once tests and security scans pass with flying colors:
 1. Maven packages the application into an executable JAR.
 2. A lightweight, hardened **Docker container image** is built using multi-stage builds.
 3. The image is published to a secure container registry.
-4. In production (on Kubernetes or cloud clusters), the release happens via a **Rolling Update**: new pods spin up, pass health readiness checks, and start accepting user traffic before the old pods are gently drained and retired.
+4. In production (on Kubernetes or cloud clusters), releases utilize rolling updates or canary releases with traffic splitting, where metrics automate an immediate rollback trigger if error thresholds are exceeded.
 
 The result? Zero downtime, zero dropped customer transactions, and painless deployments!`,
         keyIdea: 'Automated CI/CD pipelines and rolling updates let engineering teams ship features frequently with zero downtime.',
@@ -263,17 +265,18 @@ In enterprise microservices, you cannot just log into a server and stare at a te
       },
       {
         id: 'step-2',
-        title: 'Splunk & ELK: Production Log Analysis',
+        title: 'Log Analysis with Splunk',
         subtitle: 'The detective searching for a single glowing fluorescent tag',
         type: 'solution',
         content: `Imagine a detective searching through a giant warehouse holding 10 million cardboard boxes. If they open every box by hand, it would take 30 years to find the stolen watch. But what if the watch is tagged with a tiny glowing fluorescent barcode, and the detective turns on a UV blacklight? The barcode glows bright neon across the room, and the detective walks straight to it in 5 seconds!
 
 In microservices, millions of log lines are printed every hour. To find the story of one user's failed transaction:
-- The API Gateway stamps every incoming request with a unique **\`correlationId\`** (e.g. \`8f9b2a-pol-9921\`).
-- Every downstream service writes this correlation ID into its structured JSON logs using SLF4J's **MDC (Mapped Diagnostic Context)**.
+- The API Gateway stamps every incoming request with a unique \`correlationId\` (e.g. \`8f9b2a-pol-9921\`).
+- Every downstream service writes this correlation ID into its structured JSON logs using SLF4J's MDC (Mapped Diagnostic Context), tracking MDC traceId and spanId.
 - In log search tools like **Splunk** or **ELK**, you simply query \`correlationId="8f9b2a-pol-9921"\`, and in 1 second you see the complete, unified timeline of that single user's request across all 8 microservices!`,
         keyIdea: 'MDC Correlation IDs connect logs across distributed services, turning millions of scattered messages into a single coherent story.',
         codeExample: {
+          language: 'spl',
           title: 'SplunkSPLProductionQuery.spl',
           code: `# Search for downstream payment timeouts in the last 1 hour:
 index=insurance_prod sourcetype=spring_boot "Downstream" OR "PaymentGatewayException"
@@ -354,8 +357,8 @@ Total: reserved=4821MB, committed=3954MB
 -                   Thread (reserved=350MB, committed=350MB) (340 threads)
 -                     Code (reserved=250MB, committed=98MB)
 -                       GC (reserved=180MB, committed=180MB)
--            Internal/Arena (reserved=873MB, committed=1696MB) <-- LEAK!`,
-          explanation: 'Native Memory Tracking (NMT) categorizes total process memory. Notice that committed native Arena memory exceeds 1.6GB outside the 1.45GB Java Heap.',
+-            Internal/Arena (reserved=2048MB, committed=1696MB) <-- LEAK!`,
+          explanation: 'Native Memory Tracking (NMT) categorizes total process memory. Notice that committed native Arena memory reaches 1696MB (committed <= reserved).',
         },
         microCheck: {
           question: 'If a JVM container has -Xmx4g and runs on an 8GB RAM host, what happens if application code allocates 5GB of off-heap memory via malloc/FFM?',
@@ -381,10 +384,11 @@ Total: reserved=4821MB, committed=3954MB
 - In addition, buffers were limited to 2GB because they used 32-bit integer indexes.
 
 Java 22 introduced the **Foreign Function & Memory (FFM) API** (JEP 454) in \`java.lang.foreign\`:
-- **\`MemorySegment\`**: A safe, contiguous block of native memory with spatial boundary checking and 64-bit addressing (supporting terabytes of memory!).
-- **\`Arena\`**: A clean lifetime boundary. When an \`Arena\` is closed (using standard \`try-with-resources\`), all allocated native memory is freed immediately! No waiting for Garbage Collectors, no memory leaks, and zero segmentation faults.`,
+- \`MemorySegment\`: A safe, contiguous block of native memory with spatial boundary checking and 64-bit addressing (supporting terabytes of memory!).
+- \`Arena\`: A clean lifetime boundary. When an \`Arena\` is closed (using standard \`try-with-resources\`), all allocated native memory is freed immediately! No waiting for Garbage Collectors, no memory leaks, and zero segmentation faults.`,
         keyIdea: 'The Java 22 FFM API replaces dangerous Unsafe calls with safe, bounds-checked MemorySegments and deterministic, auto-closing Arenas.',
         codeExample: {
+          language: 'java',
           title: 'ModernOffHeapFFM.java',
           code: `import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
@@ -423,7 +427,7 @@ public class NativeBufferPipeline {
         type: 'solution',
         content: `Imagine suspecting a water leak in your house. The living room carpet is completely dry, but your monthly water meter shows 500 gallons consumed every day! You bring in a plumbing technician with an ultrasonic sensor and acoustic camera to pinpoint the exact hidden pipe leaking behind the bathroom drywall.
 
-In the HotSpot JVM, **Native Memory Tracking (NMT)** is your diagnostic X-ray scanner for memory leaks outside the Java heap:
+In the HotSpot JVM, **Native Memory Tracking (NMT)** is your diagnostic X-ray scanner for memory leaks outside the Java heap. In NMT, committed memory represents physical memory pages mapped by the OS and must always satisfy committed <= reserved, where reserved is the total virtual address space:
 1. Enable NMT at startup: \`-XX:NativeMemoryTracking=summary\`
 2. Capture a baseline before starting a heavy workload:
    \`jcmd <pid> VM.native_memory baseline\`
@@ -441,9 +445,9 @@ Total: reserved=5120MB (+299MB), committed=4320MB (+366MB)
 -                 Java Heap (reserved=2048MB, committed=1450MB) (no change)
 -                    Class (reserved=1120MB, committed=182MB (+2MB))
 -                   Thread (reserved=350MB, committed=350MB)
--            Arena / OffHeap (reserved=920MB (+297MB), committed=1990MB (+294MB))
+-            Arena / OffHeap (reserved=2048MB (+297MB), committed=1696MB (+294MB))
              [0x00007f9a14000000 - 0x00007f9a26000000] malloc at NativeBufferPipeline.main`,
-          explanation: 'Shows Java Heap had zero change, while Arena/OffHeap native memory grew by +294MB, pinpointing the exact allocation source.',
+          explanation: 'Shows Java Heap had zero change, while Arena/OffHeap native memory grew by +294MB (committed <= reserved), pinpointing the exact allocation source.',
         },
         diagramState: 'nmt-inspection',
         diagramAlt: 'Architecture diagram illustrating Taking an X-ray of your building\: Taking an X-ray of your building\.',

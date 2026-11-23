@@ -41,18 +41,16 @@ Tomcat feeds the raw \`HttpServletRequest\` through the **Servlet Filter Chain**
       },
       {
         id: 'step-2',
-        title: 'DispatcherServlet: The Front Controller',
+        title: 'DispatcherServlet Front Controller',
         subtitle: 'The central hotel receptionist directing guests',
         type: 'concept',
         content: `Once through the security gate, you walk through the glass doors of a 5-star hotel lobby. Right in the center stands the head receptionist. You don't wander randomly into the basement or kitchen looking for a room; you speak to the receptionist, and they coordinate everything for you.
 
-In Spring MVC, this head receptionist is **\`DispatcherServlet\`**, which implements the **Front Controller pattern**. Every single web request passes through this single hub!
-
-The DispatcherServlet coordinates three helpers:
-1. **\`HandlerMapping\`**: Looks at the hotel directory to see which controller handles this URL (e.g. mapping \`/api/v1/policies\` to \`PolicyController\`).
-2. **\`HandlerInterceptor\`**: Runs \`preHandle()\` hooks (like checking user permissions or logging timing metrics).
-3. **\`HandlerAdapter\`**: The actual hotel escort who calls the specific Java method, automatically converting incoming JSON or URL parameters into Java objects!`,
-        keyIdea: 'DispatcherServlet acts as the central traffic controller, consulting HandlerMapping and delegating invocation to HandlerAdapter.',
+In Spring MVC, this head receptionist is \`DispatcherServlet\`, which implements the Front Controller pattern. Every single web request passes through this single hub where \`doDispatch\` coordinates three helpers:
+1. \`HandlerMapping\`: Looks at the hotel directory to see which controller handles this URL (e.g. mapping \`/api/v1/policies\` to \`PolicyController\`).
+2. \`HandlerInterceptor\`: Runs \`preHandle()\` hooks (like checking user permissions or logging timing metrics).
+3. \`HandlerAdapter\`: The actual hotel escort who calls the specific Java method, automatically converting incoming JSON or URL parameters into Java objects!`,
+        keyIdea: 'DispatcherServlet acts as the central traffic controller, consulting HandlerMapping and delegating invocation to HandlerAdapter in doDispatch.',
         diagramState: 'dispatcher-dispatch',
         diagramAlt: 'Architecture diagram illustrating The central hotel receptionist directing guests: The central hotel receptionist directing guests.',
       },
@@ -72,6 +70,7 @@ The DispatcherServlet coordinates three helpers:
 This three-layer separation keeps your enterprise code organized, easy to read, and simple to test!`,
         keyIdea: 'Controllers handle HTTP communication, Services execute business rules, and Repositories manage database access.',
         codeExample: {
+          language: 'java',
           title: 'LayeredArchitectureExample.java',
           code: `import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -117,17 +116,17 @@ In enterprise software:
       },
       {
         id: 'step-5',
-        title: 'HttpMessageConverter: Serialization & Response',
+        title: 'HttpMessageConverter Response Serialization',
         subtitle: 'Translating Java objects into universal JSON packets',
         type: 'recap',
-        content: `Once your Controller returns a DTO inside a \`ResponseEntity\`, DispatcherServlet hands the Java object to **\`MappingJackson2HttpMessageConverter\`**.
+        content: `Once your Controller returns a DTO inside a \`ResponseEntity\`, DispatcherServlet hands the Java object to \`MappingJackson2HttpMessageConverter\`.
 
 Jackson reads your Java object and converts it into standard **JSON text**:
 - It converts camelCase fields into client-friendly formats.
 - It omits empty or null values if configured.
-- It writes the JSON bytes into the HTTP response body alongside an **\`HTTP 200 OK\`** header.
+- It writes the JSON bytes into the HTTP response body alongside an \`HTTP 200 OK\` header.
 
-If an unexpected error happened anywhere along the journey, Spring's **\`@RestControllerAdvice\`** catches the exception and turns it into a friendly, standardized error JSON payload (RFC 7807) so the client app always understands what went wrong!`,
+If an unexpected error happened anywhere along the journey, Spring's \`@RestControllerAdvice\` catches the exception and turns it into a friendly, standardized error JSON payload (RFC 7807) so the client app always understands what went wrong!`,
         keyIdea: 'HttpMessageConverters serialize Java DTOs into JSON streams, while @RestControllerAdvice catches errors to format friendly error responses.',
         diagramState: 'recap',
         diagramAlt: 'Architecture diagram illustrating Translating Java objects into universal JSON packets: Translating Java objects into universal JSON packets.',
@@ -171,7 +170,7 @@ This tightly welded classes together and made testing with mock databases nearly
       },
       {
         id: 'step-2',
-        title: 'Constructor Injection vs Field Injection',
+        title: 'Constructor vs Field Injection',
         subtitle: 'A bicycle with pedals in the box vs waiting for a mechanic to visit your house',
         type: 'solution',
         content: `Imagine ordering a bicycle online:
@@ -180,10 +179,12 @@ This tightly welded classes together and made testing with mock databases nearly
 
 **Why Constructor Injection Wins**:
 1. **Guaranteed Non-Null**: You cannot create the object without providing its required dependencies.
-2. **Immutability**: Fields can be declared **\`final\`**, guaranteeing thread safety.
-3. **Effortless Unit Testing**: In a JUnit test, you can simply write \`new PolicyService(mockRepo)\` with zero Spring framework overhead!`,
+2. **Immutability**: Fields can be declared \`final\`, ensuring immutability and thread safety.
+3. **Early Failure**: Enables circular dependency detection at startup, failing fast during bean creation instead of at runtime.
+4. **Effortless Unit Testing**: In a JUnit test, you can simply write \`new PolicyService(mockRepo)\` with zero Spring framework overhead!`,
         keyIdea: 'Always use constructor injection with final fields for rock-solid immutability, thread safety, and effortless unit testing.',
         codeExample: {
+          language: 'java',
           title: 'ConstructorInjectionBestPractice.java',
           code: `import java.util.Objects;
 import org.springframework.stereotype.Service;
@@ -273,21 +274,22 @@ To protect your system, modern microservices use defensive patterns:
       },
       {
         id: 'step-2',
-        title: 'The Circuit Breaker Pattern (Resilience4j)',
+        title: 'Circuit Breaker Fault Tolerance',
         subtitle: 'The electrical safety switch in your basement',
         type: 'solution',
-        content: `Think of the electrical circuit breaker in your basement. If a toaster in your kitchen develops a short circuit and draws too much electrical current, the circuit breaker instantly trips to **OPEN**, cutting off electricity to that room before your house wiring catches fire!
+        content: `Think of the electrical circuit breaker in your basement. If a toaster in your kitchen develops a short circuit and draws too much electrical current, the circuit breaker instantly trips to OPEN, cutting off electricity to that room before your house wiring catches fire!
 
-In software, a **Circuit Breaker** (like **Resilience4j**) acts as an automated safety switch with 3 states:
+In software, a Circuit Breaker (like Resilience4j) operates as a finite state machine transitioning across CLOSED, OPEN, and HALF_OPEN states:
 
 1. **CLOSED (Normal Working State)**:
-   Electricity flows freely. Requests pass through to the downstream service normally while the breaker monitors failure rates.
+   Electricity flows freely. Requests pass through to the downstream service normally while the breaker monitors failure rates across a sliding window.
 2. **OPEN (Tripped - Danger Zone)**:
-   If failure rates exceed a threshold (e.g. over 50% of recent requests fail or time out), the switch trips **OPEN**! All future requests are rejected immediately without making any network call, instantly returning a friendly cached fallback response. This saves your server threads from freezing and gives the struggling downstream service room to breathe!
-3. **HALF-OPEN (Trial Probe)**:
-   After a cooldown period (e.g. 30 seconds), the breaker lets a tiny trickle of trial requests through. If they succeed, the breaker resets to **CLOSED**; if they fail, it trips back to **OPEN**.`,
-        keyIdea: 'Circuit breakers prevent cascading crashes by failing fast when downstream services struggle, giving them time to heal.',
+   If failure rates exceed a threshold (e.g. over 50% of recent requests fail or time out), the switch trips OPEN! All future requests are rejected immediately without making network calls, instantly returning a cached fallback response.
+3. **HALF_OPEN (Trial Probe)**:
+   After a cooldown period (e.g. 30 seconds), the breaker permits trial probe requests in HALF_OPEN state. If they succeed, the breaker resets to CLOSED; if they fail, it trips back to OPEN.`,
+        keyIdea: 'Circuit breakers prevent cascading crashes by failing fast across CLOSED, OPEN, and HALF_OPEN states when downstream services struggle.',
         codeExample: {
+          language: 'java',
           title: 'Resilience4jCircuitBreaker.java',
           code: `import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -315,7 +317,7 @@ public class PaymentGatewayClient {
       },
       {
         id: 'step-3',
-        title: 'API Gateway: Centralized Ingress',
+        title: 'API Gateway Centralized Ingress',
         subtitle: 'The grand security lobby of a skyscraper',
         type: 'insight',
         content: `Imagine a skyscraper with 50 different company offices inside. You wouldn't build 50 separate outdoor staircases and 50 separate security guards on the sidewalk. Instead, everyone enters through the grand front lobby. The security guard checks ID, the turnstiles manage crowd flow, and the elevators route each visitor to the correct floor.

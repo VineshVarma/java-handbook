@@ -20,30 +20,30 @@ export const collectionsLessons: Lesson[] = [
     steps: [
       {
         id: 'step-1',
-        title: 'The Collection Interface Hierarchy',
+        title: 'Collection Interface Hierarchy',
         subtitle: 'A kitchen storage system with specialized drawers',
         type: 'concept',
         content: `Think of organizing a commercial kitchen. You don't dump all your spoons, spices, order slips, and recipes into one giant cardboard box. Instead, you use specialized organizers:
-- A silverware tray with ordered slots where each fork has a numbered position (**A List**).
-- A spice rack where every jar must be unique and you cannot have two identical jars of cinnamon (**A Set**).
-- A metal order rail where tickets hang in the exact order they arrived so chefs cook them first-come, first-served (**A Queue**).
-- A recipe index card box where each recipe has a title tag on top that maps directly to the instructions on the card (**A Map**).
+- A silverware tray with ordered slots where each fork has a numbered position (\`List\`).
+- A spice rack where every jar must be unique and you cannot have two identical jars of cinnamon (\`Set\`).
+- A metal order rail holding incoming tickets for order processing (\`Queue\`).
+- A recipe index card box where each recipe has a title tag on top that maps directly to the instructions on the card (\`Map\`).
 
 The Java Collections Framework sits in \`java.util\` and organizes your data using this exact structure:
 
-At the root sits **\`Iterable<T>\`**, which allows any collection to be walked through in a \`for-each\` loop. Extending it is **\`Collection<T>\`**, which forks into three main families:
-1. **\`List<E>\`**: An ordered list of elements with index numbers (e.g., item 0, item 1). Duplicates are welcome.
-2. **\`Set<E>\`**: A collection of unique elements. Duplicates are strictly rejected using \`equals()\` and \`hashCode()\`.
-3. **\`Queue<E>\`**: A line for tasks, processing elements in First-In, First-Out (FIFO) order.
+At the root sits \`Iterable<T>\`, which allows any collection to be walked through in a \`for-each\` loop. Extending it is \`Collection<T>\`, which forks into three main families:
+1. \`List<E>\`: An ordered list of elements with index numbers (e.g., item 0, item 1). Duplicates are welcome.
+2. \`Set<E>\`: A collection of unique elements. Duplicates are strictly rejected using \`equals()\` and \`hashCode()\`.
+3. \`Queue<E>\` & \`Deque<E>\`: For task queues and pipelines. While queues commonly follow First-In, First-Out (FIFO) order, implementations differ: \`PriorityQueue\` orders elements by natural ordering or a \`Comparator\` (min-heap, not FIFO), while \`ArrayDeque\` implements a high-performance resizable circular buffer with zero node allocation overhead, outperforming \`LinkedList\` for both FIFO and LIFO operations.
 
-**Why Map is on its own**: **\`Map<K, V>\`** does not implement \`Collection\` because it holds pairs (keys and values) rather than standalone elements.`,
+**Why Map is on its own**: \`Map<K, V>\` does not implement \`Collection\` because it holds pairs (keys and values) rather than standalone elements.`,
         keyIdea: 'List, Set, and Queue share the common Collection interface; Map is an independent family dedicated to key-value pairs.',
         diagramState: 'hierarchy',
         diagramAlt: 'Architecture diagram illustrating A kitchen storage system with specialized drawers: A kitchen storage system with specialized drawers.',
       },
       {
         id: 'step-2',
-        title: 'ArrayList vs LinkedList: CPU Cache Locality',
+        title: 'ArrayList vs LinkedList Performance',
         subtitle: 'An egg carton vs a scavenger hunt across town',
         type: 'trade-off',
         content: `Imagine grabbing eggs from an egg carton. All 12 eggs sit side-by-side in a single molded cardboard row. When you reach for the 3rd egg, your eyes and hand already see eggs 4, 5, and 6 right next to it (**ArrayList**). 
@@ -59,6 +59,7 @@ In modern enterprise Java on real multicore hardware, **this textbook advice is 
 2. **LinkedList** allocates an independent \`Node\` object for every single element, scattering pointers across the heap and triggering expensive CPU cache misses. Plus, each node burns 24 bytes of pointer overhead!`,
         keyIdea: 'ArrayList groups elements together in contiguous memory so CPU caches can prefetch them, outperforming node-based LinkedList in almost every real benchmark.',
         codeExample: {
+          language: 'java',
           title: 'ArrayList Capacity Preallocation',
           code: `import java.util.ArrayList;
 import java.util.List;
@@ -85,16 +86,17 @@ public class ListCapacityOptimization {
       },
       {
         id: 'step-3',
-        title: 'HashMap Internals: Hash, Buckets & Treeify',
+        title: 'HashMap Internals and Treeification',
         subtitle: 'The hotel coat check with smart organizing bins',
         type: 'solution',
         content: `Think of a busy hotel coat check room with 16 numbered bins along the wall:
 - When you hand your jacket to the clerk, they take your name, do a quick math calculation on your name to pick a number between 0 and 15, and hang your coat in that specific bin (**The Hash Function & Bucket Index**).
 - When you return with your claim ticket, they calculate that same number, walk straight to that single bin, and hand you your coat in 1 second flat! That is **$O(1)$ constant time lookup**.
 - What if two people with different names get assigned to the same bin? That is a **Hash Collision**. The clerk simply hangs the second coat on a hanger hooked to the first coat (a linked list).
-- **The Magic Upgrade (Treeification)**: What happens if one bin gets too crowded with more than 8 coats? In older Java versions, searching a long list of coats slowed down. In Java 8+, when a single bucket exceeds **8 elements** and the total table has at least 64 buckets, the JVM reorganizes that single bin into a balanced **Red-Black Tree**! This speeds up searches from slow $O(n)$ to lightning-fast **$O(\\log n)$**.`,
+- **The Upgrade (Treeification)**: In Java 8+, when hash collisions in a single bucket reach \`TREEIFY_THRESHOLD = 8\` and total table capacity is at least \`MIN_TREEIFY_CAPACITY = 64\`, the JVM reorganizes that bin from a linked list into a balanced **Red-Black Tree**! This speeds up lookups from $O(n)$ to **$O(\\log n)$**. If the table has fewer than 64 buckets, it resizes instead of treeifying.`,
         keyIdea: 'HashMap uses bucket arrays for O(1) lookups, converting crowded buckets into balanced Red-Black trees when collisions exceed 8 items.',
         codeExample: {
+          language: 'java',
           title: 'HashCodeEqualsContract.java',
           code: `import java.util.Objects;
 
@@ -120,7 +122,9 @@ public class CustomerKey {
 
     @Override
     public int hashCode() {
-        return Objects.hash(ssn, countryCode);
+        int result = ssn != null ? ssn.hashCode() : 0;
+        result = 31 * result + (countryCode != null ? countryCode.hashCode() : 0);
+        return result;
     }
 }`,
         },
@@ -130,12 +134,12 @@ public class CustomerKey {
       },
       {
         id: 'step-4',
-        title: 'ConcurrentHashMap: Lock Striping & CAS',
+        title: 'ConcurrentHashMap Lock Striping CAS',
         subtitle: 'A library with 16 separate study rooms instead of 1 padlocked door',
         type: 'insight',
         content: `Imagine a library where 100 students want to study. 
 - If the librarian puts a single padlock on the front entrance door (\`Collections.synchronizedMap\`), only one student can be inside at a time. The other 99 students must wait outside in the rain, destroying throughput.
-- But what if the library has 16 separate study rooms (**\`ConcurrentHashMap\`**)? Students can read books anywhere without asking for a key. If someone needs to write notes on the whiteboard in Room 4, only Room 4 is briefly locked, while all other 15 rooms remain completely open!
+- But what if the library has 16 separate study rooms (\`ConcurrentHashMap\`)? Students can read books anywhere without asking for a key. If someone needs to write notes on the whiteboard in Room 4, only Room 4 is briefly locked, while all other 15 rooms remain completely open!
 
 **ConcurrentHashMap** achieves high-throughput concurrency through three techniques:
 1. **Lock-Free Reads**: The \`get()\` method reads memory directly using volatile variables without acquiring any lock at all!
@@ -186,7 +190,7 @@ Every stream pipeline has three stages:
       },
       {
         id: 'step-2',
-        title: 'Lazy Evaluation & Short-Circuiting',
+        title: 'Lazy Evaluation Short-Circuiting',
         subtitle: 'The video streaming service that buffers only what you watch',
         type: 'insight',
         content: `Think of watching a movie on an internet streaming app. When you press play on Episode 1, the app doesn't download all 10 hours of the season to your phone before starting. It downloads only the first few seconds of video, buffering more only when your screen needs it. If you close the app after 3 minutes, the remaining 9 hours and 57 minutes are never downloaded.
@@ -195,10 +199,11 @@ In Java streams, intermediate operations like \`.filter()\` and \`.map()\` are *
 - When you call \`.filter()\`, Java does not actually run your filter code yet! It just connects the pipe.
 - Nothing moves until a **Terminal Operation** (like \`.findFirst()\` or \`.collect()\`) turns on the tap.
 
-**Short-Circuiting**:
-If you call \`.findFirst()\` on a list of 1,000,000 items, the stream stops running the millisecond it finds the very first matching item! It never even looks at the other 999,999 items, saving massive CPU time.`,
-        keyIdea: 'Streams are lazy: intermediate steps do not run until a terminal operation is called, and short-circuiting halts execution early.',
+**Short-Circuiting Operations**:
+Streams support short-circuiting operations: intermediate operations like \`limit(n)\` and terminal operations like \`findFirst()\` or \`anyMatch()\` halt processing immediately once their target condition is met without evaluating the rest of the stream. If you call \`.findFirst()\` on a list of 1,000,000 items, the stream stops running the millisecond it finds the very first matching item, saving massive CPU time!`,
+        keyIdea: 'Streams are lazy: intermediate steps do not run until a terminal operation is called, and short-circuiting operations halt execution early.',
         codeExample: {
+          language: 'java',
           title: 'StreamLazinessDemo.java',
           code: `import java.util.List;
 
@@ -236,18 +241,19 @@ public class StreamLazinessDemo {
       },
       {
         id: 'step-3',
-        title: 'map() vs flatMap(): Flattening Nested Structures',
+        title: 'Map vs FlatMap Flattening',
         subtitle: 'Changing one item vs unpacking a box of items',
         type: 'solution',
         content: `Imagine opening your daily mail:
 - **map() (1-to-1)**: You receive an envelope with an invoice. You stamp the envelope "PAID" and hand it back. One envelope in, one stamped envelope out.
-- **flatMap() (1-to-many, then flattened)**: You receive three cardboard packages. Inside each package are five smaller gift boxes. If you used \`map()\`, you would have a pile of packages containing boxes. But you want all the individual gift boxes laid out in a single flat row on your table. You use **\`flatMap()\`** to open each package and pour all the inner gift boxes into one single flat stream!
+- **flatMap() (1-to-many, then flattened)**: You receive three cardboard packages. Inside each package are five smaller gift boxes. If you used \`map()\`, you would have a pile of packages containing boxes. But you want all the individual gift boxes laid out in a single flat row on your table. You use \`flatMap()\` to open each package and pour all the inner gift boxes into one single flat stream!
 
 In Java:
-- Use **\`map()\`** when transforming an object into another single object (e.g., converting a \`Customer\` into their \`String\` email address).
-- Use **\`flatMap()\`** when each object contains a collection of child items (e.g., each \`Order\` has a \`List<OrderItem>\`), and you want a single flat stream of all items across all orders.`,
+- Use \`map()\` when transforming an object into another single object (e.g., converting a \`Customer\` into their \`String\` email address).
+- Use \`flatMap()\` when each object contains a collection of child items (e.g., each \`Order\` has a \`List<OrderItem>\`), and you want a single flat stream of all items across all orders.`,
         keyIdea: 'Use map() for simple 1-to-1 transformations; use flatMap() to unpack nested collections into a single flat stream.',
         codeExample: {
+          language: 'java',
           title: 'FlatMapEnterprisePattern.java',
           code: `import java.util.List;
 import java.util.stream.Collectors;
@@ -279,18 +285,19 @@ public class FlatMapEnterprisePattern {
       },
       {
         id: 'step-4',
-        title: 'Complex Collectors & GroupingBy',
+        title: 'Complex Collectors GroupingBy',
         subtitle: 'Sorting mail into cubbies by department',
         type: 'concept',
         content: `Think of a company mailroom. Letters arrive from all over the world. The mail clerk doesn't just leave them in a messy heap; they sort them into labeled cubbies on the wall: one cubby for Marketing, one for Finance, and one for Engineering.
 
-In Java Streams, **\`Collectors\`** is the powerhouse tool that gathers your stream results into organized collections:
+In Java Streams, \`Collectors\` is the powerhouse tool that gathers your stream results into organized collections:
 
-- **\`groupingBy()\`**: The equivalent of SQL \`GROUP BY\`. It groups items into a \`Map<Key, List<Value>>\` based on a property (like grouping policies by status).
-- **\`partitioningBy()\`**: A specialized binary grouping that splits items into two buckets: \`true\` and \`false\` (e.g., separating active accounts from inactive ones).
-- **\`joining()\`**: Glues text together into a single string with delimiters (like \`"A, B, C"\`).`,
+- \`groupingBy()\`: The equivalent of SQL \`GROUP BY\`. It groups items into a \`Map<Key, List<Value>>\` based on a property (like grouping policies by status).
+- \`partitioningBy()\`: A specialized binary grouping that splits items into two buckets: \`true\` and \`false\` (e.g., separating active accounts from inactive ones).
+- \`joining()\`: Glues text together into a single string with delimiters (like \`"A, B, C"\`).`,
         keyIdea: 'Collectors turn flat stream pipelines into rich, structured multi-level maps and aggregated summaries.',
         codeExample: {
+          language: 'java',
           title: 'GroupingByPattern.java',
           code: `import java.util.List;
 import java.util.Map;
@@ -344,7 +351,7 @@ public class GroupingByPattern {
     steps: [
       {
         id: 'step-1',
-        title: 'From Anonymous Classes to Lambdas',
+        title: 'Lambda Expressions and Desugaring',
         subtitle: 'Sending a quick text message instead of a 3-page formal letter',
         type: 'concept',
         content: `Before Java 8, if you wanted to pass a small piece of logic to another method (like telling a list how to sort itself), you had to write a verbose **Anonymous Inner Class**. You had to write six lines of boilerplate code with \`new Comparator<...>()\`, method signatures, and curly braces just to say "compare by ID".
@@ -353,11 +360,12 @@ Even worse, the compiler had to generate a separate \`.class\` file on disk (lik
 
 Java 8 introduced **Lambda Expressions (\`() -> {}\`)**:
 - A lambda is a quick, lightweight way to pass a function as if it were a variable.
-- Under the hood, lambdas do **not** generate clumsy inner class files! Instead, the JVM uses an ultra-fast instruction called **\`invokedynamic\`** (indy). It creates the function call site on-demand at runtime with almost zero memory overhead.
+- Under the hood, lambdas do not generate clumsy inner class files! Instead, the JVM uses an \`invokedynamic\` bytecode instruction linked via \`LambdaMetafactory\` to spin call sites on-demand at runtime with minimal overhead.
 
 Any interface that has **exactly one abstract method** is called a **Functional Interface** (often marked with \`@FunctionalInterface\`) and can be written as a clean lambda.`,
         keyIdea: 'Lambdas provide concise syntax and use invokedynamic under the hood to execute functional logic with minimal memory overhead.',
         codeExample: {
+          language: 'java',
           title: 'AnonymousClassVsLambda.java',
           beforeCode: `// Before Java 8: Verbose Anonymous Inner Class
 Collections.sort(policies, new Comparator<Policy>() {
@@ -400,13 +408,13 @@ These four interfaces sit in \`java.util.function\` and form the foundation for 
       },
       {
         id: 'step-3',
-        title: 'Optional<T>: Eliminating NullPointerExceptions',
+        title: 'Optional Null-Safety Best Practices',
         subtitle: 'The transparent gift box that prevents empty surprises',
         type: 'recap',
         content: `Computer scientist Tony Hoare famously called the invention of \`null\` his "billion-dollar mistake" because unhandled null values cause millions of application crashes worldwide.
 
-In Java 8, **\`Optional<T>\`** was created to fix this:
-- Instead of returning \`null\` when an item might not exist (like searching for a user that isn't in the database), a method returns an **\`Optional<User>\`**.
+In Java 8, \`Optional<T>\` was created to fix this:
+- Instead of returning \`null\` when an item might not exist (like searching for a user that isn't in the database), a method returns an \`Optional<User>\`.
 - Think of it as a transparent gift box: anyone holding the box can see immediately whether there is a real value inside or whether it's empty, without risking an unexpected crash!
 
 **Best Practices for Beginners**:
@@ -415,6 +423,7 @@ In Java 8, **\`Optional<T>\`** was created to fix this:
 - **DON'T** call \`optional.get()\` without checking \`isPresent()\` first—that defeats the whole purpose and can still crash!`,
         keyIdea: 'Optional makes the possibility of missing data explicit in your code, preventing unexpected NullPointerExceptions.',
         codeExample: {
+          language: 'java',
           title: 'OptionalBestPractice.java',
           code: `import java.util.Optional;
 
@@ -458,14 +467,14 @@ public class OptionalBestPractice {
     steps: [
       {
         id: 'step-1',
-        title: 'Why Generics: Compile-Time Type Safety',
+        title: 'Generics Compile-Time Type Safety',
         subtitle: 'Labeling storage containers in a chemistry lab',
         type: 'concept',
         content: `Imagine working in a science lab. If all bottles on the shelf are unlabeled glass jars holding mystery liquids, someone might accidentally pour vinegar into a beaker meant for pure water and ruin the experiment. But if every jar has a clear, permanent label like *"Distilled Water Only"*, nobody makes a mistake.
 
-Before Java 5, collections were like those unlabeled jars—they stored raw \`Object\` references. A developer could accidentally add an \`Integer\` to a list meant for \`String\` names. The code compiled without any complaint, only to crash in production with a fatal **\`ClassCastException\`**!
+Before Java 5, collections were like those unlabeled jars—they stored raw \`Object\` references. A developer could accidentally add an \`Integer\` to a list meant for \`String\` names. The code compiled without any complaint, only to crash in production with a fatal \`ClassCastException\`!
 
-**Generics** add clear type labels using angle brackets: **\`List<String>\`**.
+**Generics** add clear type labels using angle brackets: \`List<String>\`.
 - The compiler acts as a strict lab inspector: it blocks you from putting an integer into a string list before your code ever runs.
 - It also saves you from writing clumsy manual casts like \`(String) list.get(0)\`.`,
         keyIdea: 'Generics catch type mismatches at compile time, eliminating runtime ClassCastException crashes.',
@@ -474,7 +483,7 @@ Before Java 5, collections were like those unlabeled jars—they stored raw \`Ob
       },
       {
         id: 'step-2',
-        title: 'The PECS Principle: Producer Extends, Consumer Super',
+        title: 'The PECS Principle',
         subtitle: 'The fruit buffet tray vs the fruit compost bin',
         type: 'insight',
         content: `One of the most famous rules in Java is the **PECS Principle** (coined by Joshua Bloch in *Effective Java*): **Producer Extends, Consumer Super**.
@@ -490,6 +499,7 @@ Think of two different fruit stations:
    - But you cannot safely pull items out to eat, because all you know is that it's an unknown \`Object\`.`,
         keyIdea: 'Use ? extends T when reading items out of a collection (Producer); use ? super T when adding items into a collection (Consumer).',
         codeExample: {
+          language: 'java',
           title: 'PecsInPractice.java',
           code: `import java.util.ArrayList;
 import java.util.List;
@@ -518,7 +528,7 @@ public class PecsInPractice {
       },
       {
         id: 'step-3',
-        title: 'Type Erasure: The JVM Secret',
+        title: 'Type Erasure and Bridge Methods',
         subtitle: 'Erasing the pencil guidelines from the blueprint',
         type: 'recap',
         content: `When Java 5 introduced Generics in 2004, the designers faced a massive challenge: there were already billions of lines of older Java 1.4 code running in production worldwide. If the new Java broke older programs, companies would refuse to upgrade.
@@ -526,11 +536,12 @@ public class PecsInPractice {
 To ensure 100% backward compatibility, Java uses a clever mechanism called **Type Erasure**:
 1. While you are writing code in your IDE, the compiler strictly enforces your generic types (\`List<String>\`).
 2. But once the compiler verifies everything is safe, it **erases** the generic type information from the bytecode! In the final \`.class\` file, \`List<String>\` simply becomes a plain old raw \`List\`.
-3. The compiler automatically inserts the necessary low-level casts behind the scenes.
+3. The compiler automatically inserts synthetic bridge methods to preserve polymorphic overrides in parameterized subclasses.
+4. Developers must be careful with raw types and varargs arrays to avoid heap pollution, where a generic reference points to an incompatible object at runtime.
 
 **What This Means for Beginners**:
 Because generic types are erased at runtime, you cannot check generic types at runtime! Code like \`new T()\` or \`list instanceof List<String>\` will not compile, because by the time the code runs on the JVM, the specific type \`String\` has already been erased.`,
-        keyIdea: 'Type erasure removes generic types after compilation, keeping Java 100% backward compatible with legacy bytecode.',
+        keyIdea: 'Type erasure removes generic types after compilation, synthesizing bridge methods and avoiding heap pollution while maintaining backward compatibility.',
         diagramState: 'recap',
         diagramAlt: 'Architecture diagram illustrating Erasing the pencil guidelines from the blueprint: Erasing the pencil guidelines from the blueprint.',
       },

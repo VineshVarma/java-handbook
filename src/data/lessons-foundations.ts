@@ -33,6 +33,7 @@ Java solved this with a famous promise: **"Write Once, Run Anywhere" (WORA)**. I
         keyIdea: 'Java achieves universal portability by compiling human-readable source code into intermediate bytecode rather than processor-specific machine code.',
         productionSymptom: 'Why did our payment microservice take 3.2 seconds to serve its first 100 requests right after deployment, but later sustained 60,000 req/sec at 0.4ms average latency across 24 concurrent worker threads? This warm-up curve reflects the JVM startup lifecycle: initial class loading, connection pool warm-up, DB query cache readiness, and the HotSpot JIT compiler transitioning hot paths from cold bytecode interpretation into Tier 4 C2 profile-guided native machine code.',
         codeExample: {
+          language: 'java',
           title: 'PaymentProcessor.java',
           code: `package com.bank.payment;
 
@@ -63,13 +64,14 @@ The tool that turns your Java words into universal sheet music is **\`javac\` (t
 
 When you run \`javac PaymentProcessor.java\`, the compiler:
 1. **Checks your grammar and spelling**: Verifies syntax and makes sure variable types match.
-2. **Generates universal notes**: Emits a compact binary file called **\`PaymentProcessor.class\`**.
+2. **Generates universal notes**: Emits a compact binary file called \`PaymentProcessor.class\`.
 
-Every single valid Java \`.class\` file starts with a famous 4-byte signature in hexadecimal: **\`0xCAFEBABE\`** (a fun coffee-themed magic number that tells the JVM "this is genuine Java bytecode!").
+Every single valid Java \`.class\` file starts with a famous 4-byte signature in hexadecimal: \`0xCAFEBABE\` (a fun coffee-themed magic number that tells the JVM "this is genuine Java bytecode!").
 
 Inside this file sits the **Constant Pool** (a directory of every string, method name, and class reference your code uses) followed by compact bytecode instructions like \`iload\` (push integer), \`invokestatic\` (call method), and \`ireturn\` (return integer).`,
         keyIdea: 'The javac compiler validates your syntax and generates a universal binary .class file starting with the magic bytes 0xCAFEBABE.',
         codeExample: {
+          language: 'bash',
           title: 'Terminal / javap Bytecode Disassembly',
           code: `// Disassemble bytecode using javap -c:
 $ javap -c PaymentProcessor.class
@@ -114,6 +116,7 @@ When you start your program with \`java PaymentProcessor\`, the JVM launches its
 **How Delegation Works**: When your app asks for a class, the Application ClassLoader doesn't immediately search its own folder. It asks its parent first, all the way to the Bootstrap ClassLoader. Only if parents can't find it does the child loader look!`,
         keyIdea: 'The Parent Delegation Model checks the parent loader first, ensuring malicious code cannot replace core system classes like java.lang.String.',
         codeExample: {
+          language: 'java',
           title: 'ClassLoaderInspection.java',
           code: `public class ClassLoaderInspection {
     public static void main(String[] args) {
@@ -162,7 +165,7 @@ In Java, before any loaded bytecode is allowed to run, the **Bytecode Verifier**
 Once the safety scan passes, the class is **Linked**:
 - **Preparation**: The JVM allocates memory for static fields and assigns their initial default values (e.g., \`0\` or \`null\`).
 - **Resolution**: Symbolic names (like the text \`"System.out.println"\`) are translated into direct memory addresses so the CPU can find them quickly.`,
-        keyIdea: 'Bytecode verification acts as an automated safety checkpoint, guaranteeing memory safety and security before any code executes.',
+        keyIdea: 'Bytecode verification acts as an automated safety checkpoint that verifies type safety and stack constraints before any code executes.',
         interviewTip: 'Can you turn off the bytecode verifier? Technically yes, with flags like -noverify (or -Xverify:none), but this is deprecated and dangerous because it disables the JVM security barrier and exposes your system to memory corruption.',
         diagramState: 'verify-execute',
         diagramAlt: 'Architecture diagram illustrating The airport security scanner protecting your computer: The airport security scanner protecting your computer.',
@@ -192,6 +195,7 @@ The HotSpot JVM combines both approaches through **Tiered Compilation (Levels 0�
           explanation: 'Shows which methods the HotSpot JIT compiler has compiled into native machine code inside the Code Cache, along with their compilation tier (e.g. Tier 4 C2).',
         },
         codeExample: {
+          language: 'bash',
           title: 'JVM Optimization Flags',
           code: `# Inspect Tiered Compilation and see which methods get inlined:
 java -XX:+PrintCompilation -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining PaymentProcessor
@@ -219,8 +223,13 @@ In the JVM, memory is split the same way:
 - **Metaspace (Native OS Memory)**: Holds class definitions, constant pools, and method templates in host OS memory (replacing the old Java 7 PermGen).`,
         keyIdea: 'Method variables and references live on the fast, private thread Stack; actual objects live on the shared, GC-managed Heap.',
         codeExample: {
+          language: 'java',
           title: 'MemoryAllocation.java',
           code: `public class MemoryAllocation {
+    record Order(int id) {
+        public void process() {}
+    }
+
     public void executeOrder() {
         int orderId = 402;                // Primitive value stored directly in the Stack Frame
         Order order = new Order(orderId); // Reference 'order' sits on Stack;
@@ -289,6 +298,7 @@ True encapsulation is not just generating mindless getters and setters for every
 In modern Java 16+, **Java Records** make encapsulation even easier by providing compact, immutable data containers out of the box.`,
         keyIdea: 'Encapsulation keeps internal data private and forces all changes through validated methods, preventing corrupted states.',
         codeExample: {
+          language: 'java',
           title: 'BankAccount.java (Enforcing Invariants)',
           code: `public class BankAccount {
     private final String accountNumber;
@@ -332,7 +342,7 @@ In modern Java 16+, **Java Records** make encapsulation even easier by providing
         type: 'trade-off',
         content: `Think of family traits. A child inherits their parents' eye color or hair type without having to reinvent genetics from scratch. Similarly, a SportsCar IS-A Vehicle, so it naturally shares wheels, an engine, and brakes with all vehicles.
 
-In Java, **Inheritance** lets a subclass reuse fields and methods from a superclass using the **\`extends\`** keyword.
+In Java, **Inheritance** lets a subclass reuse fields and methods from a superclass using the \`extends\` keyword.
 
 While this sounds convenient, deep inheritance trees create a famous trap called the **Fragile Base Class problem**: if you change a single method in the parent class to fix a bug, you might accidentally break ten different subclasses scattered across your project!
 
@@ -341,13 +351,14 @@ To prevent chaotic inheritance:
 2. In modern Java 17+, **Sealed Classes** (\`sealed\` and \`permits\`) let a base class explicitly declare exactly which child classes are permitted to extend it.`,
         keyIdea: 'Use inheritance only when a genuine IS-A relationship exists; otherwise, prefer assembling smaller parts (composition).',
         codeExample: {
+          language: 'java',
           title: 'Modern Sealed Class Hierarchy (Java 17+)',
           code: `// Strictly control inheritance with sealed classes
 public sealed interface PaymentMethod permits CreditCard, PayPal, ApplePay {
     boolean processPayment(double amount);
 }
 
-public final class CreditCard implements PaymentMethod {
+final class CreditCard implements PaymentMethod {
     @Override
     public boolean processPayment(double amount) {
         // Authorize with credit card gateway
@@ -355,7 +366,7 @@ public final class CreditCard implements PaymentMethod {
     }
 }
 
-public final class PayPal implements PaymentMethod {
+final class PayPal implements PaymentMethod {
     @Override
     public boolean processPayment(double amount) {
         // Authorize with PayPal wallet
@@ -363,7 +374,7 @@ public final class PayPal implements PaymentMethod {
     }
 }
 
-public final class ApplePay implements PaymentMethod {
+final class ApplePay implements PaymentMethod {
     @Override
     public boolean processPayment(double amount) {
         // Authorize with Apple Pay biometric token
@@ -387,9 +398,10 @@ In Greek, **Polymorphism** means "many forms". It lets you treat different objec
 1. **Compile-Time (Static) Polymorphism**: **Method Overloading** (having methods with the same name but different parameters, resolved while compiling).
 2. **Runtime (Dynamic) Polymorphism**: **Method Overriding** (a subclass implements a method from its parent with \`@Override\`).
 
-At runtime, the JVM looks up the actual object type using an internal lookup directory called the **Virtual Method Table (vtable)**. When you call \`paymentMethod.processPayment()\`, the JVM automatically runs the specific logic for that exact payment type without you needing messy \`if-else\` checks!`,
+At runtime, for class inheritance, the JVM indexes a **Virtual Method Table (vtable)** via \`invokevirtual\`. For interface references like \`PaymentMethod\`, it emits \`invokeinterface\` and optimizes dynamic dispatch via monomorphic inline caches or an \`itable\` (Interface Method Table), calling the specific payment logic without messy \`if-else\` checks!`,
         keyIdea: 'Polymorphism allows you to write code that interacts with a general interface, while the JVM dynamically calls the correct specific method at runtime.',
         codeExample: {
+          language: 'java',
           title: 'PolymorphicPaymentService.java',
           code: `public class OrderCheckoutService {
     // The checkout service works with ANY PaymentMethod without caring about the details
@@ -404,7 +416,7 @@ At runtime, the JVM looks up the actual object type using an internal lookup dir
     }
 }`,
         },
-        interviewTip: 'How does the JVM resolve runtime polymorphism under the hood? Each loaded class has a Virtual Method Table (vtable) containing memory pointers to its methods. When the invokevirtual instruction runs, the JVM looks up the pointer in the actual runtime object\'s vtable.',
+        interviewTip: 'How does the JVM resolve runtime polymorphism under the hood? For class inheritance, invokevirtual indexes a fixed vtable offset. For interface polymorphism (invokeinterface), HotSpot optimizes dispatch using monomorphic inline caches, falling back to itable lookups when multiple implementing classes are encountered at runtime.',
         diagramState: 'polymorphism',
         diagramAlt: 'Architecture diagram illustrating PolymorphicPaymentService.java: One universal remote, many different devices.',
       },
@@ -423,6 +435,7 @@ In Java, **Abstraction** means exposing only the essential actions to the outsid
 In enterprise software, coding against interfaces allows you to swap out implementations (like switching from an in-memory test database to a real cloud database) without changing any of your business logic.`,
         keyIdea: 'Abstraction defines clean, simple contracts through interfaces, hiding complicated implementation details from callers.',
         codeExample: {
+          language: 'java',
           title: 'NotificationService.java',
           code: `public interface NotificationService {
     // The core contract method
@@ -546,6 +559,7 @@ This is the brilliant idea behind the **Garbage-First (G1) Collector**, the defa
 - G1 constantly tracks which regions hold the most garbage. When it's time to clean, it collects the dirtiest regions first (**"Garbage-First"**) within a target pause time that you specify (e.g. \`-XX:MaxGCPauseMillis=100\`).`,
         keyIdea: 'G1 GC slices heap memory into thousands of flexible regions, collecting the regions with the most garbage first to keep pause times predictable.',
         codeExample: {
+          language: 'bash',
           title: 'Production JVM GC Flags',
           code: `# Standard production flags for a responsive microservice:
 java -XX:+UseG1GC \\
@@ -565,7 +579,7 @@ java -XX:+UseG1GC \\
         title: 'Memory Leaks & OutOfMemoryError in Java',
         subtitle: 'Why the garbage collector cannot save you from hoarding',
         type: 'trade-off',
-        content: `A common myth among beginners is: *"Java has automatic garbage collection, so our code can never leak memory!"*
+        content: `A common myth among beginners is: *"Java has automatic garbage collection, so unintentional object retention causes memory leaks when strong references linger unnecessarily."*
 
 In reality, a Java **Memory Leak** happens when you forget that an object is still attached to an active reference. The Garbage Collector only frees objects that nobody can reach. If you keep an old object tied to a static list or a long-lived cache, the collector assumes you still need it and refuses to throw it away!
 
@@ -575,6 +589,7 @@ In reality, a Java **Memory Leak** happens when you forget that an object is sti
 3. **Forgotten ThreadLocals**: Storing user session data in a \`ThreadLocal\` and forgetting to call \`.remove()\` when the request finishes on a reused thread pool.`,
         keyIdea: 'If your code keeps an active reference to an object you no longer need, the Garbage Collector cannot reclaim it, eventually causing an OutOfMemoryError.',
         codeExample: {
+          language: 'java',
           title: 'ThreadLocalMemoryLeak.java',
           code: `public class SecurityContextFilter implements Filter {
     // A ThreadLocal associated with thread pool threads
@@ -628,18 +643,19 @@ In reality, a Java **Memory Leak** happens when you forget that an object is sti
         content: `Think of carrying pocket change. When you have a quarter in your pocket, the coin itself is right there in your hand. You can spend it instantly without asking anyone for permission. But if you have valuable jewelry locked in a bank safety deposit box, you don't carry the jewelry in your pocket—you carry a small key that points to the box in the bank vault.
 
 In Java:
-- **Primitives (Pocket Change)**: Store their raw values directly right in the thread stack frame. They take up tiny, fixed amounts of space and execute with blistering speed.
+- **Primitives (Pocket Change)**: When declared as local variables in methods, store their raw values directly in the thread stack frame. Primitive fields declared on objects live on the heap inside that object's memory layout. They take up tiny, fixed amounts of space and execute with blistering speed.
 - **Objects (Safety Deposit Box)**: Live on the Heap, and your variable holds just the address reference pointing to it.
 
 Java provides **8 primitive types**:
 1. **Whole numbers**: \`byte\` (8-bit), \`short\` (16-bit), \`int\` (32-bit), \`long\` (64-bit)
 2. **Decimals**: \`float\` (32-bit), \`double\` (64-bit)
-3. **Characters**: \`char\` (16-bit Unicode letter)
-4. **True/False**: \`boolean\` (\`true\` / \`false\`)
+3. **Characters**: \`char\` (16-bit UTF-16 code unit, \\u0000 to \\uffff; supplementary code points like emojis require a 32-bit surrogate pair of two chars)
+4. **True/False**: \`boolean\` (represented as 1 byte in arrays, and compiled into 4 bytes on operand stack slots per JVMS §2.3.4)
 
-**Crucial Financial Rule**: Never use \`float\` or \`double\` for money! Because binary hardware cannot perfectly represent fractions like 0.1, rounding errors accumulate (e.g. \`0.1 + 0.2\` becomes \`0.30000000000000004\`). Always use **\`BigDecimal\`** or store amounts as whole cents!`,
+**Crucial Financial Rule**: Never use \`float\` or \`double\` for money! Because binary hardware cannot perfectly represent fractions like 0.1, rounding errors accumulate (e.g. \`0.1 + 0.2\` becomes \`0.30000000000000004\`). Always use \`BigDecimal\` or store amounts as whole cents!`,
         keyIdea: 'Primitives store raw values directly on the stack for speed; always use BigDecimal for currency to avoid rounding errors.',
         codeExample: {
+          language: 'java',
           title: 'FinancialPrecision.java',
           code: `import java.math.BigDecimal;
 
@@ -680,6 +696,7 @@ Because text strings make up over 30% of memory in typical Java applications, th
 3. **Fast Map Lookups**: Because a string cannot change, its hash code never changes, making it the perfect key for a \`HashMap\`.`,
         keyIdea: 'Strings are immutable and cached in the String Pool to save memory, protect security, and ensure thread safety.',
         codeExample: {
+          language: 'java',
           title: 'StringPoolComparison.java',
           code: `public class StringPoolComparison {
     public static void main(String[] args) {
@@ -716,9 +733,10 @@ Java does this wrapping and unwrapping automatically:
 **The Hidden Beginner Trap**:
 What happens if someone hands you a beautifully wrapped gift box, but when you open it, the box is completely empty (\`null\`)? You can't put an invisible watch on your wrist!
 
-In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \`int\`, the compiler invisibly calls \`.intValue()\` on that null reference, causing an instant **\`NullPointerException\`**! Always be careful when reading nullable columns from a database or JSON payload.`,
+In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \`int\`, the compiler invisibly calls \`.intValue()\` on that null reference, causing an instant \`NullPointerException\`! Always be careful when reading nullable columns from a database or JSON payload.`,
         keyIdea: 'Unboxing an Integer wrapper that contains null triggers a silent, unexpected NullPointerException at runtime.',
         codeExample: {
+          language: 'java',
           title: 'AutoboxingTrap.java',
           code: `public class AutoboxingTrap {
     public static void main(String[] args) {
@@ -770,7 +788,7 @@ In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \
 - **Case 1: The oven explodes and the kitchen catches fire (an \`Error\`)**. This is a catastrophic disaster. You don't grab a spatula and keep cooking; you pull the fire alarm, evacuate the building, and shut down.
 - **Case 2: You reach for garlic and realize the spice jar is empty (an \`Exception\`)**. This is an unexpected bump in the road, but it is recoverable. You catch the issue, substitute garlic powder, and finish serving dinner!
 
-In Java, all error conditions descend from **\`java.lang.Throwable\`**:
+In Java, all error conditions descend from \`java.lang.Throwable\`:
 
 1. **\`Error\` (The Fire)**: Serious hardware or JVM problems (like \`OutOfMemoryError\` or \`StackOverflowError\`). Your application should never attempt to catch these.
 2. **\`Exception\` (The Missing Ingredient)**: Conditions your program can handle:
@@ -789,12 +807,13 @@ In Java, all error conditions descend from **\`java.lang.Throwable\`**:
 
 In older Java versions, closing database connections or files required messy, nested \`finally\` blocks. If an error happened in both the \`try\` block and the \`finally\` block, the \`finally\` error silently erased the original root cause!
 
-Java 7 introduced **\`try-with-resources\`**:
-- Any resource that implements **\`AutoCloseable\`** (like files, sockets, and database connections) is declared inside parentheses after \`try (...)\`.
-- The JVM automatically closes them the moment the block ends, even if an exception occurs!
+Java 7 introduced \`try-with-resources\`:
+- Any resource that implements \`AutoCloseable\` (like files, sockets, and database connections) is declared inside parentheses after \`try (...)\`.
+- The javac compiler desugars the construct into a robust try-finally block where close() is guaranteed to execute, using Throwable.addSuppressed() to preserve secondary closing exceptions rather than letting them mask the primary error!
 - Resources are closed in **reverse order** of creation, and any secondary closing errors are preserved as suppressed exceptions.`,
         keyIdea: 'try-with-resources automatically closes files and database connections, preventing resource leaks and preserving error messages.',
         codeExample: {
+          language: 'java',
           title: 'TryWithResourcesModern.java',
           code: `import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -852,7 +871,7 @@ In clean backend development:
     difficulty: 'Advanced',
     youllLearn: [
       'The exact 16-byte memory footprint of an empty new Object()',
-      'The 64-bit Mark Word: hash code, GC age bits, biased lock state, and lock pointers',
+      'The 64-bit Mark Word: hash code, GC age bits, and lock pointers (biased locking deprecated in JDK 15 and removed in JDK 18)',
       'How Compressed OOPs enable 32-bit pointers on 64-bit JVMs up to 32GB',
       'Compact Object Headers (Project Lilliput) in Java 24/25+ saving 10-20% memory',
       'TLAB (Thread-Local Allocation Buffer) lock-free bump-the-pointer allocation',
@@ -872,7 +891,7 @@ In Java, you cannot create an object that contains "just the fields". Every sing
 1. **Mark Word (64 bits / 8 bytes)**: The shipping barcode. It holds runtime metadata:
    - The object's identity hash code
    - Its Garbage Collection age counter (0 to 15)
-   - Its thread synchronization lock status
+   - Its thread synchronization lock status (biased locking deprecated in JDK 15 and removed in JDK 18; modern Mark Word uses 64 bits for hashcode, age, and thin/fat lock pointers)
 2. **Klass Pointer (32 or 64 bits)**: A reference pointer that tells the JVM what kind of class this object is.
 3. **8-Byte Alignment Padding**: For fast CPU hardware reads, the JVM pads all objects to multiples of 8 bytes.
 
@@ -903,6 +922,7 @@ HotSpot solves this using **Compressed OOPs (Ordinary Object Pointers)**:
 **The 32GB Trap**: If you set your heap size to \`-Xmx33g\`, the JVM can no longer fit addresses into 32 bits. It turns off Compressed OOPs and switches to full 64-bit pointers. Every reference doubles in size, suddenly eating ~30% more memory! A 31GB heap can often hold more data than a 33GB heap.`,
         keyIdea: 'Compressed OOPs use 8-byte object alignment to represent 64-bit memory addresses using 32-bit pointers on heaps up to 32GB.',
         codeExample: {
+          language: 'bash',
           title: 'CompressedOopsThreshold.sh',
           code: `# Check if your JVM is currently using compressed OOPs:
 java -XX:+PrintFlagsFinal -version | grep -i UseCompressedOops
@@ -930,6 +950,7 @@ java -XX:+PrintFlagsFinal -version | grep -i UseCompressedOops
 This architectural enhancement frees up **10% to 20% of heap memory** automatically without requiring you to change a single line of your application code!`,
         keyIdea: 'Project Lilliput shrinks Java object headers from 16/12 bytes down to 8 bytes, freeing 10% to 20% of heap space for free.',
         codeExample: {
+          language: 'bash',
           title: 'EnableCompactHeaders.sh',
           code: `# Enable compact 64-bit headers in Java 24+:
 java -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -jar microservice.jar`,
@@ -961,10 +982,10 @@ HotSpot solves this with **TLAB (Thread-Local Allocation Buffer)**:
 - When a thread creates an object, it simply slides a pointer forward: \`top += size\`.
 - This **"Bump-the-Pointer"** allocation takes zero locks and finishes in just 1 or 2 CPU clock cycles!
 - Only when a thread's private TLAB fills up does it briefly coordinate with the main heap to grab a fresh buffer.`,
-        keyIdea: 'TLAB gives each thread a private allocation buffer in Eden space, allowing objects to be created in nanoseconds with zero lock contention.',
+        keyIdea: 'TLAB provides a lock-free thread-local buffer in Eden space for bump-pointer allocation; shared heap synchronization occurs only during buffer refill.',
         cliInspection: {
           command: 'jcmd <pid> VM.flags -all | grep -i TLAB',
-          output: `bool UseTLAB = true\nsize_t TLABSize = 0 (dynamically resized)\nintx TLABWasteTargetPercent = 1`,
+          output: `bool UseTLAB = true\nsize_t TLABSize = 0\nintx TLABWasteTargetPercent = 1`,
           explanation: 'TLAB is enabled by default in all production JVMs. The JVM dynamically adjusts each thread\'s buffer size according to its allocation rate.',
         },
         diagramState: 'tlab-allocation',
@@ -1004,6 +1025,7 @@ Through a compiler technique called **Escape Analysis**, the HotSpot C2 compiler
 When that happens, the JVM does **not** allocate the object on the heap at all!`,
         keyIdea: 'Escape analysis proves whether an object escapes its method, allowing the JIT compiler to eliminate heap allocations entirely.',
         codeExample: {
+          language: 'java',
           title: 'NonEscapingObject.java',
           code: `public class NonEscapingObject {
     public record Point(int x, int y) {}
@@ -1036,7 +1058,10 @@ HotSpot classifies every object into these three exact states:
         keyIdea: 'Only NoEscape objects qualify for scalar replacement, allowing the JIT to eliminate the heap object completely.',
         cliInspection: {
           command: 'java -XX:+UnlockDiagnosticVMOptions -XX:+PrintEscapeAnalysis PointDemo',
-          output: `Point: NoEscape (eliminated)\nVector: ArgEscape\nCustomer: GlobalEscape (allocated on Heap)`,
+          output: `[info] ConnectionGraph escape analysis results (illustrative summary):
+  EscapeState: NoEscape (Point instance scalar replaced into registers)
+  EscapeState: ArgEscape (Vector passed as method argument)
+  EscapeState: GlobalEscape (Customer stored to static field / Heap)`,
           explanation: 'Prints the exact escape state determination made by the C2 compiler for every allocation site.',
         },
         diagramState: 'escape-states',
@@ -1047,7 +1072,7 @@ HotSpot classifies every object into these three exact states:
         title: 'Scalar Replacement & Lock Elision',
         subtitle: 'Dismantling the object into raw CPU numbers',
         type: 'solution',
-        content: `When an object is categorized as **\`NoEscape\`**, the HotSpot JIT compiler applies two brilliant optimizations:
+        content: `When an object is categorized as \`NoEscape\`, the HotSpot JIT compiler applies two brilliant optimizations:
 
 1. **Scalar Replacement**:
    The compiler literally dismantles the object into its individual raw numbers (scalars). If you created a \`Point(int x, int y)\`, the compiler puts \`x\` directly into CPU hardware register R1 and \`y\` into register R2.
@@ -1059,12 +1084,15 @@ HotSpot classifies every object into these three exact states:
    If a local method acquires a lock on an object that never escapes (e.g., using a legacy \`StringBuffer\` or a local \`synchronized\` block), the JIT compiler completely deletes the locking instructions because no other thread could ever compete for it!`,
         keyIdea: 'Scalar replacement breaks an object into raw primitive variables in CPU registers, eliminating heap allocations and GC pauses.',
         codeExample: {
+          language: 'java',
           title: 'ScalarReplacementEquivalent.java',
           code: `public class ScalarReplacementEquivalent {
+    public record Point(int x, int y) {}
+
     // What you wrote in Java:
     public int compute() {
         Point p = new Point(10, 20);
-        return p.x + p.y;
+        return p.x() + p.y();
     }
 
     // What HotSpot C2 JIT actually compiles into native assembly:
@@ -1072,12 +1100,6 @@ HotSpot classifies every object into these three exact states:
         int p_x = 10;      // Stored directly in CPU register R1
         int p_y = 20;      // Stored directly in CPU register R2
         return p_x + p_y;  // Single fast hardware ADD instruction! No object!
-    }
-
-    static class Point {
-        int x;
-        int y;
-        Point(int x, int y) { this.x = x; this.y = y; }
     }
 }`,
         },
@@ -1126,7 +1148,7 @@ In traditional garbage collectors (like Parallel GC and G1GC), this is known as 
 - When the collector needs to move living objects from a fragmented memory region to a fresh one, it pauses all your application threads.
 - Why? Because if your program tried to read or change an object while the Garbage Collector was halfway through moving it, your data would get corrupted!
 
-While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems, multiplayer games, and high-speed web services cannot tolerate even a 50ms pause. That is why **ZGC** was created.`,
+While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems, multiplayer games, and high-speed web services cannot tolerate even a 50ms pause. That is why **ZGC** was created, achieving sub-millisecond (<1ms) pauses.`,
         keyIdea: 'Stop-The-World pauses occur because legacy garbage collectors cannot safely allow application threads to access objects while they are being moved in memory.',
         cliInspection: {
           command: 'jstat -gcutil <pid> 1000',
@@ -1151,12 +1173,17 @@ It accomplishes this through two foundational ideas:
 2. **Load Barriers (Self-Healing Reads)**:
    When your application thread reads an object reference (like \`customer.getName()\`), the JIT compiler inserts an ultra-fast hardware check. If the pointer's color indicates that the object is currently being moved to a new memory address, the thread itself updates the pointer to the new address instantly and keeps running!
 
-Your application threads never have to pause and wait for the Garbage Collector to finish moving objects!`,
+Your application threads never experience multi-millisecond pauses while the Garbage Collector relocates objects; pause phases (Pause Mark Start, Pause Mark End, Pause Relocate Start) are strictly sub-millisecond (<1ms).`,
         keyIdea: 'ZGC uses Colored Pointers and self-healing Load Barriers to move objects concurrently without pausing application threads.',
         codeExample: {
+          language: 'bash',
           title: 'EnableGenerationalZGC.sh',
-          code: `# Enable modern Generational ZGC in Java 21+:
-java -XX:+UseZGC -XX:+ZGenerational -Xmx16g -Xlog:gc*:file=gc.log:time,uptime -jar app.jar`,
+          code: `# Generational ZGC evolution:
+# - JDK 21 experimental (-XX:+UseZGC -XX:+ZGenerational)
+# - JDK 23 default (JEP 474: Generational ZGC enabled by default with -XX:+UseZGC)
+# - JDK 24 non-generational removed (legacy non-generational mode eliminated)
+# Running modern Generational ZGC:
+java -XX:+UseZGC -Xmx16g -Xlog:gc*:file=gc.log:time,uptime -jar app.jar`,
         },
         microCheck: {
           question: 'How does ZGC prevent Stop-The-World pauses when relocating objects in memory?',

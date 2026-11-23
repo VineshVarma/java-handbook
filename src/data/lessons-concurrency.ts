@@ -31,7 +31,7 @@ export const concurrencyLessons: Lesson[] = [
 - **TIMED_WAITING**: Setting a 30-minute timer for lunch and napping until the alarm rings.
 - **TERMINATED**: Finished their project, packed up their desk, and clocked out permanently.
 
-In Java, every thread is an execution worker whose life is tracked by the **\`Thread.State\`** enum:
+In Java, every thread is an execution worker whose life is tracked by the \`Thread.State\` enum:
 1. **NEW**: Created with \`new Thread()\`, but \`start()\` has not been called yet.
 2. **RUNNABLE**: Running code on a CPU core or waiting in line for OS scheduler time.
 3. **BLOCKED**: Waiting to acquire a monitor lock to enter a \`synchronized\` block.
@@ -50,33 +50,37 @@ In Java, every thread is an execution worker whose life is tracked by the **\`Th
         content: `Many Java developers get confused between **BLOCKED** and **WAITING**:
 
 - **BLOCKED (Locked Out)**:
-  Think of standing right outside a restroom stall where someone locked the latch from the inside. You are eager to step in, but you literally cannot because the physical lock is engaged. In Java, this happens exclusively when a thread is trying to enter or re-enter a **\`synchronized\` block or method**, but another thread currently holds that object's **intrinsic monitor lock**.
+  Think of standing right outside a restroom stall where someone locked the latch from the inside. You are eager to step in, but you literally cannot because the physical lock is engaged. In Java, this happens exclusively when a thread is trying to enter or re-enter a \`synchronized\` block or method, but another thread currently holds that object's **intrinsic monitor lock**.
 
 - **WAITING (Sitting in the Waiting Room)**:
-  Think of sitting in a doctor's waiting room reading a magazine. You voluntarily sat down and gave up your place in the hallway. You aren't banging on the doctor's door; you are resting patiently until the nurse steps out and calls your name (**\`notify()\`** or **\`notifyAll()\`**). In Java, a thread enters WAITING when it deliberately calls \`Object.wait()\` or \`Thread.join()\`.`,
+  Think of sitting in a doctor's waiting room reading a magazine. You voluntarily sat down and gave up your place in the hallway. You aren't banging on the doctor's door; you are resting patiently until the nurse steps out and calls your name (\`notify()\` or \`notifyAll()\`). In Java, a thread enters WAITING when it deliberately calls \`Object.wait()\` or \`Thread.join()\`.`,
         keyIdea: 'BLOCKED threads are waiting to acquire an intrinsic monitor lock; WAITING threads voluntarily yielded the CPU waiting for an explicit signal.',
         diagramState: 'blocked-state',
         diagramAlt: 'Architecture diagram illustrating Waiting outside a locked door vs sitting in a waiting room: Waiting outside a locked door vs sitting in a waiting room.',
       },
       {
         id: 'step-3',
-        title: 'volatile & The Java Memory Model (JMM)',
+        title: 'Volatile and Java Memory Model',
         subtitle: 'A private pocket notepad vs a central town square billboard',
         type: 'solution',
         content: `Imagine two commanders stationed in two different towers:
 - Commander A writes an order on a small private notepad in their pocket (Core 1's local CPU L1/L2 cache).
 - Commander B is looking out the window of Tower 2. They have no idea Commander A wrote anything, because the private notepad stays inside Tower 1!
-- To make sure both commanders stay in sync, they must write updates on a giant public chalkboard in the central town square (**Main System RAM**).
+- To make sure both commanders stay in sync, they coordinate via shared memory protocols.
 
 Modern multi-core processors give each CPU core its own high-speed L1/L2 cache. Without coordination, Core 1 can write a new variable value to its cache, while Core 2 keeps reading an old, stale value from its own cache!
 
-The **\`volatile\`** keyword enforces two vital guarantees:
-1. **Memory Visibility**: Every write to a volatile variable is flushed straight to main memory, and every read is fetched straight from main memory, so all threads immediately see the newest value.
-2. **Instruction Ordering**: The compiler and CPU are forbidden from reordering reads and writes across the volatile boundary.
+The \`volatile\` keyword establishes formal happens-before relationships defined by the Java Memory Model (JMM):
+1. **Memory Visibility**: Writes do not bypass cache to make a slow round-trip to main DRAM. Instead, CPU memory barriers drain the local CPU store buffer and broadcast cache line invalidation over hardware cache coherence protocols (MESI/MOESI), guaranteeing other CPU cores observe the updated value in their L1/L2 caches immediately.
+2. **Instruction Ordering**: The JMM enforces one-way acquire and release memory barriers:
+   - Release barrier on volatile write: Prior ordinary reads and writes cannot be reordered after the volatile write.
+   - Acquire barrier on volatile read: Subsequent ordinary reads and writes cannot be reordered before the volatile read.
+   - Full barrier: A volatile write followed by a volatile read prevents reordering between them.
 
-**Crucial Warning**: \`volatile\` does **NOT** make \`count++\` thread-safe! \`count++\` is actually 3 separate steps: read value, add 1, write value. If two threads do this at once, they can overwrite each other. For atomic math, always use **\`AtomicInteger\`** or **\`AtomicLong\`**.`,
-        keyIdea: 'volatile guarantees that all CPU cores see the latest variable value immediately, but does not make compound operations like count++ atomic.',
+**Crucial Warning**: \`volatile\` does **NOT** make \`count++\` thread-safe! \`count++\` involves 3 separate bytecode operations: read (\`getfield\` or \`iload\`), increment (\`iadd\`), and write (\`putfield\` or \`istore\`). If multiple threads execute this concurrently, increments are lost. For atomic math, always use \`AtomicInteger\` or \`AtomicLong\`.`,
+        keyIdea: 'volatile establishes happens-before relationships using CPU memory barriers and cache coherence, but does not make compound operations atomic.',
         codeExample: {
+          language: 'java',
           title: 'VolatileFlagPattern.java',
           code: `public class WorkerService implements Runnable {
     // volatile ensures all worker threads see the stop signal immediately!
@@ -105,13 +109,13 @@ The **\`volatile\`** keyword enforces two vital guarantees:
     }
 }`,
         },
-        interviewTip: 'Is count++ thread-safe if count is declared volatile? No! count++ involves 3 separate bytecode operations: read (getfield), increment (iadd), and write (putfield). If multiple threads execute this concurrently, increments can be lost. Use AtomicInteger.incrementAndGet() instead.',
+        interviewTip: 'Is count++ thread-safe if count is declared volatile? No! count++ involves 3 separate bytecode operations: read (getfield or iload), increment (iadd), and write (putfield or istore). If multiple threads execute this concurrently, increments can be lost. Use AtomicInteger.incrementAndGet() instead.',
         diagramState: 'running-state',
         diagramAlt: 'Architecture diagram illustrating VolatileFlagPattern.java: A private pocket notepad vs a central town square billboard.',
       },
       {
         id: 'step-4',
-        title: 'Deadlocks & Prevention',
+        title: 'Deadlocks and Prevention',
         subtitle: 'Two cars meeting on a narrow one-lane bridge',
         type: 'trade-off',
         content: `Imagine two stubborn drivers meeting in the middle of a narrow one-lane bridge from opposite directions. Driver 1 refuses to back up until Driver 2 backs up. Driver 2 refuses to back up until Driver 1 backs up. Both drivers sit with their arms crossed, honking their horns forever. Traffic is permanently frozen.
@@ -123,7 +127,7 @@ In multithreading, this frozen nightmare is called a **Deadlock**:
 
 **How to Prevent Deadlocks**:
 1. **Acquire locks in a strict global order**: If all threads always acquire Lock A first and Lock B second, circular wait is impossible!
-2. **Use timeouts with \`ReentrantLock\`**: Instead of locking forever with \`synchronized\`, use **\`lock.tryLock(500, TimeUnit.MILLISECONDS)\`**. If a lock cannot be obtained within half a second, back off, release any held locks, and try again later.`,
+2. **Use timeouts with** \`ReentrantLock\`: Instead of locking forever with \`synchronized\`, use \`lock.tryLock(500, TimeUnit.MILLISECONDS)\`. If a lock cannot be obtained within half a second, back off, release any held locks, and try again later.`,
         keyIdea: 'Deadlocks happen when threads wait in a circle for each other\'s locks; prevent them by ordering lock acquisitions or using timed tryLock().',
         diagramState: 'recap',
         diagramAlt: 'Architecture diagram illustrating Two cars meeting on a narrow one-lane bridge: Two cars meeting on a narrow one-lane bridge.',
@@ -158,26 +162,27 @@ In multithreading, this frozen nightmare is called a **Deadlock**:
 
 In classic Java, calling \`Future.get()\` acted like standing frozen at the register—it blocked the calling thread until the remote server replied!
 
-**\`CompletableFuture\`** (introduced in Java 8 and enhanced in Java 9/21) brings reactive, non-blocking promise chaining to Java: you declare a pipeline of steps that will execute automatically whenever data arrives, without tying up worker threads.`,
+\`CompletableFuture\` (introduced in Java 8 and enhanced in Java 9/21) brings reactive, non-blocking promise chaining to Java: you declare a pipeline of steps that will execute automatically whenever data arrives, without tying up worker threads.`,
         keyIdea: 'CompletableFuture allows you to chain asynchronous tasks together so threads are never held captive waiting for network responses.',
         diagramState: 'supply-async',
         diagramAlt: 'Architecture diagram illustrating The cafe buzzer tag that frees you to walk around: The cafe buzzer tag that frees you to walk around.',
       },
       {
         id: 'step-2',
-        title: 'supplyAsync & Thread Pool Isolation',
+        title: 'supplyAsync Thread Pool Isolation',
         subtitle: 'Giving the kitchen its own dedicated crew',
         type: 'insight',
-        content: `When you call \`CompletableFuture.supplyAsync(() -> fetchRemoteData())\`, Java has to run that work on a background thread. By default, it uses **\`ForkJoinPool.commonPool()\`**.
+        content: `When you call \`CompletableFuture.supplyAsync(() -> fetchRemoteData())\`, Java has to run that work on a background thread. By default, it uses \`ForkJoinPool.commonPool()\`.
 
 **Critical Production Warning for Beginners**:
-The default \`commonPool()\` is sized strictly to match your computer's CPU core count (e.g. 4 to 8 threads). It is designed purely for fast, pure in-memory math calculations!
+The default \`ForkJoinPool.commonPool()\` is sized strictly to match your computer's CPU core count (e.g. 4 to 8 threads). It is designed purely for fast, pure in-memory math calculations!
 
-If you submit slow network HTTP calls or database queries to \`commonPool()\`, all 8 threads will quickly become frozen waiting for network sockets. Suddenly, your entire JVM is starved of threads, freezing other parts of your app!
+If you submit slow network HTTP calls or database queries to \`ForkJoinPool.commonPool()\`, all worker threads will quickly become frozen waiting for network sockets. Suddenly, your entire JVM is starved of threads, freezing other parts of your app!
 
-**Best Practice**: Always pass your own dedicated, properly sized **\`ExecutorService\`** when making external API calls.`,
+**Best Practice**: Always pass your own dedicated, properly sized custom Executor (such as an \`ExecutorService\`) when making external API calls.`,
         keyIdea: 'Never use the default ForkJoinPool.commonPool() for blocking network or database calls; always supply a dedicated custom thread pool.',
         codeExample: {
+          language: 'java',
           title: 'DedicatedThreadPoolAsync.java',
           code: `import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -212,21 +217,22 @@ public class DedicatedThreadPoolAsync {
       },
       {
         id: 'step-3',
-        title: 'Chaining: thenApply vs thenCompose vs thenCombine',
+        title: 'Async Chaining and Composition',
         subtitle: 'Chopping, baking, and plating the dinner dishes',
         type: 'concept',
         content: `Think of preparing a delicious dinner in a kitchen:
 
-1. **\`thenApply()\` (Chopping veggies - Simple 1-to-1 transform)**:
+1. \`thenApply()\` (Chopping veggies - Simple 1-to-1 transform):
    You receive a peeled carrot and chop it into coins. Like a stream's \`map()\`, it takes the output of the previous future and transforms it synchronously.
 
-2. **\`thenCompose()\` (Baking in the oven - Sequential Async)**:
+2. \`thenCompose()\` (Baking in the oven - Sequential Async):
    You take the seasoned chicken and slide it into the oven. The oven gives you its own independent baking timer. You don't want a "timer inside a box inside a timer" (\`CompletableFuture<CompletableFuture<Dinner>>\`). \`thenCompose()\` un-nests the async steps into a single clean sequential chain!
 
-3. **\`thenCombine()\` (Plating the meal - Parallel Combination)**:
+3. \`thenCombine()\` (Plating the meal - Parallel Combination):
    While the chicken bakes in the oven, you toss a fresh garden salad on the side counter at the exact same time. When both the chicken and the salad are ready, you combine them onto a single dinner plate!`,
         keyIdea: 'Use thenApply for simple result mapping, thenCompose for dependent sequential async calls, and thenCombine to merge two parallel independent futures.',
         codeExample: {
+          language: 'java',
           title: 'AsyncChainingExamples.java',
           code: `import java.util.concurrent.CompletableFuture;
 
@@ -266,16 +272,17 @@ public class AsyncChainingExamples {
       },
       {
         id: 'step-4',
-        title: 'allOf & Graceful Fallbacks',
+        title: 'AllOf and Graceful Fallbacks',
         subtitle: 'The travel search engine that aggregates flights safely',
         type: 'solution',
         content: `Think of a flight comparison website like Skyscanner. When you search for flights, the website calls 5 different airlines at the same time:
-- It doesn't query them one after another (which would take 15 seconds). It fires all 5 requests in parallel using **\`CompletableFuture.allOf()\`**.
-- What if one airline's API is down or takes too long? The search engine doesn't crash your screen with a scary 500 error! It attaches a timeout rule (**\`orTimeout()\`**) and provides a fallback note saying "Airline C temporarily unavailable" using **\`exceptionally()\`**.
+- It doesn't query them one after another (which would take 15 seconds). It fires all 5 requests in parallel using \`CompletableFuture.allOf()\`.
+- What if one airline's API is down or takes too long? The search engine doesn't crash your screen with a scary 500 error! It attaches a timeout rule (\`orTimeout()\`) and provides a fallback note saying "Airline C temporarily unavailable" using \`exceptionally()\`.
 
-By combining parallel fan-out with timeouts and fallback error handlers, your microservices remain blazing fast and completely immune to downstream outages!`,
+By combining parallel fan-out with timeouts and fallback error handlers, your microservices remain blazing fast and resilient to downstream outages!`,
         keyIdea: 'Use allOf() to query multiple downstream services in parallel, and attach exceptionally() or handle() to return cached fallbacks if one fails.',
         codeExample: {
+          language: 'java',
           title: 'ResilientOrchestration.java',
           code: `import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -350,10 +357,13 @@ In Java, creating a platform thread is expensive:
 - The operating system has to spend valuable CPU cycles switching between threads.
 - If you call \`new Thread()\` for every incoming web request, your server will quickly crash with \`OutOfMemoryError: unable to create new native thread\`.
 
-The **\`ExecutorService\`** solves this by keeping a pool of reusable worker threads:
-1. **\`corePoolSize\`**: The number of regular standby workers kept ready even when idle.
-2. **\`maximumPoolSize\`**: The ceiling of maximum workers allowed during a rush.
-3. **\`workQueue\`**: The waiting line (queue) holding incoming tasks when all core workers are busy.`,
+The \`ExecutorService\` solves this by keeping a pool of reusable worker threads:
+1. \`corePoolSize\`: The number of regular standby workers kept ready even when idle.
+2. \`maximumPoolSize\`: The ceiling of maximum workers allowed during a rush.
+3. \`workQueue\`: The waiting line (queue) holding incoming tasks when all core workers are busy.
+
+**Queuing Order & Sizing Pitfall**:
+A \`ThreadPoolExecutor\` only expands past \`corePoolSize\` once its \`workQueue\` is completely saturated. If an unbounded queue like \`LinkedBlockingQueue\` (without capacity) is used, the pool will never create temporary burst threads, risking unbounded queue starvation, memory exhaustion, and latency spikes under heavy load.`,
         keyIdea: 'A ThreadPoolExecutor reuses a fixed, healthy set of operating system threads, preventing server crashes and memory exhaustion.',
         diagramState: 'thread-pool-anatomy',
         diagramAlt: 'Architecture diagram illustrating A taxi fleet standby service vs buying a car for every errand: A taxi fleet standby service vs buying a car for every errand.',
@@ -367,12 +377,12 @@ The **\`ExecutorService\`** solves this by keeping a pool of reusable worker thr
 1. If fewer than \`corePoolSize\` workers are active, the pool **spawns a new worker thread** right away.
 2. If all core workers are busy, the task is **placed in the waiting queue** (the velvet rope line).
 3. Only if the **waiting queue becomes 100% full**, and current threads are still less than \`maximumPoolSize\`, does the pool hire extra temporary emergency workers!
-4. If the queue is completely full and all maximum workers are busy, the pool invokes the **\`RejectedExecutionHandler\`**!
+4. If the queue is completely full and all maximum workers are busy, the pool invokes the \`RejectedExecutionHandler\`!
 
 **Common Rejection Policies**:
-- **\`AbortPolicy\` (Default)**: Throws a \`RejectedExecutionException\` immediately.
-- **\`CallerRunsPolicy\`**: Forces the thread that submitted the task to execute the task itself! This slows down incoming requests naturally (**backpressure**).
-- **\`DiscardOldestPolicy\`**: Drops the oldest unhandled task from the front of the queue to make room for the new one.`,
+- \`AbortPolicy\` **(Default)**: Throws a \`RejectedExecutionException\` immediately.
+- \`CallerRunsPolicy\`: Forces the thread that submitted the task to execute the task itself! This slows down incoming requests naturally (**backpressure**).
+- \`DiscardOldestPolicy\`: Drops the oldest unhandled task from the front of the queue to make room for the new one.`,
         keyIdea: 'Extra temporary workers beyond corePoolSize are created only when the workQueue is completely full, not when core threads become busy.',
         diagramState: 'queue-rejection-policy',
         diagramAlt: 'Architecture diagram illustrating The bank lobby queue and the velvet rope: The bank lobby queue and the velvet rope.',
@@ -393,6 +403,7 @@ When a Virtual Thread calls a blocking operation (like an HTTP call, a database 
 You can write simple, readable, step-by-step code while achieving the astronomical throughput of complex reactive frameworks.`,
         keyIdea: 'Virtual threads cost only ~1KB and unmount automatically during blocking I/O, allowing you to run millions of threads concurrently.',
         codeExample: {
+          language: 'java',
           title: 'Java21VirtualThreads.java',
           code: `import java.time.Duration;
 import java.util.concurrent.Executors;
@@ -456,8 +467,29 @@ As a result, a server hits a hard physical wall at 2,000 to 5,000 threads. To ov
         keyIdea: '1:1 platform threads are too memory-heavy (~1MB each) and hit OS kernel limits when scaling to thousands of concurrent users.',
         cliInspection: {
           command: 'jcmd <pid> Thread.dump_to_file -format=json threads.json',
-          output: `{"threadDump": {"threadCount": 240, "virtualThreadCount": 100000, "carrierThreadCount": 16}}`,
-          explanation: 'Inspects active threads. Notice how 100,000 virtual threads are serviced by just 16 underlying OS carrier threads!',
+          output: `[info] Thread dump written to threads.json (illustrative schema):
+{
+  "threadDump": {
+    "processId": 41280,
+    "time": "2024-03-15T10:30:00.123Z",
+    "threads": [
+      {
+        "tid": 105,
+        "name": "virtual-worker-1",
+        "state": "WAITING",
+        "virtual": true,
+        "carrier": "ForkJoinPool-1-worker-3"
+      }
+    ],
+    "threadContainers": [
+      {
+        "container": "VirtualThreadPerTaskExecutor",
+        "threads": 100000
+      }
+    ]
+  }
+}`,
+          explanation: 'Authentic HotSpot Thread.dump_to_file JSON excerpt (JEP 425/444). Notice virtual threads mounted on underlying ForkJoinPool carrier threads.',
         },
         diagramState: 'thread-wall',
         diagramAlt: 'Architecture diagram illustrating Dedicating an entire passenger jet to a single traveler: Dedicating an entire passenger jet to a single traveler.',
@@ -477,6 +509,7 @@ As a result, a server hits a hard physical wall at 2,000 to 5,000 threads. To ov
 In Java 21 Project Loom, this **M:N scheduling** allows a tiny pool of 16 OS carrier threads to easily juggle 100,000+ virtual threads with zero thread starvation!`,
         keyIdea: 'When a virtual thread blocks on I/O, the JVM unmounts its call stack to the Heap as a Continuation, instantly freeing the OS carrier thread.',
         codeExample: {
+          language: 'java',
           title: 'VirtualThreadPerTaskPattern.java',
           code: `import java.net.URI;
 import java.net.http.HttpClient;
@@ -516,20 +549,23 @@ public class VirtualThreadPerTaskPattern {
         title: 'The Thread Pinning Danger',
         subtitle: 'Supergluing yourself to the shuttle van seat',
         type: 'trade-off',
-        content: `There is one critical trap that every Java engineer must avoid when using Virtual Threads: **Thread Pinning**.
+        content: `There is one critical consideration when running virtual threads: **Thread Pinning**.
 
 Imagine a passenger stepping into the shuttle van and supergluing their pants to the seat. When they arrive at the library, they cannot step out of the van! The van is forced to sit in the parking lot doing nothing while that single student reads their book.
 
 In Java, a Virtual Thread becomes **PINNED** to its underlying OS carrier thread if it performs blocking I/O while:
-1. Inside a **\`synchronized\` block or method**
-2. Inside a native C/C++ **JNI call**
+1. Inside a \`synchronized\` block or method
+2. Inside a native C/C++ JNI call
 
 When pinned, HotSpot cannot unmount the virtual thread to the heap. If 16 virtual threads get pinned at the same time, all 16 carrier threads are frozen, completely halting your entire server!
 
-**The Modern Fix**:
-Replace legacy \`synchronized\` blocks with **\`java.util.concurrent.locks.ReentrantLock\`**, which allows virtual threads to unmount freely during blocking calls.`,
-        keyIdea: 'Never execute blocking I/O inside a synchronized block in virtual threads; use ReentrantLock to avoid pinning the underlying OS carrier thread.',
+**JDK Version Evolution**:
+- In **JDK 21 pinned** carrier threads occurred whenever a virtual thread entered a \`synchronized\` block or method and then blocked on I/O.
+- In **JDK 24 JEP 491** ("Synchronize Virtual Threads without Pinning"), intrinsic monitor locking was re-engineered so virtual threads unmount and remount gracefully without pinning carrier threads.
+- For JDK 21 LTS runtimes, avoid pinning by replacing \`synchronized\` with \`java.util.concurrent.locks.ReentrantLock\`, which allows virtual threads to unmount freely during blocking calls.`,
+        keyIdea: 'In JDK 21, avoid blocking I/O inside synchronized blocks by using ReentrantLock to prevent pinning OS carrier threads; JDK 24 JEP 491 eliminates synchronized pinning.',
         codeExample: {
+          language: 'java',
           title: 'RefactorSynchronizedToReentrantLock.java',
           code: `import java.util.concurrent.locks.ReentrantLock;
 
@@ -627,12 +663,13 @@ There are two ways to do this:
 1. **Manual Padding (The Legacy Way)**:
    Add unused dummy fields (\`long p1, p2, p3, p4, p5, p6, p7;\`) between your variables so they are spaced at least 64 bytes apart.
 
-2. **The Modern JVM Way: \`@Contended\`**:
-   Java provides the **\`@jdk.internal.vm.annotation.Contended\`** annotation (JEP 142).
-   When you annotate a variable with \`@Contended\`, the HotSpot JVM automatically inserts **128 bytes of empty padding** around it in memory.
-   This guarantees that the variable has its own private CPU cache line with zero interference from neighbors! This exact optimization powers high-performance JDK classes like **\`LongAdder\`**.`,
-        keyIdea: '@Contended inserts 128 bytes of padding around hot variables, isolating them on separate CPU cache lines and restoring peak multicore throughput.',
+2. **The Modern JVM Way:** \`@Contended\`:
+   Java provides the \`@jdk.internal.vm.annotation.Contended\` annotation (JEP 142).
+   Note that application classpath classes require the JVM flag \`-XX:-RestrictContended\` to enable \`@Contended\`. HotSpot automatically inserts 128 bytes of padding (two 64-byte cache lines) around annotated fields to prevent adjacent cache-line prefetching interference.
+   This guarantees that the variable has its own private CPU cache line with zero interference from neighbors! This exact optimization powers high-performance JDK classes like \`LongAdder\`.`,
+        keyIdea: '@Contended inserts 128 bytes of padding around hot variables with -XX:-RestrictContended, isolating them on separate CPU cache lines.',
         codeExample: {
+          language: 'java',
           title: 'ContendedCounterCell.java',
           code: `import jdk.internal.vm.annotation.Contended;
 
@@ -699,13 +736,13 @@ public class HighThroughputCounter {
 - If 99 employees arrive in 5 seconds, but 1 employee is out running a marathon on a trail and takes 20 minutes to return, all 99 people must stand waiting in the hot sun.
 - The photo itself takes 1 second, but everyone was frozen for 20 minutes!
 
-In the JVM, whenever a global operation needs to happen (like Garbage Collection, revoking biased locks, or capturing a thread dump), the JVM asks all running application threads to pause at a **Safepoint**—a safe state where all thread memory pointers are consistent and known.
+In the JVM, whenever a global operation needs to happen (like Garbage Collection, deoptimizing JIT code, or capturing a thread dump), the JVM asks all running application threads to pause at a **Safepoint**—a safe state where all thread memory pointers are consistent and known.
 
 The time it takes for **ALL** threads to halt after the JVM requests a safepoint is called **Time-To-Safepoint (TTSP)**. If 99 threads halt in 0.1ms, but a single thread takes 1.8 seconds to reach its safepoint check, **the entire JVM is frozen for 1.8 seconds!**`,
         keyIdea: 'Time-To-Safepoint (TTSP) is the elapsed time until the slowest application thread reaches a safepoint check, stalling all other threads in the JVM.',
         cliInspection: {
           command: 'java -Xlog:safepoint=debug:file=safepoint.log -jar service.jar',
-          output: `[0.450s][info][safepoint] Safepoint "G1CollectForAllocation", Time since last: 120405ns, Reaching safepoint: 1792100412ns (TTSP STALL!), At safepoint: 4100200ns`,
+          output: `[0.450s][info][safepoint] Safepoint "G1CollectForAllocation", Reaching safepoint: 1792100412ns, At safepoint: 4100200ns, Total: 1796200612ns`,
           explanation: 'GC log reveals TTSP was 1.79 seconds, while the actual Garbage Collection pause at the safepoint was only 4.1 milliseconds!',
         },
         diagramState: 'safepoint-stall',
@@ -718,19 +755,20 @@ The time it takes for **ALL** threads to halt after the JVM requests a safepoint
         type: 'solution',
         content: `Why would a thread take seconds to reach a safepoint check?
 
-The most common cause is the **Uncounted Loop Trap**:
-- The JIT compiler inserts tiny check points called **Safepoint Polls** at method exits and loop edges.
-- However, to make simple loops run at maximum hardware speed, the C2 compiler used to assume that standard \`for (int i = 0; i < N; i++)\` loops were short, so it **omitted safepoint poll checks** inside the loop body to enable vectorization!
-- If \`N = 1,000,000,000\`, that thread would crunch numbers for two full seconds without ever checking if the JVM wanted it to pause!
+The most common cause is safepoint poll omission in loops:
+- The JIT compiler inserts tiny check points called **Safepoint Polls** at method exits and loop back-edges.
+- In older Java versions, to make simple loops run at maximum hardware speed, the C2 compiler treated counted \`int\` loops as short-lived and **omitted safepoint poll checks** inside the loop body to enable vectorization.
+- If \`N = 1,000,000,000\`, that thread would crunch numbers for two full seconds without ever checking if the JVM requested a safepoint!
 
 **The Modern Solution: Loop Strip Mining (Java 10+)**:
-Modern Java automatically divides counted loops into two tiers:
+Modern HotSpot automatically divides counted loops into two tiers:
 1. An inner loop that crunches numbers at maximum hardware speed.
 2. An outer loop that periodically checks the safepoint poll every few milliseconds.
 
-This ensures that Time-To-Safepoint (TTSP) stays under 1 millisecond without slowing down high-speed number crunching!`,
+Note the distinction: counted \`int\` loops are solved by strip mining, but true uncounted loops (e.g., loops with unknown bounds or \`long\` loop variables) can still delay safepoints if not structured properly. This ensures Time-To-Safepoint (TTSP) stays under 1 millisecond.`,
         keyIdea: 'Modern Java uses Loop Strip Mining so long loops can check for safepoints periodically without losing hardware vectorization speed.',
         codeExample: {
+          language: 'java',
           title: 'UncountedLoopTrap.java',
           code: `public class LoopSafepointDemo {
     public static void main(String[] args) {

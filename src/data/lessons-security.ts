@@ -45,13 +45,13 @@ Nested resources naturally express parent-child relationships:
       },
       {
         id: 'step-2',
-        title: 'HTTP Methods: Safety & Idempotency',
+        title: 'HTTP Method Safety and Idempotency',
         subtitle: 'Flipping a light switch vs vending a soda can',
         type: 'insight',
         content: `Think of everyday physical actions:
-- **Safe (Read-Only)**: Reading a book on a shelf. Merely looking at the book does not change or harm the book in any way. In HTTP, **\`GET\`**, \`HEAD\`, and \`OPTIONS\` are safe.
-- **Idempotent (Repeatable with the same outcome)**: Think of flipping a light switch to **"OFF"**. If you flip it to OFF once, the light turns off. If your cat walks by and flips it to OFF five more times, the light is still off! The final state is identical whether you did it once or ten times. In HTTP, **\`GET\`**, **\`PUT\`**, and **\`DELETE\`** are idempotent. If a network blip occurs during a DELETE call, your client can safely retry the request!
-- **Non-Idempotent (Every call causes a new side-effect)**: Putting a coin into a vending machine. If you press the button ten times, you get charged ten times and ten soda cans drop out! In HTTP, **\`POST\`** is non-idempotent. Sending ten identical POST requests creates ten duplicate orders in the database unless deduplication is enforced.`,
+- **Safe (Read-Only)**: Reading a book on a shelf. Merely looking at the book does not change or harm the book in any way. In HTTP, \`GET (safe, idempotent)\`, \`HEAD\`, and \`OPTIONS\` are safe operations that do not modify server state.
+- **Idempotent (Repeatable with the same outcome)**: Think of flipping a light switch to **"OFF"**. If you flip it to OFF once, the light turns off. If your cat walks by and flips it to OFF five more times, the light is still off! The final state is identical whether you did it once or ten times. In HTTP, \`PUT (idempotent)\` and \`DELETE\` are idempotent: repeated calls result in the same server state.
+- **Non-Idempotent (Every call causes a new side-effect)**: Putting a coin into a vending machine. If you press the button ten times, you get charged ten times and ten soda cans drop out! In HTTP, \`POST (neither)\` is neither safe nor idempotent. Sending ten identical POST requests creates ten duplicate orders in the database unless deduplication is enforced.`,
         keyIdea: 'Idempotent methods (GET, PUT, DELETE) can be safely retried during network blips without creating duplicate records.',
         diagramState: 'http-methods',
         diagramAlt: 'Architecture diagram illustrating Flipping a light switch vs vending a soda can: Flipping a light switch vs vending a soda can.',
@@ -147,13 +147,14 @@ A **JSON Web Token (JWT)** (RFC 7519) is a compact, URL-friendly string with thr
 Because the signature is verified using the public key, your Spring Boot services can validate user tokens in sub-milliseconds without querying the database on every single HTTP request!`,
         keyIdea: 'JWTs are digitally signed and self-contained, allowing microservices to verify authenticity statelessly without querying a central database.',
         codeExample: {
+          language: 'java',
           title: 'JwtValidationFilter.java',
           code: `import java.io.IOException;
 import java.util.Collections;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 public class SimpleJwtFilter extends OncePerRequestFilter {
