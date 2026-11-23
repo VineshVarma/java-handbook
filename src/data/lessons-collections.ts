@@ -39,6 +39,7 @@ At the root sits **\`Iterable<T>\`**, which allows any collection to be walked t
 **Why Map is on its own**: **\`Map<K, V>\`** does not implement \`Collection\` because it holds pairs (keys and values) rather than standalone elements.`,
         keyIdea: 'List, Set, and Queue share the common Collection interface; Map is an independent family dedicated to key-value pairs.',
         diagramState: 'hierarchy',
+        diagramAlt: 'Architecture diagram illustrating A kitchen storage system with specialized drawers: A kitchen storage system with specialized drawers.',
       },
       {
         id: 'step-2',
@@ -80,6 +81,7 @@ public class ListCapacityOptimization {
         },
         interviewTip: 'How does an ArrayList grow when it reaches capacity? It creates a new array that is 50% larger (newCapacity = oldCapacity + (oldCapacity >> 1)) and copies all elements over using the native System.arraycopy() method.',
         diagramState: 'arraylist-vs-linkedlist',
+        diagramAlt: 'Architecture diagram illustrating ArrayList Capacity Preallocation: An egg carton vs a scavenger hunt across town.',
       },
       {
         id: 'step-3',
@@ -124,6 +126,7 @@ public class CustomerKey {
         },
         interviewTip: 'What happens if two different keys return the same hashCode() in a HashMap? A hash collision occurs. Both key-value pairs are stored in the same bucket. When retrieving, the JVM compares keys using .equals() to find the exact matching item.',
         diagramState: 'hashmap-buckets-treeify',
+        diagramAlt: 'Architecture diagram illustrating HashCodeEqualsContract.java: The hotel coat check with smart organizing bins.',
       },
       {
         id: 'step-4',
@@ -140,6 +143,7 @@ public class CustomerKey {
 3. **Bucket-Level Synchronization**: If multiple threads write to the same non-empty bucket at the same time, the JVM locks only that single bucket node (\`synchronized(node)\`), letting other threads continue reading and writing to all other buckets simultaneously.`,
         keyIdea: 'ConcurrentHashMap allows completely lock-free reads and locks only individual bucket nodes during writes, delivering massive concurrency.',
         diagramState: 'concurrenthashmap-cas',
+        diagramAlt: 'Architecture diagram illustrating A library with 16 separate study rooms instead of 1 padlocked door: A library with 16 separate study rooms instead of 1 padlocked door.',
       },
     ],
   },
@@ -177,7 +181,8 @@ Every stream pipeline has three stages:
 2. **Intermediate Operations (0 or more)**: Step-by-step transformations like \`filter()\`, \`map()\`, or \`sorted()\`. They return a new stream.
 3. **Terminal Operation (Exactly 1)**: Triggers the conveyor belt to start moving and collects the final result (like \`toList()\`, \`count()\`, or \`findFirst()\`).`,
         keyIdea: 'Streams do not store elements; they transform data on-the-fly as elements flow from a source to a terminal operation.',
-        diagramState: 'default',
+        diagramState: 'stream-pipeline',
+        diagramAlt: 'Architecture diagram illustrating The automated factory conveyor belt: The automated factory conveyor belt.',
       },
       {
         id: 'step-2',
@@ -226,7 +231,8 @@ public class StreamLazinessDemo {
 }`,
         },
         interviewTip: 'Why are Java Streams lazy? Laziness enables major performance wins: loop fusion (combining filter and map into a single pass through memory) and short-circuiting (halting immediately once a condition like findFirst() or anyMatch() is satisfied).',
-        diagramState: 'default',
+        diagramState: 'lazy-short-circuit',
+        diagramAlt: 'Architecture diagram illustrating StreamLazinessDemo.java: The video streaming service that buffers only what you watch.',
       },
       {
         id: 'step-3',
@@ -268,7 +274,8 @@ public class FlatMapEnterprisePattern {
     }
 }`,
         },
-        diagramState: 'default',
+        diagramState: 'map-flatmap',
+        diagramAlt: 'Architecture diagram illustrating FlatMapEnterprisePattern.java: Changing one item vs unpacking a box of items.',
       },
       {
         id: 'step-4',
@@ -314,6 +321,7 @@ public class GroupingByPattern {
 }`,
         },
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating GroupingByPattern.java: Sorting mail into cubbies by department.',
       },
     ],
   },
@@ -371,7 +379,8 @@ public class LambdaExample {
     }
 }`,
         },
-        diagramState: 'default',
+        diagramState: 'lambda-desugaring',
+        diagramAlt: 'Architecture diagram illustrating AnonymousClassVsLambda.java: Sending a quick text message instead of a 3-page formal letter.',
       },
       {
         id: 'step-2',
@@ -386,7 +395,8 @@ public class LambdaExample {
 
 These four interfaces sit in \`java.util.function\` and form the foundation for all functional programming in modern Java. You can even chain them together, such as \`predicate.and(otherPredicate)\` or \`function.andThen(otherFunction)\`.`,
         keyIdea: 'The four core functional interfaces standardize testing (Predicate), transforming (Function), acting (Consumer), and providing (Supplier).',
-        diagramState: 'default',
+        diagramState: 'functional-interfaces',
+        diagramAlt: 'Architecture diagram illustrating The 4 fundamental roles in an office team: The 4 fundamental roles in an office team.',
       },
       {
         id: 'step-3',
@@ -425,6 +435,7 @@ public class OptionalBestPractice {
 }`,
         },
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating OptionalBestPractice.java: The transparent gift box that prevents empty surprises.',
       },
     ],
   },
@@ -458,7 +469,8 @@ Before Java 5, collections were like those unlabeled jars—they stored raw \`Ob
 - The compiler acts as a strict lab inspector: it blocks you from putting an integer into a string list before your code ever runs.
 - It also saves you from writing clumsy manual casts like \`(String) list.get(0)\`.`,
         keyIdea: 'Generics catch type mismatches at compile time, eliminating runtime ClassCastException crashes.',
-        diagramState: 'default',
+        diagramState: 'compile-type-safety',
+        diagramAlt: 'Architecture diagram illustrating Labeling storage containers in a chemistry lab: Labeling storage containers in a chemistry lab.',
       },
       {
         id: 'step-2',
@@ -501,7 +513,8 @@ public class PecsInPractice {
 }`,
         },
         interviewTip: 'What is the PECS rule in Java Generics? PECS stands for Producer Extends, Consumer Super. If a generic collection supplies data to you, use <? extends T>. If a generic collection consumes data that you provide, use <? super T>.',
-        diagramState: 'default',
+        diagramState: 'pecs-wildcards',
+        diagramAlt: 'Architecture diagram illustrating PecsInPractice.java: The fruit buffet tray vs the fruit compost bin.',
       },
       {
         id: 'step-3',
@@ -519,6 +532,7 @@ To ensure 100% backward compatibility, Java uses a clever mechanism called **Typ
 Because generic types are erased at runtime, you cannot check generic types at runtime! Code like \`new T()\` or \`list instanceof List<String>\` will not compile, because by the time the code runs on the JVM, the specific type \`String\` has already been erased.`,
         keyIdea: 'Type erasure removes generic types after compilation, keeping Java 100% backward compatible with legacy bytecode.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Erasing the pencil guidelines from the blueprint: Erasing the pencil guidelines from the blueprint.',
       },
     ],
   },

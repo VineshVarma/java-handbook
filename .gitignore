@@ -8,3 +8,7 @@ next-env.d.ts
 
 test-results/
 playwright-report/
+
+# Snippet compiler outputs and test probes
+.snippets
+.snippets-probe*

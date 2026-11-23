@@ -37,6 +37,7 @@ Tomcat feeds the raw \`HttpServletRequest\` through the **Servlet Filter Chain**
 - **Correlation ID Tracking**: Attaches an \`X-Correlation-ID\` to logs so you can trace the request across microservices.`,
         keyIdea: 'Servlet Filters act as the front security checkpoint outside Spring MVC, validating tokens, CORS headers, and tracing IDs.',
         diagramState: 'http-arrives',
+        diagramAlt: 'Architecture diagram illustrating The front security gate of an office business park: The front security gate of an office business park.',
       },
       {
         id: 'step-2',
@@ -53,6 +54,7 @@ The DispatcherServlet coordinates three helpers:
 3. **\`HandlerAdapter\`**: The actual hotel escort who calls the specific Java method, automatically converting incoming JSON or URL parameters into Java objects!`,
         keyIdea: 'DispatcherServlet acts as the central traffic controller, consulting HandlerMapping and delegating invocation to HandlerAdapter.',
         diagramState: 'dispatcher-dispatch',
+        diagramAlt: 'Architecture diagram illustrating The central hotel receptionist directing guests: The central hotel receptionist directing guests.',
       },
       {
         id: 'step-3',
@@ -96,6 +98,7 @@ public class PolicyController {
 }`,
         },
         diagramState: 'controller-service',
+        diagramAlt: 'Architecture diagram illustrating LayeredArchitectureExample.java: The waitstaff, head chef, and pantry clerk in a restaurant.',
       },
       {
         id: 'step-4',
@@ -110,6 +113,7 @@ In enterprise software:
 - **Why DTOs matter**: You never want to accidentally expose sensitive database fields (like password hashes, internal IDs, or credit card secrets) to external public API consumers!`,
         keyIdea: 'Mapping internal database entities to clean DTOs prevents accidental data leaks and protects your internal database schema.',
         diagramState: 'repo-db',
+        diagramAlt: 'Architecture diagram illustrating Packaging takeaway meals in clean boxes: Packaging takeaway meals in clean boxes.',
       },
       {
         id: 'step-5',
@@ -126,6 +130,7 @@ Jackson reads your Java object and converts it into standard **JSON text**:
 If an unexpected error happened anywhere along the journey, Spring's **\`@RestControllerAdvice\`** catches the exception and turns it into a friendly, standardized error JSON payload (RFC 7807) so the client app always understands what went wrong!`,
         keyIdea: 'HttpMessageConverters serialize Java DTOs into JSON streams, while @RestControllerAdvice catches errors to format friendly error responses.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Translating Java objects into universal JSON packets: Translating Java objects into universal JSON packets.',
       },
     ],
   },
@@ -161,7 +166,8 @@ This tightly welded classes together and made testing with mock databases nearly
 
 **Inversion of Control (IoC)** reverses this control. Instead of your class building its own tools, the **Spring IoC Container (\`ApplicationContext\`)** creates all objects ("Beans"), configures them, and hands them into your class automatically!`,
         keyIdea: 'IoC lets the Spring container build and wire objects together, resulting in flexible, loosely coupled, easily testable applications.',
-        diagramState: 'default',
+        diagramState: 'ioc-container',
+        diagramAlt: 'Architecture diagram illustrating Plugging into a standard wall outlet vs hardwiring a lamp into the power grid: Plugging into a standard wall outlet vs hardwiring a lamp into the power grid.',
       },
       {
         id: 'step-2',
@@ -202,7 +208,8 @@ public class PolicyServiceImpl implements PolicyService {
 }`,
         },
         interviewTip: 'Why is constructor injection preferred over field injection? Constructor injection allows dependencies to be final (immutable), guarantees that objects are never in a half-initialized null state, and allows easy unit testing using simple mocks without needing Spring reflection.',
-        diagramState: 'default',
+        diagramState: 'constructor-injection',
+        diagramAlt: 'Architecture diagram illustrating ConstructorInjectionBestPractice.java: A bicycle with pedals in the box vs waiting for a mechanic to visit your house.',
       },
       {
         id: 'step-3',
@@ -221,6 +228,7 @@ public class PolicyServiceImpl implements PolicyService {
 Understanding this lifecycle helps you know exactly where to place setup logic (like preloading caches in \`@PostConstruct\`) and teardown logic (closing connections in \`@PreDestroy\`).`,
         keyIdea: 'Spring beans pass through a structured lifecycle: constructor creation, dependency injection, @PostConstruct initialization, and @PreDestroy cleanup.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating From assembly line factory to retirement: From assembly line factory to retirement.',
       },
     ],
   },
@@ -260,7 +268,8 @@ To protect your system, modern microservices use defensive patterns:
 - **Circuit Breakers**: Cut off calls to a failing service before your own server runs out of threads.
 - **Bulkheads**: Isolate thread pools so one slow feature cannot consume all server resources.`,
         keyIdea: 'Unprotected inter-service network calls lead to cascading failures by consuming all server worker threads; defensive patterns halt the chain reaction.',
-        diagramState: 'default',
+        diagramState: 'cascading-failure',
+        diagramAlt: 'Architecture diagram illustrating A single blown fuse turning off an entire neighborhood: A single blown fuse turning off an entire neighborhood.',
       },
       {
         id: 'step-2',
@@ -301,7 +310,8 @@ public class PaymentGatewayClient {
     }
 }`,
         },
-        diagramState: 'default',
+        diagramState: 'circuit-breaker',
+        diagramAlt: 'Architecture diagram illustrating Resilience4jCircuitBreaker.java: The electrical safety switch in your basement.',
       },
       {
         id: 'step-3',
@@ -316,6 +326,7 @@ In distributed microservices, an **API Gateway** serves as this central front lo
 - **Rate Limiting**: Stops malicious bots and traffic spikes from overwhelming backend servers.`,
         keyIdea: 'An API Gateway provides a single hardened entry point for authentication, intelligent routing, and traffic rate limiting.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating The grand security lobby of a skyscraper: The grand security lobby of a skyscraper.',
       },
     ],
   },

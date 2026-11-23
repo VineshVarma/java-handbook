@@ -32,7 +32,8 @@ Now imagine a relational SQL database: to store that same photo, you must take s
 - **High-Speed Reads**: Retrieve the entire customer policy and all its nested sub-documents in a single lightning-fast disk read, with zero expensive table joins!
 - **Schema Flexibility**: Different policy types can hold different fields without needing painful database schema migration scripts (\`ALTER TABLE\`).`,
         keyIdea: 'MongoDB documents store hierarchical data in single cohesive records, eliminating expensive multi-table SQL joins.',
-        diagramState: 'default',
+        diagramState: 'relational-vs-document',
+        diagramAlt: 'Architecture diagram illustrating A single family photo album vs cutting photos into pieces across 6 cabinets: A single family photo album vs cutting photos into pieces across 6 cabinets.',
       },
       {
         id: 'step-2',
@@ -84,7 +85,8 @@ public class PolicyDocument {
     public void setStatus(String status) { this.status = status; }
 }`,
         },
-        diagramState: 'default',
+        diagramState: 'embed-vs-reference',
+        diagramAlt: 'Architecture diagram illustrating PolicyDocumentSchema.java: Your pocket wallet vs a basement storage unit.',
       },
       {
         id: 'step-3',
@@ -135,6 +137,7 @@ public class PolicyCustomRepository {
 }`,
         },
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating MongoTemplateAtomicUpdate.java: Editing one line in a shared doc vs re-uploading an entire 500-page PDF.',
       },
     ],
   },
@@ -169,6 +172,7 @@ In modern software delivery, this automated track is **Continuous Integration (C
 4. It checks out the exact Git commit, downloads dependencies from a private repository (Nexus/Artifactory), and prepares to test.`,
         keyIdea: 'Automated CI pipelines eliminate the classic "it works on my machine" problem by building code in pristine, standardized container runners.',
         diagramState: 'git-commit',
+        diagramAlt: 'Architecture diagram illustrating The automated assembly line test track: The automated assembly line test track.',
       },
       {
         id: 'step-2',
@@ -182,6 +186,7 @@ In modern software delivery, this automated track is **Continuous Integration (C
 If even a single test fails, the assembly line halts immediately, the pull request is blocked from merging, and the engineering team is notified right away.`,
         keyIdea: 'Automated test suites catch regressions early, using Testcontainers to test against real databases before code reaches production.',
         diagramState: 'maven-build',
+        diagramAlt: 'Architecture diagram illustrating Driving through the rain chamber and brake test track: Driving through the rain chamber and brake test track.',
       },
       {
         id: 'step-3',
@@ -201,6 +206,7 @@ Before any Java application can be deployed, it must pass automated **Quality Ga
    - Any critical security finding stops the release pipeline dead in its tracks until fixed!`,
         keyIdea: 'Static analysis tools like SonarQube and Fortify act as automated code quality and security inspectors, blocking unsafe code from reaching customers.',
         diagramState: 'sonar-scan',
+        diagramAlt: 'Architecture diagram illustrating The building inspector with a magnifying glass and checklist: The building inspector with a magnifying glass and checklist.',
       },
       {
         id: 'step-4',
@@ -216,6 +222,7 @@ Before any Java application can be deployed, it must pass automated **Quality Ga
 The result? Zero downtime, zero dropped customer transactions, and painless deployments!`,
         keyIdea: 'Automated CI/CD pipelines and rolling updates let engineering teams ship features frequently with zero downtime.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Boarding the new train while the old train is still running: Boarding the new train while the old train is still running.',
       },
     ],
   },
@@ -251,7 +258,8 @@ In enterprise microservices, you cannot just log into a server and stare at a te
 - **Traces (OpenTelemetry / Zipkin)**: Tracing a request as it hops across 10 microservices.
 - **Logs (Splunk / ELK)**: Detailed error messages and stack traces.`,
         keyIdea: 'Metrics notify you that a problem exists; traces pinpoint which service slowed down; logs reveal the exact exception details.',
-        diagramState: 'default',
+        diagramState: 'observability-pillars',
+        diagramAlt: 'Architecture diagram illustrating The hospital patient monitor, doctor\: The hospital patient monitor, doctor\.',
       },
       {
         id: 'step-2',
@@ -277,7 +285,8 @@ index=insurance_prod correlation_id="8f9b2a-pol-9921"
 | table _time, app_name, log_level, message, response_time_ms
 | sort _time asc`,
         },
-        diagramState: 'default',
+        diagramState: 'log-analysis',
+        diagramAlt: 'Architecture diagram illustrating SplunkSPLProductionQuery.spl: The detective searching for a single glowing fluorescent tag.',
       },
       {
         id: 'step-3',
@@ -297,6 +306,7 @@ In production engineering:
 5. **Remediate**: Add the missing index, write an automated regression test, and update alert thresholds!`,
         keyIdea: 'A blameless Root Cause Analysis (RCA) transforms production incidents into permanent architectural improvements.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating The airline safety review that makes every future flight safer: The airline safety review that makes every future flight safer.',
       },
     ],
   },
@@ -359,6 +369,7 @@ Total: reserved=4821MB, committed=3954MB
           explanation: 'Off-heap memory allocations bypass JVM heap tracking. As long as host memory is available, allocations succeed; once the container cgroup limit is breached, the Linux kernel terminates the process via SIGKILL.',
         },
         diagramState: 'offheap-vs-heap',
+        diagramAlt: 'Architecture diagram illustrating Building a storage shed in the backyard instead of cluttering the living room: Building a storage shed in the backyard instead of cluttering the living room.',
       },
       {
         id: 'step-2',
@@ -403,6 +414,7 @@ public class NativeBufferPipeline {
 }`,
         },
         diagramState: 'ffm-arena-lifecycle',
+        diagramAlt: 'Architecture diagram illustrating ModernOffHeapFFM.java: An uninsulated high-voltage bare wire vs an insulated modern breaker switch.',
       },
       {
         id: 'step-3',
@@ -434,6 +446,7 @@ Total: reserved=5120MB (+299MB), committed=4320MB (+366MB)
           explanation: 'Shows Java Heap had zero change, while Arena/OffHeap native memory grew by +294MB, pinpointing the exact allocation source.',
         },
         diagramState: 'nmt-inspection',
+        diagramAlt: 'Architecture diagram illustrating Taking an X-ray of your building\: Taking an X-ray of your building\.',
       },
     ],
   },

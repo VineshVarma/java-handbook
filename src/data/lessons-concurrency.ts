@@ -40,6 +40,7 @@ In Java, every thread is an execution worker whose life is tracked by the **\`Th
 6. **TERMINATED**: Finished its \`run()\` method or terminated by an unhandled error.`,
         keyIdea: 'The JVM moves threads through 6 distinct states, managing active execution on CPU cores and passive waiting for locks or timers.',
         diagramState: 'new-thread',
+        diagramAlt: 'Architecture diagram illustrating The daily stages of an employee at work: The daily stages of an employee at work.',
       },
       {
         id: 'step-2',
@@ -55,6 +56,7 @@ In Java, every thread is an execution worker whose life is tracked by the **\`Th
   Think of sitting in a doctor's waiting room reading a magazine. You voluntarily sat down and gave up your place in the hallway. You aren't banging on the doctor's door; you are resting patiently until the nurse steps out and calls your name (**\`notify()\`** or **\`notifyAll()\`**). In Java, a thread enters WAITING when it deliberately calls \`Object.wait()\` or \`Thread.join()\`.`,
         keyIdea: 'BLOCKED threads are waiting to acquire an intrinsic monitor lock; WAITING threads voluntarily yielded the CPU waiting for an explicit signal.',
         diagramState: 'blocked-state',
+        diagramAlt: 'Architecture diagram illustrating Waiting outside a locked door vs sitting in a waiting room: Waiting outside a locked door vs sitting in a waiting room.',
       },
       {
         id: 'step-3',
@@ -105,6 +107,7 @@ The **\`volatile\`** keyword enforces two vital guarantees:
         },
         interviewTip: 'Is count++ thread-safe if count is declared volatile? No! count++ involves 3 separate bytecode operations: read (getfield), increment (iadd), and write (putfield). If multiple threads execute this concurrently, increments can be lost. Use AtomicInteger.incrementAndGet() instead.',
         diagramState: 'running-state',
+        diagramAlt: 'Architecture diagram illustrating VolatileFlagPattern.java: A private pocket notepad vs a central town square billboard.',
       },
       {
         id: 'step-4',
@@ -123,6 +126,7 @@ In multithreading, this frozen nightmare is called a **Deadlock**:
 2. **Use timeouts with \`ReentrantLock\`**: Instead of locking forever with \`synchronized\`, use **\`lock.tryLock(500, TimeUnit.MILLISECONDS)\`**. If a lock cannot be obtained within half a second, back off, release any held locks, and try again later.`,
         keyIdea: 'Deadlocks happen when threads wait in a circle for each other\'s locks; prevent them by ordering lock acquisitions or using timed tryLock().',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Two cars meeting on a narrow one-lane bridge: Two cars meeting on a narrow one-lane bridge.',
       },
     ],
   },
@@ -157,6 +161,7 @@ In classic Java, calling \`Future.get()\` acted like standing frozen at the regi
 **\`CompletableFuture\`** (introduced in Java 8 and enhanced in Java 9/21) brings reactive, non-blocking promise chaining to Java: you declare a pipeline of steps that will execute automatically whenever data arrives, without tying up worker threads.`,
         keyIdea: 'CompletableFuture allows you to chain asynchronous tasks together so threads are never held captive waiting for network responses.',
         diagramState: 'supply-async',
+        diagramAlt: 'Architecture diagram illustrating The cafe buzzer tag that frees you to walk around: The cafe buzzer tag that frees you to walk around.',
       },
       {
         id: 'step-2',
@@ -203,6 +208,7 @@ public class DedicatedThreadPoolAsync {
 }`,
         },
         diagramState: 'parallel-exec',
+        diagramAlt: 'Architecture diagram illustrating DedicatedThreadPoolAsync.java: Giving the kitchen its own dedicated crew.',
       },
       {
         id: 'step-3',
@@ -256,6 +262,7 @@ public class AsyncChainingExamples {
 }`,
         },
         diagramState: 'then-combine',
+        diagramAlt: 'Architecture diagram illustrating AsyncChainingExamples.java: Chopping, baking, and plating the dinner dishes.',
       },
       {
         id: 'step-4',
@@ -297,6 +304,7 @@ public class ResilientOrchestration {
         },
         interviewTip: 'What is the difference between join() and get() in CompletableFuture? get() throws checked exceptions (InterruptedException, ExecutionException), which requires clunky try-catch blocks. join() throws unchecked CompletionException, allowing it to be used smoothly inside clean lambda pipelines.',
         diagramState: 'fallback-catch',
+        diagramAlt: 'Architecture diagram illustrating ResilientOrchestration.java: The travel search engine that aggregates flights safely.',
       },
       {
         id: 'step-5',
@@ -309,6 +317,7 @@ public class ResilientOrchestration {
 - Your application can easily handle 5x to 10x higher user traffic on the exact same hardware!`,
         keyIdea: 'CompletableFuture turns sluggish sequential waiting into fast, parallel, resilient execution for high-throughput distributed systems.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating The speed advantage of asynchronous pipelines: The speed advantage of asynchronous pipelines.',
       },
     ],
   },
@@ -346,7 +355,8 @@ The **\`ExecutorService\`** solves this by keeping a pool of reusable worker thr
 2. **\`maximumPoolSize\`**: The ceiling of maximum workers allowed during a rush.
 3. **\`workQueue\`**: The waiting line (queue) holding incoming tasks when all core workers are busy.`,
         keyIdea: 'A ThreadPoolExecutor reuses a fixed, healthy set of operating system threads, preventing server crashes and memory exhaustion.',
-        diagramState: 'default',
+        diagramState: 'thread-pool-anatomy',
+        diagramAlt: 'Architecture diagram illustrating A taxi fleet standby service vs buying a car for every errand: A taxi fleet standby service vs buying a car for every errand.',
       },
       {
         id: 'step-2',
@@ -364,7 +374,8 @@ The **\`ExecutorService\`** solves this by keeping a pool of reusable worker thr
 - **\`CallerRunsPolicy\`**: Forces the thread that submitted the task to execute the task itself! This slows down incoming requests naturally (**backpressure**).
 - **\`DiscardOldestPolicy\`**: Drops the oldest unhandled task from the front of the queue to make room for the new one.`,
         keyIdea: 'Extra temporary workers beyond corePoolSize are created only when the workQueue is completely full, not when core threads become busy.',
-        diagramState: 'default',
+        diagramState: 'queue-rejection-policy',
+        diagramAlt: 'Architecture diagram illustrating The bank lobby queue and the velvet rope: The bank lobby queue and the velvet rope.',
       },
       {
         id: 'step-3',
@@ -406,6 +417,7 @@ public class Java21VirtualThreads {
         },
         interviewTip: 'Should you pool Virtual Threads in Java 21 using a fixed-size thread pool? NO! Never pool virtual threads. Because they are lightweight and ephemeral, simply create a new virtual thread per task using Executors.newVirtualThreadPerTaskExecutor().',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Java21VirtualThreads.java: From thousands of heavy platform threads to millions of lightweight fibers.',
       },
     ],
   },
@@ -448,6 +460,7 @@ As a result, a server hits a hard physical wall at 2,000 to 5,000 threads. To ov
           explanation: 'Inspects active threads. Notice how 100,000 virtual threads are serviced by just 16 underlying OS carrier threads!',
         },
         diagramState: 'thread-wall',
+        diagramAlt: 'Architecture diagram illustrating Dedicating an entire passenger jet to a single traveler: Dedicating an entire passenger jet to a single traveler.',
       },
       {
         id: 'step-2',
@@ -496,6 +509,7 @@ public class VirtualThreadPerTaskPattern {
 }`,
         },
         diagramState: 'carrier-mount',
+        diagramAlt: 'Architecture diagram illustrating VirtualThreadPerTaskPattern.java: Passengers sharing seats in a small fleet of shuttle vans.',
       },
       {
         id: 'step-3',
@@ -553,6 +567,7 @@ public class SafeVirtualThreadLocking {
           explanation: 'The current HotSpot implementation cannot detach call stacks when an object monitor lock is held, locking the OS carrier thread in place.',
         },
         diagramState: 'thread-pinning',
+        diagramAlt: 'Architecture diagram illustrating RefactorSynchronizedToReentrantLock.java: Supergluing yourself to the shuttle van seat.',
       },
     ],
   },
@@ -598,6 +613,7 @@ This invisible elbow-bumping is called **False Sharing**, and it can ruin multic
           explanation: 'Linux perf counters reveal massive CPU cache misses caused by cache lines ping-ponging back and forth between CPU cores.',
         },
         diagramState: 'cache-line-ping-pong',
+        diagramAlt: 'Architecture diagram illustrating Two accountants bumping elbows on a single narrow desk: Two accountants bumping elbows on a single narrow desk.',
       },
       {
         id: 'step-2',
@@ -651,6 +667,7 @@ public class HighThroughputCounter {
           explanation: 'CPUs fetch and invalidate memory in 64-byte cache lines. Mutating one variable invalidates the entire cache line across other CPU core caches via the hardware coherence protocol.',
         },
         diagramState: 'contended-padding',
+        diagramAlt: 'Architecture diagram illustrating ContendedCounterCell.java: Giving each accountant their own private desk with empty buffer space.',
       },
     ],
   },
@@ -692,6 +709,7 @@ The time it takes for **ALL** threads to halt after the JVM requests a safepoint
           explanation: 'GC log reveals TTSP was 1.79 seconds, while the actual Garbage Collection pause at the safepoint was only 4.1 milliseconds!',
         },
         diagramState: 'safepoint-stall',
+        diagramAlt: 'Architecture diagram illustrating Taking a group photo at a company retreat: Taking a group photo at a company retreat.',
       },
       {
         id: 'step-2',
@@ -738,6 +756,7 @@ This ensures that Time-To-Safepoint (TTSP) stays under 1 millisecond without slo
           explanation: 'TTSP measures how long the JVM must wait for the slowest running thread to reach a safepoint poll and halt.',
         },
         diagramState: 'loop-strip-mining',
+        diagramAlt: 'Architecture diagram illustrating UncountedLoopTrap.java: The marathon runner without a radio.',
       },
     ],
   },

@@ -4,12 +4,15 @@ import React, { useState } from 'react';
 import { DiagramRenderer } from '@/components/diagrams/DiagramRenderer';
 import { RotateCcw, Pause, Play, Box, Square, Zap, ChevronDown } from 'lucide-react';
 
+import { DiagramState } from '@/lib/types';
+
 interface DiagramCanvasProps {
   lessonSlug: string;
-  diagramState: string;
+  diagramState: DiagramState;
   isPlaying: boolean;
   onTogglePlay: () => void;
   onReplay: () => void;
+  diagramAlt?: string;
 }
 
 export type SimulationScenario = 'normal' | 'hot-calls' | 'recursion' | 'thread-pin';
@@ -20,6 +23,7 @@ export function DiagramCanvas({
   isPlaying,
   onTogglePlay,
   onReplay,
+  diagramAlt,
 }: DiagramCanvasProps) {
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
   const [simulationScenario, setSimulationScenario] = useState<SimulationScenario>('normal');
@@ -159,13 +163,18 @@ export function DiagramCanvas({
       </div>
 
       {/* SVG Animation Stage */}
-      <div className="flex-1 min-h-0 w-full h-full overflow-hidden touch-pan-y">
+      <div
+        className="flex-1 min-h-0 w-full h-full overflow-hidden touch-pan-y"
+        role="region"
+        aria-label={diagramAlt || "Interactive Architecture Diagram"}
+      >
         <DiagramRenderer
           lessonSlug={lessonSlug}
           diagramState={diagramState}
           isPlaying={isPlaying}
           viewMode={viewMode}
           simulationScenario={simulationScenario}
+          diagramAlt={diagramAlt}
         />
       </div>
     </div>

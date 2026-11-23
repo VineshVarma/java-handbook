@@ -304,6 +304,7 @@ export interface IsoPedestalProps {
   fillTop?: string;
   fillSide?: string;
   label?: string;
+  is2D?: boolean;
 }
 
 export function IsoPedestal({
@@ -315,6 +316,7 @@ export function IsoPedestal({
   fillTop = '#22201D',
   fillSide = '#161513',
   label,
+  is2D = false,
 }: IsoPedestalProps) {
   const hw = w / 2;
   const hd = d / 2;
@@ -322,6 +324,47 @@ export function IsoPedestal({
   // Auto-fit label pill
   const labelLen = label?.length || 0;
   const pedW = Math.max(90, labelLen * 7 + 24);
+
+  if (is2D) {
+    return (
+      <g>
+        <rect
+          x={cx - hw}
+          y={cy - hd}
+          width={w}
+          height={d}
+          rx="16"
+          fill={fillTop}
+          stroke="rgba(255,255,255,0.12)"
+          strokeWidth="1.5"
+        />
+        {label && (
+          <g transform={`translate(${cx}, ${cy - hd - 10})`}>
+            <rect
+              x={-pedW / 2}
+              y="-10"
+              width={pedW}
+              height="20"
+              rx="10"
+              fill="#22201D"
+              stroke="#444038"
+              strokeWidth="1.2"
+              className="shadow-sm"
+            />
+            <text
+              x="0"
+              y="4"
+              textAnchor="middle"
+              fill="#ECE8E1"
+              className="text-[10px] font-mono font-bold select-none"
+            >
+              {label}
+            </text>
+          </g>
+        )}
+      </g>
+    );
+  }
 
   return (
     <g>
@@ -404,6 +447,7 @@ export function IsoDatabase({
   sublabel = 'BSON Store',
   badge,
   isHighlighted = false,
+  is2D = false,
 }: {
   cx: number;
   cy: number;
@@ -415,8 +459,90 @@ export function IsoDatabase({
   sublabel?: string;
   badge?: string;
   isHighlighted?: boolean;
+  is2D?: boolean;
 }) {
   const dbBadgeW = Math.max(48, (badge?.length || 0) * 6.5 + 18);
+
+  if (is2D) {
+    return (
+      <g>
+        {isHighlighted && (
+          <rect
+            x={cx - rx - 6}
+            y={cy - h / 2 - 6}
+            width={rx * 2 + 12}
+            height={h + 12}
+            rx="14"
+            fill="none"
+            stroke={color}
+            strokeWidth="2.5"
+            className="animate-pulse"
+          />
+        )}
+        <rect
+          x={cx - rx}
+          y={cy - h / 2}
+          width={rx * 2}
+          height={h}
+          rx="10"
+          fill="#1C1826"
+          stroke={color}
+          strokeWidth="1.8"
+        />
+        <line
+          x1={cx - rx}
+          y1={cy}
+          x2={cx + rx}
+          y2={cy}
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1.2"
+        />
+        {badge && (
+          <g transform={`translate(${cx}, ${cy - h / 2 - 12})`}>
+            <rect
+              x={-dbBadgeW / 2}
+              y="-9"
+              width={dbBadgeW}
+              height="18"
+              rx="9"
+              fill="rgba(20,20,20,0.9)"
+              stroke={color}
+              strokeWidth="1.2"
+            />
+            <text
+              x="0"
+              y="4"
+              textAnchor="middle"
+              fill="#FFFFFF"
+              className="text-[9px] font-mono font-bold select-none"
+            >
+              {badge}
+            </text>
+          </g>
+        )}
+        <text
+          x={cx}
+          y={cy - 4}
+          textAnchor="middle"
+          fill="#FFFFFF"
+          className="text-[10px] font-mono font-bold select-none pointer-events-none"
+        >
+          {label}
+        </text>
+        {sublabel && (
+          <text
+            x={cx}
+            y={cy + 12}
+            textAnchor="middle"
+            fill="rgba(255, 255, 255, 0.8)"
+            className="text-[8.5px] font-sans font-medium select-none pointer-events-none"
+          >
+            {sublabel}
+          </text>
+        )}
+      </g>
+    );
+  }
 
   return (
     <g>
@@ -489,14 +615,66 @@ export function IsoLaptop({
   label = 'Client',
   sublabel = 'HTTP / REST',
   badge = 'Online',
+  is2D = false,
 }: {
   cx: number;
   cy: number;
   label?: string;
   sublabel?: string;
   badge?: string;
+  is2D?: boolean;
 }) {
   const bubbleW = Math.max(86, (sublabel?.length || 0) * 7 + 26);
+
+  if (is2D) {
+    return (
+      <g>
+        <rect
+          x={cx - 42}
+          y={cy - 24}
+          width="84"
+          height="48"
+          rx="8"
+          fill="#1E2024"
+          stroke="#4A90E2"
+          strokeWidth="1.5"
+        />
+        <text
+          x={cx}
+          y={cy + 4}
+          textAnchor="middle"
+          fill="#FFFFFF"
+          className="text-[10px] font-mono font-bold select-none pointer-events-none"
+        >
+          {label}
+        </text>
+        {/* Floating URL Speech Bubble */}
+        <g transform={`translate(${cx}, ${cy - 38})`}>
+          <rect
+            x={-bubbleW / 2}
+            y="-10"
+            width={bubbleW}
+            height="20"
+            rx="10"
+            fill="#22201D"
+            stroke="#444038"
+            strokeWidth="1.2"
+            className="shadow-md"
+          />
+          <circle cx={-bubbleW / 2 + 10} cy="0" r="3" fill="#4E8752" />
+          <text
+            x="5"
+            y="4"
+            textAnchor="middle"
+            fill="#ECE8E1"
+            className="text-[9.5px] font-mono font-bold select-none pointer-events-none"
+          >
+            {sublabel}
+          </text>
+        </g>
+      </g>
+    );
+  }
 
   return (
     <g>

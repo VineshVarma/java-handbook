@@ -50,6 +50,7 @@ public class PaymentProcessor {
         },
         interviewTip: 'Why does Java use intermediate bytecode instead of compiling directly to native machine code like C++? Bytecode provides complete portability across different operating systems and CPU architectures. It also allows the JVM to profile running code in real time and optimize frequently executed paths using Just-In-Time (JIT) compilation.',
         diagramState: 'write-code',
+        diagramAlt: 'Architecture diagram illustrating PaymentProcessor.java: From human-readable ideas to disk.',
       },
       {
         id: 'step-2',
@@ -95,6 +96,7 @@ public class com.bank.payment.PaymentProcessor {
           explanation: 'Disassembles the class constant pool and bytecode instructions. Notice how dstore_1 saves a double to a local variable slot, and invokestatic invokes the helper method.',
         },
         diagramState: 'compile-bytecode',
+        diagramAlt: 'Architecture diagram illustrating Terminal / javap Bytecode Disassembly: Turning human words into universal bytecode.',
       },
       {
         id: 'step-3',
@@ -141,6 +143,7 @@ When you start your program with \`java PaymentProcessor\`, the JVM launches its
           explanation: 'Because ClassLoaders delegate to their parent first, the root Bootstrap ClassLoader always resolves java.lang.String from the JDK runtime modules, keeping core runtime security airtight.',
         },
         diagramState: 'classloader-load',
+        diagramAlt: 'Architecture diagram illustrating ClassLoaderInspection.java: The 3-tier security gate before code runs.',
       },
       {
         id: 'step-4',
@@ -162,6 +165,7 @@ Once the safety scan passes, the class is **Linked**:
         keyIdea: 'Bytecode verification acts as an automated safety checkpoint, guaranteeing memory safety and security before any code executes.',
         interviewTip: 'Can you turn off the bytecode verifier? Technically yes, with flags like -noverify (or -Xverify:none), but this is deprecated and dangerous because it disables the JVM security barrier and exposes your system to memory corruption.',
         diagramState: 'verify-execute',
+        diagramAlt: 'Architecture diagram illustrating The airport security scanner protecting your computer: The airport security scanner protecting your computer.',
       },
       {
         id: 'step-5',
@@ -198,6 +202,7 @@ java -XX:+PrintCompilation -XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining Pay
         },
         interviewTip: 'What is Method Inlining in the JIT compiler? It is when the compiler takes the body of a small, frequently called method and pastes it directly into the caller code, removing the overhead of making a method call.',
         diagramState: 'jit-compile',
+        diagramAlt: 'Architecture diagram illustrating JVM Optimization Flags: From a live translator to a speed-printing press.',
       },
       {
         id: 'step-6',
@@ -227,6 +232,7 @@ In the JVM, memory is split the same way:
         },
         interviewTip: 'What is the difference between a StackOverflowError and an OutOfMemoryError? A StackOverflowError happens when a thread runs out of stack memory (almost always caused by infinite recursion). An OutOfMemoryError happens when the shared heap has no room left to allocate new objects and the Garbage Collector cannot reclaim enough space.',
         diagramState: 'memory-stack-heap',
+        diagramAlt: 'Architecture diagram illustrating MemoryAllocation.java: The chef\.',
       },
       {
         id: 'step-7',
@@ -246,6 +252,7 @@ Now you understand the powerful engine humming beneath every Java application!`,
         keyIdea: 'Java combines fast startup via interpretation, peak throughput via JIT compilation, and effortless safety via bytecode verification and garbage collection.',
         interviewTip: 'What is the "JIT Warm-up Period" in production services? Right after a new service version is deployed, the JVM is running cold bytecode through the interpreter while loading classes. Over the first few minutes, HotSpot profiles the workload and compiles hot paths into native machine code, causing performance to dramatically speed up and stabilize.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating The full execution pipeline from source to machine code: The full execution pipeline from source to machine code.',
       },
     ],
   },
@@ -316,6 +323,7 @@ In modern Java 16+, **Java Records** make encapsulation even easier by providing
         },
         interviewTip: 'What is "Defensive Copying" in encapsulation? If your class stores or returns mutable objects (like a Date or a List), callers could modify those objects from the outside. Defensive copying means creating and returning a fresh copy so outsiders cannot tamper with your internal state.',
         diagramState: 'encapsulation',
+        diagramAlt: 'Architecture diagram illustrating BankAccount.java (Enforcing Invariants): The bank vault door for your data.',
       },
       {
         id: 'step-2',
@@ -365,6 +373,7 @@ public final class ApplePay implements PaymentMethod {
         },
         interviewTip: 'What are Sealed Classes in Java 17? Sealed classes allow a class or interface to declare explicitly which subclasses are allowed to extend or implement it, giving you tight control over your type hierarchy and enabling exhaustive pattern matching.',
         diagramState: 'inheritance',
+        diagramAlt: 'Architecture diagram illustrating Modern Sealed Class Hierarchy (Java 17+): Family genetics and the risk of tangled family trees.',
       },
       {
         id: 'step-3',
@@ -397,6 +406,7 @@ At runtime, the JVM looks up the actual object type using an internal lookup dir
         },
         interviewTip: 'How does the JVM resolve runtime polymorphism under the hood? Each loaded class has a Virtual Method Table (vtable) containing memory pointers to its methods. When the invokevirtual instruction runs, the JVM looks up the pointer in the actual runtime object\'s vtable.',
         diagramState: 'polymorphism',
+        diagramAlt: 'Architecture diagram illustrating PolymorphicPaymentService.java: One universal remote, many different devices.',
       },
       {
         id: 'step-4',
@@ -432,6 +442,7 @@ In enterprise software, coding against interfaces allows you to swap out impleme
         },
         interviewTip: 'When would you choose an Abstract Class over an Interface? Choose an abstract class when closely related classes need to share common internal state (fields) and constructors. Choose an interface when defining a capability contract that can be implemented by completely unrelated classes.',
         diagramState: 'abstraction',
+        diagramAlt: 'Architecture diagram illustrating NotificationService.java: The car steering wheel and pedals.',
       },
       {
         id: 'step-5',
@@ -448,6 +459,7 @@ In enterprise software, coding against interfaces allows you to swap out impleme
 Mastering these four principles is the secret to writing clean, maintainable enterprise systems!`,
         keyIdea: 'Clean OOP design produces modular, easy-to-test code that can grow gracefully as requirements change.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating How the four pillars build strong applications: How the four pillars build strong applications.',
       },
     ],
   },
@@ -486,6 +498,7 @@ Instead of scanning gigabytes of memory every single second, the JVM divides the
 - **Old (Tenured) Generation**: Holds long-lived survivor objects.`,
         keyIdea: 'Because 95%+ of objects die almost immediately, the JVM focuses high-speed cleanup sweeps on the Young Generation.',
         diagramState: 'eden-alloc',
+        diagramAlt: 'Architecture diagram illustrating Sticky notes vs filing cabinets: Sticky notes vs filing cabinets.',
       },
       {
         id: 'step-2',
@@ -501,6 +514,7 @@ Instead of scanning gigabytes of memory every single second, the JVM divides the
 This rapid cleanup is called a **Minor GC**. Because the collector only has to pick up the tiny handful of surviving toys rather than inspecting every dead toy, it finishes in just a couple of milliseconds!`,
         keyIdea: 'Minor GC uses a fast copying algorithm that sweeps dead objects from Eden and moves living objects between Survivor spaces in single-digit milliseconds.',
         diagramState: 'minor-gc',
+        diagramAlt: 'Architecture diagram illustrating The rapid cleanup of the nursery: The rapid cleanup of the nursery.',
       },
       {
         id: 'step-3',
@@ -516,6 +530,7 @@ Very large objects (like a massive 50MB image buffer) can even skip the Young Ge
 Because the Old Generation is much larger, cleaning it (**Major GC / Full GC**) takes much longer. That is why keeping your memory healthy means letting temporary objects die peacefully in the Young Generation!`,
         keyIdea: 'Objects that survive multiple Young GC cycles graduate to the Old Generation, where collections are less frequent but take longer.',
         diagramState: 'promotion',
+        diagramAlt: 'Architecture diagram illustrating Graduating to the permanent archive: Graduating to the permanent archive.',
       },
       {
         id: 'step-4',
@@ -543,6 +558,7 @@ java -XX:+UseG1GC \\
         },
         interviewTip: 'What are the main GC Roots in Java? GC Roots are the starting points for finding live objects. They include local variables currently on active thread stacks, running Thread objects, static class fields, and native JNI pointers.',
         diagramState: 'major-gc',
+        diagramAlt: 'Architecture diagram illustrating Production JVM GC Flags: The checkerboard cleanup crew.',
       },
       {
         id: 'step-5',
@@ -583,6 +599,7 @@ In reality, a Java **Memory Leak** happens when you forget that an object is sti
         },
         interviewTip: 'How do you diagnose a memory leak in production? Enable automatic heap dumps on failure with -XX:+HeapDumpOnOutOfMemoryError. When memory runs out, open the generated dump file in tools like Eclipse Memory Analyzer (MAT) or JProfiler to find which objects are hogging the heap.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating ThreadLocalMemoryLeak.java: Why the garbage collector cannot save you from hoarding.',
       },
     ],
   },
@@ -641,7 +658,8 @@ public class FinancialPrecision {
 }`,
         },
         interviewTip: 'Why should you never use double or float for currency? Floating-point numbers use IEEE 754 binary scientific notation, which cannot represent base-10 decimal fractions like 0.1 exactly. Use BigDecimal or store values in integer cents.',
-        diagramState: 'default',
+        diagramState: 'primitives-stack',
+        diagramAlt: 'Architecture diagram illustrating FinancialPrecision.java: Pocket change vs a bank safe deposit box.',
       },
       {
         id: 'step-2',
@@ -681,7 +699,8 @@ Because text strings make up over 30% of memory in typical Java applications, th
     }
 }`,
         },
-        diagramState: 'default',
+        diagramState: 'string-pool-heap',
+        diagramAlt: 'Architecture diagram illustrating StringPoolComparison.java: The public book lending library.',
       },
       {
         id: 'step-3',
@@ -721,6 +740,7 @@ In Java, if you try to assign an \`Integer\` that is \`null\` into a primitive \
 }`,
         },
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating AutoboxingTrap.java: The surprise inside an empty gift box.',
       },
     ],
   },
@@ -757,7 +777,8 @@ In Java, all error conditions descend from **\`java.lang.Throwable\`**:
    - **Checked Exceptions**: Subclasses of \`Exception\` (like \`IOException\` or \`SQLException\`). The compiler forces you to handle them with \`try-catch\` or declare them with \`throws\`.
    - **Unchecked Exceptions (\`RuntimeException\`)**: Programming bugs or logic errors (like \`NullPointerException\` or \`IllegalArgumentException\`). The compiler doesn't force you to declare them.`,
         keyIdea: 'Errors are fatal JVM problems; Checked Exceptions represent recoverable external issues; RuntimeExceptions represent logic flaws.',
-        diagramState: 'default',
+        diagramState: 'throwable-hierarchy',
+        diagramAlt: 'Architecture diagram illustrating A kitchen fire vs a missing ingredient: A kitchen fire vs a missing ingredient.',
       },
       {
         id: 'step-2',
@@ -800,7 +821,8 @@ public class TryWithResourcesModern {
     }
 }`,
         },
-        diagramState: 'default',
+        diagramState: 'try-with-resources-cleanup',
+        diagramAlt: 'Architecture diagram illustrating TryWithResourcesModern.java: The automatic sensor faucet that never overflows.',
       },
       {
         id: 'step-3',
@@ -815,6 +837,7 @@ In clean backend development:
 - **Include helpful context**: Add error codes and relevant IDs (like the missing policy number) so your logging and monitoring tools can pinpoint bugs instantly.`,
         keyIdea: 'Custom domain exceptions give your errors clear business meaning and make debugging production issues effortless.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Clear medical charts instead of vague complaints: Clear medical charts instead of vague complaints.',
       },
     ],
   },
@@ -861,6 +884,7 @@ An empty object with zero fields still takes up 8 bytes (Mark Word) + 4 bytes (K
           explanation: 'Java Object Layout (JOL) tool output showing the 8-byte Mark Word, 4-byte compressed Klass Word, and 4 bytes of alignment padding totaling 16 bytes.',
         },
         diagramState: 'object-layout',
+        diagramAlt: 'Architecture diagram illustrating The shipping box that is bigger than the gift: The shipping box that is bigger than the gift.',
       },
       {
         id: 'step-2',
@@ -889,6 +913,7 @@ java -XX:+PrintFlagsFinal -version | grep -i UseCompressedOops
         },
         interviewTip: 'Why is a 31GB heap often better than a 33GB heap? Crossing the 32GB boundary disables Compressed OOPs, causing every object reference pointer to double from 4 bytes to 8 bytes, which eats up usable heap space.',
         diagramState: 'compressed-oops',
+        diagramAlt: 'Architecture diagram illustrating CompressedOopsThreshold.sh: Numbering houses on an 8-meter lot.',
       },
       {
         id: 'step-3',
@@ -920,6 +945,7 @@ java -XX:+UnlockExperimentalVMOptions -XX:+UseCompactObjectHeaders -jar microser
           explanation: 'Lilliput shrinks the header by packing class pointer metadata directly into unused bits of the mark word, saving massive amounts of memory across object-heavy collections.',
         },
         diagramState: 'lilliput-headers',
+        diagramAlt: 'Architecture diagram illustrating EnableCompactHeaders.sh: Shrinking the shipping label in modern Java.',
       },
       {
         id: 'step-4',
@@ -942,6 +968,7 @@ HotSpot solves this with **TLAB (Thread-Local Allocation Buffer)**:
           explanation: 'TLAB is enabled by default in all production JVMs. The JVM dynamically adjusts each thread\'s buffer size according to its allocation rate.',
         },
         diagramState: 'tlab-allocation',
+        diagramAlt: 'Architecture diagram illustrating Personal parchment paper for every chef: Personal parchment paper for every chef.',
       },
     ],
   },
@@ -990,6 +1017,7 @@ When that happens, the JVM does **not** allocate the object on the heap at all!`
 }`,
         },
         diagramState: 'escape-graph',
+        diagramAlt: 'Architecture diagram illustrating NonEscapingObject.java: Do all Java objects really live on the Heap?.',
       },
       {
         id: 'step-2',
@@ -1012,6 +1040,7 @@ HotSpot classifies every object into these three exact states:
           explanation: 'Prints the exact escape state determination made by the C2 compiler for every allocation site.',
         },
         diagramState: 'escape-states',
+        diagramAlt: 'Architecture diagram illustrating Confined to the room vs escaping to the street: Confined to the room vs escaping to the street.',
       },
       {
         id: 'step-3',
@@ -1063,6 +1092,7 @@ HotSpot classifies every object into these three exact states:
           explanation: 'Scalar replacement dismantles the object into individual primitive fields that live directly in CPU registers or stack frames, bypassing the heap entirely.',
         },
         diagramState: 'scalar-replacement',
+        diagramAlt: 'Architecture diagram illustrating ScalarReplacementEquivalent.java: Dismantling the object into raw CPU numbers.',
       },
     ],
   },
@@ -1104,6 +1134,7 @@ While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems
           explanation: 'Monitors Eden (E), Old Gen (O), Young GC count and time (YGC/YGCT), and Full GC count (FGC). Helps pinpoint where memory pressure builds up.',
         },
         diagramState: 'stw-barrier',
+        diagramAlt: 'Architecture diagram illustrating Freezing time in the supermarket: Freezing time in the supermarket.',
       },
       {
         id: 'step-2',
@@ -1138,6 +1169,7 @@ java -XX:+UseZGC -XX:+ZGenerational -Xmx16g -Xlog:gc*:file=gc.log:time,uptime -j
           explanation: 'ZGC inspects the reference color on read via JIT load barriers. If an object is in the process of moving, the load barrier self-heals the pointer to the new address immediately.',
         },
         diagramState: 'colored-pointers',
+        diagramAlt: 'Architecture diagram illustrating EnableGenerationalZGC.sh: Moving houses while guests are still visiting.',
       },
     ],
   },

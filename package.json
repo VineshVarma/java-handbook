@@ -5,8 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "start": "serve out -p 3000",
+    "lint": "next lint",
+    "test:diagrams": "node scripts/audit-diagram-states.mjs",
+    "test:snippets": "node scripts/extract-snippets.mjs && node scripts/compile-snippets.mjs",
+    "test:objectives": "node scripts/audit-objectives.mjs",
+    "test:copy": "node scripts/lint-copy.mjs",
+    "test:facts": "node scripts/audit-facts.mjs",
+    "test:e2e": "playwright test",
+    "test": "npm run test:diagrams && npm run test:snippets && npm run test:objectives && npm run test:copy && npm run test:facts",
+    "audit": "npm run test"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -26,9 +34,10 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.7.0",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.4.6",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.35",
     "postcss": "^8.5.33",
+    "serve": "^14.2.8",
     "tailwindcss": "^3.4.19",
     "typescript": "^6.0.3"
   }

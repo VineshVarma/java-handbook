@@ -30,7 +30,7 @@ export default defineConfig({
   ],
   ...(!isProduction && {
     webServer: {
-      command: 'npm run start',
+      command: 'npx --yes serve out -p 3000 -n',
       url: 'http://localhost:3000',
       reuseExistingServer: false,
       timeout: 120000,

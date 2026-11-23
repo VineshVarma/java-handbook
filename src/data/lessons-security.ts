@@ -40,7 +40,8 @@ True REST APIs model **Resources** using clean plural nouns, letting the standar
 Nested resources naturally express parent-child relationships:
 \`GET /api/v1/policies/{policyId}/claims\``,
         keyIdea: 'Use clean plural nouns for resource URLs, and let standard HTTP verbs specify the action.',
-        diagramState: 'default',
+        diagramState: 'resource-uri',
+        diagramAlt: 'Architecture diagram illustrating Labeling folders with nouns instead of shouting action verbs: Labeling folders with nouns instead of shouting action verbs.',
       },
       {
         id: 'step-2',
@@ -52,7 +53,8 @@ Nested resources naturally express parent-child relationships:
 - **Idempotent (Repeatable with the same outcome)**: Think of flipping a light switch to **"OFF"**. If you flip it to OFF once, the light turns off. If your cat walks by and flips it to OFF five more times, the light is still off! The final state is identical whether you did it once or ten times. In HTTP, **\`GET\`**, **\`PUT\`**, and **\`DELETE\`** are idempotent. If a network blip occurs during a DELETE call, your client can safely retry the request!
 - **Non-Idempotent (Every call causes a new side-effect)**: Putting a coin into a vending machine. If you press the button ten times, you get charged ten times and ten soda cans drop out! In HTTP, **\`POST\`** is non-idempotent. Sending ten identical POST requests creates ten duplicate orders in the database unless deduplication is enforced.`,
         keyIdea: 'Idempotent methods (GET, PUT, DELETE) can be safely retried during network blips without creating duplicate records.',
-        diagramState: 'default',
+        diagramState: 'http-methods',
+        diagramAlt: 'Architecture diagram illustrating Flipping a light switch vs vending a soda can: Flipping a light switch vs vending a soda can.',
       },
       {
         id: 'step-3',
@@ -79,6 +81,7 @@ Always use standard HTTP status codes:
   - \`503 Service Unavailable\`: Downstream service is temporarily down or overloaded.`,
         keyIdea: 'Accurate HTTP status codes allow client libraries and API gateways to make automatic retry and error routing decisions.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Clear delivery receipts instead of mystery packages: Clear delivery receipts instead of mystery packages.',
       },
     ],
   },
@@ -119,6 +122,7 @@ The **OAuth2 Framework (RFC 6749)** coordinates four roles:
 4. **Resource Server**: The Spring Boot microservice that protects your backend data.`,
         keyIdea: 'Authentication proves identity; Authorization checks permissions using scoped security tokens.',
         diagramState: 'auth-request',
+        diagramAlt: 'Architecture diagram illustrating Your photo ID card vs your VIP backstage wristband: Your photo ID card vs your VIP backstage wristband.',
       },
       {
         id: 'step-2',
@@ -179,6 +183,7 @@ public class SimpleJwtFilter extends OncePerRequestFilter {
 }`,
         },
         diagramState: 'jwt-mint',
+        diagramAlt: 'Architecture diagram illustrating JwtValidationFilter.java: The tamper-evident wax seal on an official passport.',
       },
       {
         id: 'step-3',
@@ -195,6 +200,7 @@ To keep things smooth for you, the hotel gives you a special secure registration
 This automatic renewal cycle gives users a seamless experience while keeping security airtight!`,
         keyIdea: 'Short-lived access tokens combined with secure refresh token rotation minimize damage if tokens are intercepted.',
         diagramState: 'bearer-dispatch',
+        diagramAlt: 'Architecture diagram illustrating A 15-minute temporary room key with a renewal card: A 15-minute temporary room key with a renewal card.',
       },
       {
         id: 'step-4',
@@ -210,6 +216,7 @@ A complete, enterprise-grade logout sequence requires three steps:
    \`Set-Cookie: session_token=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict\``,
         keyIdea: 'True logout requires revoking the session at the identity provider, blacklisting the token in Redis, and clearing HttpOnly cookies.',
         diagramState: 'recap',
+        diagramAlt: 'Architecture diagram illustrating Canceling the key card and shredding the duplicate: Canceling the key card and shredding the duplicate.',
       },
     ],
   },
