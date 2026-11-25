@@ -1102,7 +1102,7 @@ HotSpot classifies every object into these three exact states:
       },
       {
         id: 'step-3',
-        title: 'Scalar Replacement Lock Elision',
+        title: 'Scalar Replacement & Lock Elision',
         subtitle: 'Dismantling the object into raw CPU numbers',
         duration: '2 min',
         type: 'solution',
@@ -1197,7 +1197,7 @@ While G1GC keeps these pauses short (e.g. 50–100ms), financial trading systems
       },
       {
         id: 'step-2',
-        title: 'Colored Pointers Load Barriers',
+        title: 'Colored Pointers & Load Barriers',
         subtitle: 'Moving houses while guests are still visiting',
         duration: '3 min',
         type: 'solution',

@@ -94,8 +94,8 @@ for (const fileName of LESSON_FILES) {
       totalStepsChecked++;
       const title = (step.title || '').trim();
 
-      // Check 2: Word Count <= 4
-      const words = title.split(/\s+/).filter(Boolean);
+      // Check 2: Word Count <= 4 (excluding standalone '&' conjunction tokens)
+      const words = title.split(/\s+/).filter((w) => Boolean(w) && w !== '&');
       if (words.length > 4) {
         findings.titleLengthViolations.push({
           lesson: lesson.slug,
@@ -232,6 +232,12 @@ if (isJson) {
   console.log(`5. Banned Absolutes in Prose:               ${findings.bannedAbsoluteViolations.length}`);
   console.log(`6. Sensational Multipliers:                 ${findings.sensationalMultiplierViolations.length}`);
   console.log(`7. Micro-Check Distribution Violations:     ${findings.microCheckDistributionViolations.length}\n`);
+
+  if (findings.titleLengthViolations.length > 0) {
+    console.log(`--- Step Title Length Violations (>4 words) (Total: ${findings.titleLengthViolations.length}) ---`);
+    findings.titleLengthViolations.forEach(v => console.log(`  [${v.lesson} / ${v.stepId}] "${v.title}" (${v.wordCount} content words)`));
+    console.log('');
+  }
 
   if (findings.microCheckDistributionViolations.length > 0) {
     console.log(`--- Micro-Check Distribution Violations (Total: ${findings.microCheckDistributionViolations.length}) ---`);

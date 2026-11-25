@@ -176,7 +176,7 @@ In classic Java, calling \`Future.get()\` acted like standing frozen at the regi
       },
       {
         id: 'step-2',
-        title: 'supplyAsync Thread Pool Isolation',
+        title: 'supplyAsync & Thread Pool Isolation',
         subtitle: 'Giving the kitchen its own dedicated crew',
         duration: '2 min',
         type: 'insight',
@@ -386,7 +386,7 @@ A \`ThreadPoolExecutor\` only expands past \`corePoolSize\` once its \`workQueue
       },
       {
         id: 'step-2',
-        title: 'Task Submission Rejection Policies',
+        title: 'Task Submission & Rejection Policies',
         subtitle: 'The bank lobby queue and the velvet rope',
         duration: '2 min',
         type: 'insight',
@@ -675,7 +675,7 @@ This invisible hardware contention is called **False Sharing**, and it degrades 
       },
       {
         id: 'step-2',
-        title: 'Cache Line Padding Contended',
+        title: 'Cache Line Padding & @Contended',
         subtitle: 'Giving each accountant their own private desk with empty buffer space',
         duration: '2 min',
         type: 'solution',
@@ -776,7 +776,7 @@ The time it takes for **ALL** threads to halt after the JVM requests a safepoint
       },
       {
         id: 'step-2',
-        title: 'Uncounted Loops Strip Mining',
+        title: 'Uncounted Loops & Strip Mining',
         subtitle: 'The marathon runner without a radio',
         duration: '3 min',
         type: 'solution',

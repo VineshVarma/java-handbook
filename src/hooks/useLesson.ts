@@ -4,75 +4,67 @@ import { useState, useEffect, useCallback } from 'react';
 import { Lesson } from '@/lib/types';
 
 export function useLesson(allLessons: Lesson[], initialLessonSlug?: string) {
-  const [currentLessonSlug, setCurrentLessonSlug] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      // Check pathname first: /lessons/xxx
-      const pathMatch = window.location.pathname.match(/\/lessons\/([^/?#]+)/);
-      if (pathMatch && allLessons.some((l) => l.slug === pathMatch[1])) {
-        return pathMatch[1];
-      }
-      // Check legacy hash: #/xxx
-      const hash = window.location.hash.replace(/^#\/?/, '').split('/')[0];
-      if (hash && allLessons.some((l) => l.slug === hash)) {
-        return hash;
-      }
-    }
-    return initialLessonSlug && allLessons.some((l) => l.slug === initialLessonSlug)
+  const resolvedInitialSlug =
+    initialLessonSlug && allLessons.some((l) => l.slug === initialLessonSlug)
       ? initialLessonSlug
       : allLessons[0]?.slug || 'how-java-runs';
-  });
 
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace(/^#\/?/, '').split('/');
-      if (hash[1]) {
-        const step = parseInt(hash[1], 10) - 1;
-        if (!isNaN(step) && step >= 0) return step;
-      }
-    }
-    return 0;
-  });
+  const [currentLessonSlug, setCurrentLessonSlug] = useState<string>(resolvedInitialSlug);
+  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
 
-  // Sync state with URL changes (both popstate for path routing and hashchange)
+  // Sync state with URL changes on mount and on popstate / hashchange
   useEffect(() => {
     const handleUrlChange = () => {
-      // 1. Check path /lessons/slug
       const pathMatch = window.location.pathname.match(/\/lessons\/([^/?#]+)/);
-      if (pathMatch) {
-        const slug = pathMatch[1];
-        const found = allLessons.find((l) => l.slug === slug);
-        if (found) {
-          setCurrentLessonSlug(slug);
-          return;
-        }
+      const pathSlug =
+        pathMatch && allLessons.some((l) => l.slug === pathMatch[1])
+          ? pathMatch[1]
+          : null;
+
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      const hashParts = hash ? hash.split('/') : [];
+      const hashSlug =
+        hashParts[0] && allLessons.some((l) => l.slug === hashParts[0])
+          ? hashParts[0]
+          : null;
+
+      const targetSlug = pathSlug || hashSlug;
+      if (!targetSlug) {
+        setCurrentLessonSlug(resolvedInitialSlug);
+        setCurrentStepIndex(0);
+        return;
       }
 
-      // 2. Check hash #/slug/step
-      const hash = window.location.hash.replace(/^#\/?/, '');
-      if (hash) {
-        const parts = hash.split('/');
-        const slug = parts[0];
-        const step = parts[1] ? parseInt(parts[1], 10) - 1 : 0;
+      const foundLesson = allLessons.find((l) => l.slug === targetSlug);
+      if (!foundLesson) return;
 
-        const foundLesson = allLessons.find((l) => l.slug === slug);
-        if (foundLesson) {
-          setCurrentLessonSlug(slug);
-          if (!isNaN(step) && step >= 0 && step < foundLesson.steps.length) {
-            setCurrentStepIndex(step);
-          } else {
-            setCurrentStepIndex(0);
-          }
+      setCurrentLessonSlug(targetSlug);
+      document.title = `${foundLesson.title} | Java Handbook`;
+
+      if (hashParts[1] !== undefined && hashParts[1] !== '') {
+        const parsed = parseInt(hashParts[1], 10);
+        if (!isNaN(parsed)) {
+          const clamped = Math.max(
+            0,
+            Math.min(parsed - 1, foundLesson.steps.length - 1)
+          );
+          setCurrentStepIndex(clamped);
+        } else {
+          setCurrentStepIndex(0);
         }
+      } else {
+        setCurrentStepIndex(0);
       }
     };
 
+    handleUrlChange();
     window.addEventListener('popstate', handleUrlChange);
     window.addEventListener('hashchange', handleUrlChange);
     return () => {
       window.removeEventListener('popstate', handleUrlChange);
       window.removeEventListener('hashchange', handleUrlChange);
     };
-  }, [allLessons]);
+  }, [allLessons, resolvedInitialSlug]);
 
   const currentLesson =
     allLessons.find((l) => l.slug === currentLessonSlug) || allLessons[0];

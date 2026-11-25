@@ -36,7 +36,7 @@ export const devopsLessons: Lesson[] = [
       },
       {
         id: 'step-2',
-        title: 'Schema Design Document Patterns',
+        title: 'Schema Design & Document Patterns',
         subtitle: 'Your pocket wallet vs a basement storage unit',
         duration: '3 min',
         type: 'trade-off',
@@ -154,7 +154,7 @@ public class PolicyCustomRepository {
     title: 'CI/CD Pipeline & Code Quality',
     subtitle: 'From Git commit to automated Maven builds, SonarQube, Fortify SAST, and Jenkins deployment.',
     moduleId: '07',
-    moduleTitle: '07. DevOps & CI/CD',
+    moduleTitle: '07. DevOps & Observability',
     duration: '8 min',
     difficulty: 'Intermediate',
     youllLearn: [
@@ -184,7 +184,7 @@ In modern software delivery, this automated track is **Continuous Integration (C
       },
       {
         id: 'step-2',
-        title: 'Maven Build Automated Testing',
+        title: 'Maven Build & Automated Testing',
         subtitle: 'Driving through the rain chamber and brake test track',
         duration: '2 min',
         type: 'solution',
@@ -199,7 +199,7 @@ If even a single test fails, the assembly line halts immediately, the pull reque
       },
       {
         id: 'step-3',
-        title: 'Static Analysis Security Scans',
+        title: 'Static Analysis & Security Scans',
         subtitle: 'The building inspector with a magnifying glass and checklist',
         duration: '2 min',
         type: 'insight',
@@ -245,7 +245,7 @@ The result? Continuous service availability, negligible transaction disruption, 
     title: 'Production Observability & RCA',
     subtitle: 'The Three Pillars: CloudWatch Metrics, Splunk Log Analysis, and ELK distributed tracing for Root Cause Analysis.',
     moduleId: '07',
-    moduleTitle: '07. DevOps & CI/CD',
+    moduleTitle: '07. DevOps & Observability',
     duration: '8 min',
     difficulty: 'Intermediate',
     youllLearn: [
@@ -332,7 +332,7 @@ index=insurance_prod correlation_id="8f9b2a-pol-9921"
     title: 'Off-Heap Memory & Modern FFM API',
     subtitle: 'Direct ByteBuffer vs Java 22+ Project Panama: Arena lifetimes, MemorySegment, and Linux RSS vs JVM Heap OOM.',
     moduleId: '07',
-    moduleTitle: '07. DevOps & Performance',
+    moduleTitle: '07. DevOps & Observability',
     duration: '8 min',
     difficulty: 'Advanced',
     youllLearn: [

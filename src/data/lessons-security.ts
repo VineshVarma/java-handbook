@@ -113,7 +113,7 @@ Adhere to standard HTTP status codes:
     steps: [
       {
         id: 'step-1',
-        title: 'Authentication Authorization OAuth2 Roles',
+        title: 'Authentication & Authorization OAuth2 Roles',
         subtitle: 'Your photo ID card vs your VIP backstage wristband',
         duration: '4 min',
         type: 'concept',
@@ -346,7 +346,7 @@ This automatic renewal cycle gives users a seamless experience while keeping sec
       },
       {
         id: 'step-4',
-        title: 'Secure Logout Cookie Revocation',
+        title: 'Secure Logout & Cookie Revocation',
         subtitle: 'Canceling the key card and shredding the duplicate',
         duration: '4 min',
         type: 'trade-off',

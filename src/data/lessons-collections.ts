@@ -206,7 +206,7 @@ Streams replace imperative loops with declarative pipelines, expressing transfor
       },
       {
         id: 'step-2',
-        title: 'Lazy Evaluation Short-Circuiting',
+        title: 'Lazy Evaluation & Short-Circuiting',
         subtitle: 'The video streaming service that buffers only what you watch',
         duration: '3 min',
         type: 'insight',
@@ -305,7 +305,7 @@ public class FlatMapEnterprisePattern {
       },
       {
         id: 'step-4',
-        title: 'Complex Collectors GroupingBy',
+        title: 'Complex Collectors & GroupingBy',
         subtitle: 'Sorting mail into cubbies by department',
         duration: '2 min',
         type: 'concept',
@@ -562,7 +562,7 @@ public class PecsInPractice {
       },
       {
         id: 'step-3',
-        title: 'Type Erasure Bridge Methods',
+        title: 'Type Erasure & Bridge Methods',
         subtitle: 'Erasing the pencil guidelines from the blueprint',
         duration: '3 min',
         type: 'recap',

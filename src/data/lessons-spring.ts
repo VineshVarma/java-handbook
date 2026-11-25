@@ -58,7 +58,7 @@ In Spring MVC, this head receptionist is \`DispatcherServlet\`, which implements
       },
       {
         id: 'step-3',
-        title: 'Controller Service Repository Layers',
+        title: 'Controller, Service & Repository Layers',
         subtitle: 'The waitstaff, head chef, and pantry clerk in a restaurant',
         duration: '2 min',
         type: 'solution',
@@ -70,7 +70,7 @@ In Spring MVC, this head receptionist is \`DispatcherServlet\`, which implements
 3. **The Pantry Clerk (\`@Repository\`)**:
    Knows where every raw ingredient is stored in the pantry or refrigerator (**The Database**). The chef asks the clerk for 2 steaks, and the clerk fetches them.
 
-This three-layer separation keeps your enterprise code organized, easy to read, and simple to test!`,
+This layered architecture keeps your enterprise code organized, easy to read, and simple to test!`,
         keyIdea: 'Controllers handle HTTP communication, Services execute business rules, and Repositories manage database access.',
         codeExample: {
           language: 'java',
@@ -285,7 +285,7 @@ To protect your system, modern microservices use defensive patterns:
       },
       {
         id: 'step-2',
-        title: 'Circuit Breaker Fault Tolerance',
+        title: 'Circuit Breaker & Fault Tolerance',
         subtitle: 'The electrical safety switch in your basement',
         duration: '3 min',
         type: 'solution',

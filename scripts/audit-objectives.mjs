@@ -42,34 +42,52 @@ const STOP_WORDS = new Set([
   'can', 'will', 'just', 'should', 'now', 'modern', 'enterprise', 'best', 'practices'
 ]);
 
-// 1. Ingest Lesson Data
-function loadLessonData() {
-  const lessonFiles = [
-    'lessons-foundations.ts',
-    'lessons-collections.ts',
-    'lessons-concurrency.ts',
-    'lessons-spring.ts',
-    'lessons-security.ts',
-    'lessons-devops.ts'
-  ];
+// 1. Ingest Curriculum Data (lessons.ts + ./lessons-*.ts via local require shim)
+function transpileTsModule(fullPath, customRequire) {
+  const code = fs.readFileSync(fullPath, 'utf8');
+  const transpiled = ts.transpileModule(code, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+  }).outputText;
+  const exportsObj = {};
+  const moduleObj = { exports: exportsObj };
+  const context = vm.createContext({
+    exports: exportsObj,
+    module: moduleObj,
+    require: customRequire || ((specifier) => {
+      throw new Error(`Unexpected runtime require("${specifier}") in ${path.basename(fullPath)}`);
+    })
+  });
+  vm.runInContext(transpiled, context);
+  return moduleObj.exports;
+}
 
-  const lessons = [];
-  for (const file of lessonFiles) {
-    const fullPath = path.join(DATA_DIR, file);
-    if (!fs.existsSync(fullPath)) continue;
-    const code = fs.readFileSync(fullPath, 'utf8');
-    const transpiled = ts.transpileModule(code, {
-      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
-    }).outputText;
-    const exportsObj = {};
-    const context = vm.createContext({ exports: exportsObj, module: { exports: exportsObj } });
-    vm.runInContext(transpiled, context);
-    const key = Object.keys(exportsObj).find(k => Array.isArray(exportsObj[k]));
-    if (key && exportsObj[key]) {
-      lessons.push(...exportsObj[key]);
-    }
+function loadCurriculumData() {
+  const lessonsIndexPath = path.join(DATA_DIR, 'lessons.ts');
+  if (!fs.existsSync(lessonsIndexPath)) {
+    throw new Error(`Missing curriculum registry: ${lessonsIndexPath}`);
   }
-  return lessons;
+
+  const moduleCache = new Map();
+  const localRequire = (specifier) => {
+    if (!specifier.startsWith('./lessons-')) {
+      throw new Error(`Unsupported runtime import "${specifier}" in curriculum data`);
+    }
+    const fileName = specifier.endsWith('.ts') ? specifier : `${specifier}.ts`;
+    const resolvedPath = path.join(DATA_DIR, fileName);
+    if (!fs.existsSync(resolvedPath)) {
+      throw new Error(`Missing imported lesson module: ${resolvedPath}`);
+    }
+    if (!moduleCache.has(resolvedPath)) {
+      moduleCache.set(resolvedPath, transpileTsModule(resolvedPath, localRequire));
+    }
+    return moduleCache.get(resolvedPath);
+  };
+
+  const registryExports = transpileTsModule(lessonsIndexPath, localRequire);
+  return {
+    lessons: registryExports.allLessons || [],
+    getModuleById: registryExports.getModuleById
+  };
 }
 
 // 2. Build Lesson Step Corpus
@@ -227,13 +245,25 @@ function auditSubtitle(subtitle, corpus) {
 
 // 5. Main Audit Runner
 function runAudit() {
-  const lessons = loadLessonData();
+  const { lessons, getModuleById } = loadCurriculumData();
   let totalObjectives = 0;
   let coveredObjectives = 0;
   const orphanObjectives = [];
   const subtitleDiscrepancies = [];
+  const moduleTitleDiscrepancies = [];
 
   for (const lesson of lessons) {
+    const expectedModule = typeof getModuleById === 'function' ? getModuleById(lesson.moduleId) : undefined;
+    if (!expectedModule || lesson.moduleTitle !== expectedModule.title) {
+      moduleTitleDiscrepancies.push({
+        lessonSlug: lesson.slug,
+        lessonTitle: lesson.title,
+        moduleId: lesson.moduleId,
+        actualModuleTitle: lesson.moduleTitle,
+        expectedModuleTitle: expectedModule ? expectedModule.title : '<missing module>'
+      });
+    }
+
     const corpus = buildCorpus(lesson);
 
     // Audit Subtitle
@@ -280,7 +310,8 @@ function runAudit() {
     orphanCount: orphanObjectives.length,
     coveragePercent,
     orphanObjectives,
-    subtitleDiscrepancies
+    subtitleDiscrepancies,
+    moduleTitleDiscrepancies
   };
 }
 
@@ -298,7 +329,8 @@ try {
     console.log(`Total Objectives:     ${report.totalObjectives}`);
     console.log(`Covered Objectives:   ${report.coveredObjectives} (${report.coveragePercent}%)`);
     console.log(`Orphan Objectives:    ${report.orphanCount}`);
-    console.log(`Subtitle Promises:    ${report.subtitleDiscrepancies.length} discrepancies\n`);
+    console.log(`Subtitle Promises:    ${report.subtitleDiscrepancies.length} discrepancies`);
+    console.log(`Module Title Parity:  ${report.moduleTitleDiscrepancies.length} discrepancies\n`);
 
     if (report.orphanCount > 0) {
       console.log('--- Sample Orphan Objectives (Remediation in M5) ---');
@@ -317,10 +349,22 @@ try {
       });
       console.log('');
     }
+
+    if (report.moduleTitleDiscrepancies.length > 0) {
+      console.log('--- Module Title Parity Discrepancies ---');
+      report.moduleTitleDiscrepancies.forEach(d => {
+        console.log(`  - [${d.lessonSlug}] moduleId="${d.moduleId}" has "${d.actualModuleTitle}", expected "${d.expectedModuleTitle}"`);
+      });
+      console.log('');
+    }
   }
 
-  if (report.orphanCount > 0 || (report.subtitleDiscrepancies && report.subtitleDiscrepancies.length > 0)) {
-    if (!isJson) console.error(`[FAIL] Objectives audit failed: ${report.orphanCount} orphan objectives, ${report.subtitleDiscrepancies.length} subtitle discrepancies detected.`);
+  if (
+    report.orphanCount > 0 ||
+    (report.subtitleDiscrepancies && report.subtitleDiscrepancies.length > 0) ||
+    (report.moduleTitleDiscrepancies && report.moduleTitleDiscrepancies.length > 0)
+  ) {
+    if (!isJson) console.error(`[FAIL] Objectives audit failed: ${report.orphanCount} orphan objectives, ${report.subtitleDiscrepancies.length} subtitle discrepancies, ${report.moduleTitleDiscrepancies.length} moduleTitle discrepancies detected.`);
     process.exit(1);
   } else {
     if (!isJson) console.log('[PASS] Objectives audit completed successfully.\n');

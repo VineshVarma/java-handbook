@@ -18,7 +18,7 @@ export function StepProgress({
   completedStepIndices,
 }: StepProgressProps) {
   return (
-    <div className="w-full py-3 px-4 border-t border-cream-300 dark:border-charcoal-700 bg-cream-100/90 dark:bg-charcoal-900/90 flex flex-col gap-2">
+    <div className="w-full pt-2.5 pb-2 px-4 border-t border-cream-300 dark:border-charcoal-700 bg-cream-100/90 dark:bg-charcoal-900/90 flex flex-col gap-2">
       <div className="flex items-center justify-between text-xs font-mono text-charcoal-500 dark:text-cream-400">
         <span className="font-semibold uppercase tracking-wider text-[11px] text-charcoal-700 dark:text-cream-300">
           In this lesson
@@ -28,7 +28,7 @@ export function StepProgress({
         </span>
       </div>
 
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
         {steps.map((step, idx) => {
           const isCurrent = idx === currentStepIndex;
           const isDone = completedStepIndices.includes(idx);
@@ -57,7 +57,7 @@ export function StepProgress({
                 >
                   {isDone && !isCurrent ? <Check className="w-2.5 h-2.5" /> : idx + 1}
                 </span>
-                <span className="truncate max-w-[120px]">{step.title}</span>
+                <span className="whitespace-nowrap">{step.title}</span>
               </button>
 
               {idx < steps.length - 1 && (

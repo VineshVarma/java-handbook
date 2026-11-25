@@ -121,9 +121,9 @@ export function LessonLayout({
         />
 
         {/* Content Area offset by sidebar on desktop */}
-        <main className="flex-1 lg:pl-72 flex flex-col h-full min-h-0 overflow-hidden relative">
+        <main className="flex-1 min-w-0 lg:pl-72 flex flex-col h-full min-h-0 overflow-hidden relative">
           {/* Mobile & Tablet Segmented View Switcher (Visible only below xl) */}
-          <div className="xl:hidden flex items-center justify-between px-3 py-2 bg-cream-200/90 dark:bg-charcoal-900 border-b border-cream-300 dark:border-charcoal-800 flex-shrink-0 z-20">
+          <div className="flex xl:hidden items-center justify-between px-3 py-2 bg-cream-200/90 dark:bg-charcoal-900 border-b border-cream-300 dark:border-charcoal-800 flex-shrink-0 z-20">
             <div
               role="tablist"
               aria-label="Workspace view panes"
