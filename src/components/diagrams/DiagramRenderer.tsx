@@ -10,16 +10,29 @@ import {
   IsoPedestal,
 } from './IsoShapes';
 
+export type SimulationScenarioType = 'normal' | 'hot-calls' | 'recursion' | 'thread-pin';
+
+const SimulationContext = React.createContext<SimulationScenarioType>('normal');
+
 export interface DiagramRendererProps {
   lessonSlug: string;
   diagramState: DiagramState;
   isPlaying: boolean;
   viewMode?: '3d' | '2d';
-  simulationScenario?: 'normal' | 'hot-calls' | 'recursion' | 'thread-pin';
+  simulationScenario?: SimulationScenarioType;
   diagramAlt?: string;
 }
 
-export function DiagramRenderer({
+export function DiagramRenderer(props: DiagramRendererProps) {
+  const scenario = props.simulationScenario || 'normal';
+  return (
+    <SimulationContext.Provider value={scenario}>
+      <DiagramStageSwitch {...props} simulationScenario={scenario} />
+    </SimulationContext.Provider>
+  );
+}
+
+function DiagramStageSwitch({
   lessonSlug,
   diagramState,
   isPlaying,
@@ -1978,18 +1991,20 @@ function MemoryGcStage({
 function StageContainer({
   telemetry,
   viewMode = '3d',
-  simulationScenario = 'normal',
+  simulationScenario: propScenario,
   legend,
   diagramAlt,
   children,
 }: {
   telemetry: Array<{ label: string; value: string }>;
   viewMode?: '3d' | '2d';
-  simulationScenario?: 'normal' | 'hot-calls' | 'recursion' | 'thread-pin';
+  simulationScenario?: SimulationScenarioType;
   legend?: Array<{ label: string; color: string; shape?: 'circle' | 'square' }>;
   diagramAlt?: string;
   children: React.ReactNode;
 }) {
+  const contextScenario = React.useContext(SimulationContext);
+  const simulationScenario = propScenario ?? contextScenario;
   let effectiveTelemetry = telemetry;
   if (simulationScenario === 'hot-calls') {
     effectiveTelemetry = [

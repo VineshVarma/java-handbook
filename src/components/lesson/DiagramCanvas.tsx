@@ -59,8 +59,8 @@ export function DiagramCanvas({
 
   return (
     <div className="relative w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-cream-300 dark:border-charcoal-700 shadow-sm bg-[#161513]">
-      {/* Docked Controls Header Bar — prevents overlap with diagram content */}
-      <div className="flex-shrink-0 flex items-center justify-end gap-1.5 px-3 py-1.5 bg-[#22201D]/95 backdrop-blur-md border-b border-[#33302B] text-xs font-mono">
+      {/* Docked Controls Header Bar — relative z-30 ensures dropdown paints above StageContainer */}
+      <div className="relative z-30 flex-shrink-0 flex items-center justify-end gap-1.5 px-3 py-1.5 bg-[#22201D]/95 backdrop-blur-md border-b border-[#33302B] text-xs font-mono">
         {/* 2D Flat / 3D Isometric Toggle */}
         <button
           onClick={() => setViewMode((v) => (v === '3d' ? '2d' : '3d'))}
