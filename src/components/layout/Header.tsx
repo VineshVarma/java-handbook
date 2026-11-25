@@ -97,8 +97,8 @@ export function Header({
           data-testid="search-button"
         >
           <Search className="w-3.5 h-3.5 text-charcoal-400 dark:text-cream-400" />
-          <span className="hidden sm:inline">Search lessons...</span>
-          <kbd className="hidden sm:inline-block px-1.5 py-0.5 rounded text-[10px] font-mono bg-cream-200 dark:bg-charcoal-700 text-charcoal-600 dark:text-cream-300 border border-cream-300 dark:border-charcoal-600">
+          <span className="hidden lg:inline">Search lessons...</span>
+          <kbd className="hidden lg:inline-block px-1.5 py-0.5 rounded text-[10px] font-mono bg-cream-200 dark:bg-charcoal-700 text-charcoal-600 dark:text-cream-300 border border-cream-300 dark:border-charcoal-600">
             ⌘K
           </kbd>
         </button>

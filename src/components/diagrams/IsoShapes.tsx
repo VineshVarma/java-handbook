@@ -58,6 +58,16 @@ export function IsoBlock({
   const pillHalf = pillW / 2;
   const dotX = -pillHalf + 9;
 
+  // Auto-size label font based on text length to prevent overflow
+  const labelLen = label?.length || 0;
+  const labelFontClass = labelLen > 18 ? 'text-[8px]' : labelLen > 13 ? 'text-[9px]' : 'text-[10px]';
+  const sublabelLen = sublabel?.length || 0;
+  const sublabelFontClass = sublabelLen > 22 ? 'text-[7px]' : sublabelLen > 16 ? 'text-[7.5px]' : 'text-[8.5px]';
+
+  // Label background dims for readability
+  const labelBgW = Math.min(w - 4, Math.max(50, labelLen * 7));
+  const sublabelBgW = Math.min(w - 4, Math.max(50, sublabelLen * 6));
+
   // 2D Flat Mode (High contrast, crisp mobile rendering)
   if (is2D) {
     return (
@@ -115,30 +125,50 @@ export function IsoBlock({
           </g>
         )}
 
-        {/* Label */}
+        {/* Label with contrast background */}
         {label && (
-          <text
-            x={cx}
-            y={cy - (sublabel ? 3 : -3)}
-            textAnchor="middle"
-            fill="#FFFFFF"
-            className="text-[10px] font-mono font-bold select-none pointer-events-none"
-          >
-            {label}
-          </text>
+          <>
+            <rect
+              x={cx - labelBgW / 2}
+              y={cy - (sublabel ? 11 : -6) - 7}
+              width={labelBgW}
+              height={14}
+              rx="4"
+              fill="rgba(0, 0, 0, 0.45)"
+            />
+            <text
+              x={cx}
+              y={cy - (sublabel ? 3 : -3)}
+              textAnchor="middle"
+              fill="#FFFFFF"
+              className={`${labelFontClass} font-mono font-bold select-none pointer-events-none`}
+            >
+              {label}
+            </text>
+          </>
         )}
 
-        {/* Sublabel */}
+        {/* Sublabel with contrast background */}
         {sublabel && (
-          <text
-            x={cx}
-            y={cy + 11}
-            textAnchor="middle"
-            fill="rgba(255, 255, 255, 0.75)"
-            className="text-[8.5px] font-sans font-medium select-none pointer-events-none"
-          >
-            {sublabel}
-          </text>
+          <>
+            <rect
+              x={cx - sublabelBgW / 2}
+              y={cy + 11 - 7}
+              width={sublabelBgW}
+              height={13}
+              rx="3"
+              fill="rgba(0, 0, 0, 0.35)"
+            />
+            <text
+              x={cx}
+              y={cy + 11}
+              textAnchor="middle"
+              fill="rgba(255, 255, 255, 0.85)"
+              className={`${sublabelFontClass} font-sans font-medium select-none pointer-events-none`}
+            >
+              {sublabel}
+            </text>
+          </>
         )}
       </g>
     );
@@ -265,30 +295,50 @@ export function IsoBlock({
         </g>
       )}
 
-      {/* Centered Node Label on top face */}
+      {/* Centered Node Label on top face with contrast backdrop */}
       {label && (
-        <text
-          x={cx}
-          y={cy - h + hd - (sublabel ? 3 : -2)}
-          textAnchor="middle"
-          fill="#FFFFFF"
-          className="text-[10px] font-mono font-bold select-none drop-shadow-sm pointer-events-none"
-        >
-          {label}
-        </text>
+        <>
+          <rect
+            x={cx - labelBgW / 2}
+            y={cy - h + hd - (sublabel ? 3 : -2) - 8}
+            width={labelBgW}
+            height={14}
+            rx="4"
+            fill="rgba(0, 0, 0, 0.5)"
+          />
+          <text
+            x={cx}
+            y={cy - h + hd - (sublabel ? 3 : -2)}
+            textAnchor="middle"
+            fill="#FFFFFF"
+            className={`${labelFontClass} font-mono font-bold select-none drop-shadow-sm pointer-events-none`}
+          >
+            {label}
+          </text>
+        </>
       )}
 
-      {/* Sublabel */}
+      {/* Sublabel with contrast backdrop */}
       {sublabel && (
-        <text
-          x={cx}
-          y={cy - h + hd + 10}
-          textAnchor="middle"
-          fill="rgba(255, 255, 255, 0.75)"
-          className="text-[8.5px] font-sans font-medium select-none pointer-events-none"
-        >
-          {sublabel}
-        </text>
+        <>
+          <rect
+            x={cx - sublabelBgW / 2}
+            y={cy - h + hd + 10 - 7}
+            width={sublabelBgW}
+            height={13}
+            rx="3"
+            fill="rgba(0, 0, 0, 0.4)"
+          />
+          <text
+            x={cx}
+            y={cy - h + hd + 10}
+            textAnchor="middle"
+            fill="rgba(255, 255, 255, 0.85)"
+            className={`${sublabelFontClass} font-sans font-medium select-none pointer-events-none`}
+          >
+            {sublabel}
+          </text>
+        </>
       )}
     </g>
   );

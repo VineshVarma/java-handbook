@@ -219,8 +219,8 @@ export function LessonLayout({
             </aside>
           </div>
 
-          {/* Floating Mobile Peek Quick Toggle (Bottom-Right on mobile) */}
-          <div className="xl:hidden fixed bottom-16 right-4 z-30">
+          {/* Floating Mobile Peek Quick Toggle (Bottom-Right on mobile, raised above step progress & nav) */}
+          <div className="xl:hidden fixed bottom-28 right-4 z-30">
             <button
               onClick={() =>
                 setMobileTab((prev) => (prev === 'diagram' ? 'content' : 'diagram'))

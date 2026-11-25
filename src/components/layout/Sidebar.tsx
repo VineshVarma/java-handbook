@@ -62,16 +62,17 @@ export function Sidebar({
 
   return (
     <>
-      {/* Mobile backdrop */}
+      {/* Mobile backdrop — z-index below header (z-[45]) but above content */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-charcoal-950/50 backdrop-blur-xs lg:hidden"
+          className="fixed inset-0 z-[42] bg-charcoal-950/50 backdrop-blur-xs lg:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
 
       <aside
-        className={`fixed top-14 bottom-0 left-0 z-40 w-72 bg-cream-100 dark:bg-charcoal-900 border-r border-cream-300 dark:border-charcoal-700 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-14 bottom-0 left-0 z-[43] w-72 bg-cream-100 dark:bg-charcoal-900 border-r border-cream-300 dark:border-charcoal-700 flex flex-col transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -102,6 +103,7 @@ export function Sidebar({
                 {/* Module title header */}
                 <button
                   onClick={() => toggleModule(mod.id)}
+                  aria-expanded={isExpanded}
                   className="w-full flex items-center justify-between p-2.5 text-left font-semibold text-charcoal-800 dark:text-cream-200 hover:bg-cream-200/50 dark:hover:bg-charcoal-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -147,6 +149,7 @@ export function Sidebar({
                                 onLessonSelect(lesson.slug);
                                 onClose();
                               }}
+                              title={lesson.title}
                               className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-left transition-all ${
                                 isActive
                                   ? 'bg-emerald-600 text-white font-semibold shadow-sm'

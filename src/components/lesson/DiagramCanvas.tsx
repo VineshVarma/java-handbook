@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DiagramRenderer } from '@/components/diagrams/DiagramRenderer';
 import { RotateCcw, Pause, Play, Box, Square, Zap, ChevronDown } from 'lucide-react';
 
@@ -28,11 +28,39 @@ export function DiagramCanvas({
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
   const [simulationScenario, setSimulationScenario] = useState<SimulationScenario>('normal');
   const [simulatorOpen, setSimulatorOpen] = useState(false);
+  const simulatorRef = useRef<HTMLDivElement>(null);
+
+  // Close Break It dropdown on Escape key or click outside
+  const handleCloseSimulator = useCallback(() => setSimulatorOpen(false), []);
+
+  useEffect(() => {
+    if (!simulatorOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleCloseSimulator();
+      }
+    };
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (simulatorRef.current && !simulatorRef.current.contains(e.target as Node)) {
+        handleCloseSimulator();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [simulatorOpen, handleCloseSimulator]);
 
   return (
     <div className="relative w-full h-full flex-1 min-h-0 flex flex-col overflow-hidden rounded-2xl border border-cream-300 dark:border-charcoal-700 shadow-sm bg-[#161513]">
-      {/* Simulation Controls Top-Right */}
-      <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 bg-[#22201D]/90 backdrop-blur-md p-1 rounded-xl border border-[#33302B] shadow-md text-xs font-mono">
+      {/* Docked Controls Header Bar — prevents overlap with diagram content */}
+      <div className="flex-shrink-0 flex items-center justify-end gap-1.5 px-3 py-1.5 bg-[#22201D]/95 backdrop-blur-md border-b border-[#33302B] text-xs font-mono">
         {/* 2D Flat / 3D Isometric Toggle */}
         <button
           onClick={() => setViewMode((v) => (v === '3d' ? '2d' : '3d'))}
@@ -54,7 +82,7 @@ export function DiagramCanvas({
         </button>
 
         {/* "Break It" Interactive Simulator Menu */}
-        <div className="relative">
+        <div className="relative" ref={simulatorRef}>
           <button
             onClick={() => setSimulatorOpen((p) => !p)}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-colors ${
@@ -63,6 +91,8 @@ export function DiagramCanvas({
                 : 'text-cream-300 hover:text-white hover:bg-white/10'
             }`}
             title="Break It: Runtime Simulations"
+            aria-expanded={simulatorOpen}
+            aria-haspopup="true"
             data-testid="break-it-button"
           >
             <Zap
@@ -71,7 +101,7 @@ export function DiagramCanvas({
               }`}
             />
             <span className="hidden sm:inline">Break It</span>
-            <ChevronDown className="w-3 h-3 text-cream-400" />
+            <ChevronDown className={`w-3 h-3 text-cream-400 transition-transform ${simulatorOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {simulatorOpen && (
