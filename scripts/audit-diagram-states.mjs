@@ -63,14 +63,17 @@ function parseDiagramRenderer() {
   let fallbackStage = null;
 
   function visit(node) {
-    // Dispatch in DiagramRenderer function
-    if (ts.isFunctionDeclaration(node) && node.name?.text === 'DiagramRenderer') {
+    // Dispatch in DiagramRenderer or DiagramStageSwitch function
+    if (
+      ts.isFunctionDeclaration(node) &&
+      (node.name?.text === 'DiagramRenderer' || node.name?.text === 'DiagramStageSwitch')
+    ) {
       function findDispatch(n) {
         if (ts.isIfStatement(n)) {
           const condText = code.substring(n.expression.pos, n.expression.end);
           const slugs = [...condText.matchAll(/lessonSlug === ['"]([^'"]+)['"]/g)].map(m => m[1]);
           const thenText = code.substring(n.thenStatement.pos, n.thenStatement.end);
-          const stageMatch = thenText.match(/<([A-Za-z0-9]+Stage)/);
+          const stageMatch = thenText.match(/<([A-Za-z0-9]+Stage)\b/);
           if (stageMatch && slugs.length > 0) {
             const stageName = stageMatch[1];
             for (const slug of slugs) {
@@ -84,12 +87,12 @@ function parseDiagramRenderer() {
       }
       ts.forEachChild(node, findDispatch);
 
-      // Locate top-level return statement in DiagramRenderer body
+      // Locate top-level return statement in dispatch function body
       if (node.body && ts.isBlock(node.body)) {
         for (const stmt of node.body.statements) {
           if (ts.isReturnStatement(stmt)) {
             const retText = code.substring(stmt.pos, stmt.end);
-            const fbMatch = retText.match(/<([A-Za-z0-9]+Stage)/);
+            const fbMatch = retText.match(/<([A-Za-z0-9]+Stage)\b/);
             if (fbMatch) {
               fallbackStage = fbMatch[1];
             }
